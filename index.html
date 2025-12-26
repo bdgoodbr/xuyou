@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTM 物流协同平台 - HHA物流委托 (V5.9.67 Hotfix)</title>
+    <title>HTM 物流协同平台 - HHA物流委托 (V5.9.69 Hotfix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -113,7 +113,7 @@
                 </nav>
             </div>
             <div class="p-4 bg-slate-950 text-xs text-slate-500 border-t border-slate-800 shrink-0">
-                <div>用户: 订单岗</div><div>版本: V5.9.67</div>
+                <div>用户: 订单岗</div><div>版本: V5.9.69</div>
             </div>
         </aside>
 
@@ -181,6 +181,8 @@
                             <button @click="showCommissionSearchModal=true" class="ml-2 bg-blue-50 text-blue-600 px-3 py-1 rounded text-xs border border-blue-200 hover:bg-blue-100"><i class="fa-solid fa-search mr-1"></i>查询单据</button>
                         </div>
                         <div class="flex gap-3">
+                            <button v-if="canSave" @click="referenceCreate" class="bg-purple-50 border border-purple-200 text-purple-600 px-4 py-2 rounded hover:bg-purple-100 shadow-sm text-sm font-medium">参考创建</button>
+                            
                             <button @click="exportPDF" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 shadow-sm text-sm font-medium">导出 PDF</button>
                             <button v-if="canSave" @click="saveDraft(false)" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 shadow-sm text-sm font-medium">暂存草稿</button>
                             <button v-if="formData.status === 'EXECUTED'" @click="recallCommission" class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-2 rounded hover:bg-yellow-100 shadow-sm text-sm font-medium">撤回</button>
@@ -1105,6 +1107,36 @@
                     }
                     item.qty = newQty; 
                     item.isEditing = false; 
+                },
+                referenceCreate() {
+                    if (this.isReadOnly) return; // Although v-if handles this, safe guard
+                    const refId = prompt("请输入参考的委托单号：");
+                    if (!refId) return;
+
+                    // Mock check: in reality, call API. Here we assume any input is valid for testing.
+                    // We prompt user for confirmation.
+                    
+                    if (confirm(`检测到单号 [${refId}] 存在。\n是否确认使用该单据信息覆盖当前页面内容？\n注意：当前填写的信息将被清空。`)) {
+                        // Mock fetching data and overwriting
+                        // Keeping orderer/createTime as is, but overwriting business fields
+                        this.formData.productLine = 'REF';
+                        this.formData.country = 'UK';
+                        this.formData.base = 'QD';
+                        this.formData.entity = 'QD_ENT';
+                        this.formData.transportMode = 'BY AIR';
+                        this.formData.items = [
+                            { 
+                                id: Date.now(), batchNo: 'REF-BATCH-01', category: 'AC', plmCode: 'REF-PLM', 
+                                salesModel: 'REF-SM', productModel: 'REF-PM', currency: 'USD', 
+                                customsPrice: 200, markupRate: 15, qty: 50, remaining: 500, 
+                                base: 'QD', entity: 'QD_ENT', salesOrg: 'HSHA', totalPlan: 1000, 
+                                used: 500, isEditing: false, tempQty: 0 
+                            }
+                        ];
+                        // Reset containers/notes based on new data (mock)
+                        this.formData.containers = [{ type: '20GP', qty: 1 }];
+                        alert("引用成功！数据已覆盖。");
+                    }
                 }
             }
         }).mount('#app');
