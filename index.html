@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTM 物流协同平台 - HHA物流委托 (V5.9.69 Hotfix)</title>
+    <title>HTM 物流协同平台 - HHA物流委托 (V5.9.70 Hotfix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -113,7 +113,7 @@
                 </nav>
             </div>
             <div class="p-4 bg-slate-950 text-xs text-slate-500 border-t border-slate-800 shrink-0">
-                <div>用户: 订单岗</div><div>版本: V5.9.69</div>
+                <div>用户: 订单岗</div><div>版本: V5.9.70</div>
             </div>
         </aside>
 
@@ -139,8 +139,15 @@
                     </div>
                     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
                          <div class="flex flex-wrap items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <label class="text-gray-700 font-medium whitespace-nowrap required-star">产品线</label>
+                                <select v-model="createFilters.productLine" class="w-40 h-10 border border-gray-300 rounded px-3 outline-none bg-white text-sm focus:ring-2 focus:ring-blue-500">
+                                    <option value="">-- 请选择 --</option>
+                                    <option v-for="opt in config.productLines" :value="opt.value">{{opt.label}}</option>
+                                </select>
+                            </div>
                             <div class="flex items-center gap-2 flex-1 min-w-[250px]"><label class="text-gray-700 font-medium whitespace-nowrap">批次号</label><input v-model="createFilters.batchNo" type="text" placeholder="输入批次号 (最多50个)..." class="flex-1 h-10 border border-gray-300 rounded px-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm"></div>
-                            <div class="flex items-center gap-2"><label class="text-gray-700 font-medium whitespace-nowrap">产品类型</label><select v-model="createFilters.category" class="w-40 h-10 border border-gray-300 rounded px-3 outline-none bg-white text-sm focus:ring-2 focus:ring-blue-500"><option value="ALL">全部产品类型</option><option value="AC">移动空调</option><option value="EC">电控</option><option value="HE">两器</option></select></div>
+                            <div class="flex items-center gap-2"><label class="text-gray-700 font-medium whitespace-nowrap">部件类型</label><select v-model="createFilters.category" class="w-40 h-10 border border-gray-300 rounded px-3 outline-none bg-white text-sm focus:ring-2 focus:ring-blue-500"><option value="ALL">全部类型</option><option value="AC">移动空调</option><option value="EC">电控</option><option value="HE">两器</option></select></div>
                             <div class="flex items-center h-10 px-2"><label class="flex items-center cursor-pointer select-none"><input type="checkbox" v-model="createFilters.showCompleted" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"><span class="ml-2 text-gray-700 text-sm font-medium whitespace-nowrap">显示已做数量</span></label></div>
                             <button @click="searchGSS" class="bg-blue-600 text-white px-6 h-10 rounded hover:bg-blue-700 transition shadow-sm font-medium flex items-center"><i class="fa-solid fa-magnifying-glass mr-2"></i> 查询批次</button>
                         </div>
@@ -150,7 +157,7 @@
                             <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
                                 <tr>
                                     <th class="px-6 py-3 w-10"><input type="checkbox" v-model="selectAllPage1" @change="toggleSelectAll('create')" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"></th>
-                                    <th class="px-6 py-3">批次号</th><th class="px-6 py-3">产品类型</th><th class="px-6 py-3">销售型号</th><th class="px-6 py-3">产品型号(原型)</th><th class="px-6 py-3">委托单号</th><th class="px-6 py-3 text-right">排产总量</th><th class="px-6 py-3 text-right">已做委托数量</th><th class="px-6 py-3 text-right">剩余可用量</th><th class="px-6 py-3 w-32 bg-blue-50/50 text-blue-700 font-semibold border-l pl-4">此次要做数量</th>
+                                    <th class="px-6 py-3">批次号</th><th class="px-6 py-3">部件类型</th><th class="px-6 py-3">销售型号</th><th class="px-6 py-3">产品型号(原型)</th><th class="px-6 py-3">委托单号</th><th class="px-6 py-3 text-right">排产总量</th><th class="px-6 py-3 text-right">已做委托数量</th><th class="px-6 py-3 text-right">剩余可用量</th><th class="px-6 py-3 w-32 bg-blue-50/50 text-blue-700 font-semibold border-l pl-4">此次要做数量</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
@@ -196,7 +203,7 @@
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <h2 class="text-sm font-bold text-blue-600 mb-4 flex items-center"><i class="fa-regular fa-file-lines mr-2"></i> 基础信息</h2>
                         <div class="grid grid-cols-4 gap-6 mb-4">
-                            <div><span class="p2-label required-star">产品线</span><select v-model="formData.productLine" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.productLine}"><option v-for="opt in config.productLines" :value="opt.value">{{opt.label}}</option></select></div>
+                            <div><span class="p2-label required-star">产品线</span><select v-model="formData.productLine" disabled class="p2-input input-readonly" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.productLine}"><option v-for="opt in config.productLines" :value="opt.value">{{opt.label}}</option></select></div>
                             <div><span class="p2-label required-star">出口国家</span><select v-model="formData.country" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.country}"><option value="JP">日本</option><option value="UK">英国</option><option value="TH">泰国</option></select></div>
                             <div><span class="p2-label required-star">生产基地</span><select v-model="formData.base" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.base}"><option value="HZ">湖州工厂</option><option value="QD">青岛工厂</option></select></div>
                             <div><span class="p2-label required-star">报关主体</span><select v-model="formData.entity" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.entity}"><option value="HZ_ENT">海信(浙江)空调有限公司</option><option value="QD_ENT">海信(山东)空调有限公司</option></select></div>
@@ -257,7 +264,7 @@
                             <table class="w-full text-left text-xs">
                                 <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200 whitespace-nowrap">
                                     <tr>
-                                        <th class="compact-cell">滚动计划号</th><th class="compact-cell">产品类型</th><th class="compact-cell text-center">排产/已做</th><th class="compact-cell text-center w-24 bg-blue-50">此次数量</th>
+                                        <th class="compact-cell">滚动计划号</th><th class="compact-cell">部件类型</th><th class="compact-cell text-center">排产/已做</th><th class="compact-cell text-center w-24 bg-blue-50">此次数量</th>
                                         <th class="compact-cell">产品编码 (PLM)</th><th class="compact-cell">客户型号</th><th class="compact-cell">产品型号(原型)</th><th class="compact-cell">币种</th>
                                         <th class="compact-cell text-center w-24">报关单价</th><th class="compact-cell text-right">报关总价</th>
                                         <th class="compact-cell text-center w-24 text-blue-600">HSHA单价</th><th class="compact-cell text-right font-bold text-blue-600">HSHA总价</th>
@@ -415,7 +422,7 @@
         
         <div v-if="showAddBatchModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
              <div class="bg-white rounded-lg shadow-xl w-[900px] max-h-[80vh] flex flex-col">
-                <div class="p-4 border-b flex justify-between items-center"><h3 class="font-bold">添加批次明细</h3><button @click="showAddBatchModal=false"><i class="fa-solid fa-xmark"></i></button></div>
+                <div class="p-4 border-b flex justify-between items-center"><h3 class="font-bold">添加批次明细 ({{ formData.productLine }})</h3><button @click="showAddBatchModal=false"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="p-4 bg-gray-50 border-b flex gap-2">
                     <input v-model="modalSearchQuery" type="text" placeholder="输入批次号 (支持逗号分割)..." class="border rounded px-3 py-2 flex-1"><button @click="modalSearchBatch" class="bg-blue-600 text-white px-4 rounded">查询</button>
                 </div>
@@ -509,7 +516,9 @@
         createApp({
             data() {
                 return {
-                    currentView: 'create', selectAllPage1: false, selectAllPage3: false, createFilters: { batchNo: '', category: 'ALL', showCompleted: false },
+                    currentView: 'create', selectAllPage1: false, selectAllPage3: false, 
+                    // [Hotfix] Added productLine to createFilters
+                    createFilters: { batchNo: '', category: 'ALL', showCompleted: false, productLine: '' },
                     isSubmitting: false,
                     showCommissionSearchModal: false,
                     commissionSearchQuery: '',
@@ -555,7 +564,7 @@
                     ],
                     formData: { 
                         commissionNo: '', status: 'NONE', 
-                        productLine: 'AC', country: 'TH', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'EXW', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
+                        productLine: '', country: 'TH', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'EXW', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
                         orderer: 'Current User', // [Hotfix] Set to current user fixed string
                         booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
                         items: [], 
@@ -638,6 +647,8 @@
                     if (view === 'create') { 
                         this.gssData.forEach(i => { i.checked = false; i.inputQty = 0; i.hasError = false; }); 
                         this.selectAllPage1 = false;
+                        // [Hotfix] Reset create filters slightly but keep defaults if needed
+                        this.createFilters.batchNo = '';
                     }
                     if (view === 'edit' && mode === 'direct') {
                         this.resetFormData();
@@ -684,7 +695,8 @@
 
                     this.resetFormData();
                     
-                    this.formData.productLine = 'AC';
+                    // [Hotfix] Inherit Product Line from Page 1 Filters
+                    this.formData.productLine = this.createFilters.productLine;
                     this.formData.country = 'TH';
                     this.formData.transportMode = 'BY SEA';
                     this.formData.priceTerms = 'EXW';
@@ -721,7 +733,7 @@
                 resetFormData() {
                     this.formData = { 
                         commissionNo: '', status: 'NONE', 
-                        productLine: 'AC', country: 'TH', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'EXW', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
+                        productLine: '', country: 'TH', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'EXW', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
                         orderer: 'Current User', // [Hotfix] Set to current user fixed string
                         booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
                         items: [], 
@@ -737,13 +749,19 @@
 
                 formatMoney(num) { return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
                 searchGSS() { 
+                    // [Hotfix] Added Validation for Product Line
+                    if (!this.createFilters.productLine) {
+                        alert("请先选择产品线");
+                        return;
+                    }
+
                     const batches = this.createFilters.batchNo.split(',').filter(b => b.trim());
                     // [Hotfix] Changed limit 10 -> 50
                     if (batches.length > 50) {
                         alert("单次查询最多支持50个批次");
                         return;
                     }
-                    alert("模拟查询 GSS 接口..."); 
+                    alert("模拟查询 GSS 接口 (已携带产品线: " + this.createFilters.productLine + ")..."); 
                 },
                 
                 toggleSelectAll(view) { 
@@ -789,6 +807,7 @@
                     this.resetFormData();
                     this.formData.commissionNo = this.commissionSearchQuery;
                     this.formData.status = 'DRAFT'; 
+                    this.formData.productLine = 'AC'; // Mock loaded product line
                     this.formData.items = [
                          { id: 99, batchNo: 'LOADED-01', category: 'AC', plmCode: 'L-01', salesModel: 'L-SM', productModel: 'L-PM', currency: 'USD', customsPrice: 120, markupRate: 10, qty: 100, remaining: 500, base: 'HZ', entity: 'HZ_ENT', salesOrg: 'HSHA', totalPlan: 1000, used: 500, isEditing: false, tempQty: 0 },
                          { id: 100, batchNo: 'LOADED-02', category: 'EC', plmCode: 'L-02', salesModel: 'E-SM', productModel: 'E-PM', currency: 'CNY', customsPrice: 800, markupRate: 0, qty: 200, remaining: 800, base: 'QD', entity: 'QD_ENT', salesOrg: 'HSHA', totalPlan: 1000, used: 200, isEditing: false, tempQty: 0 }
@@ -806,10 +825,19 @@
                     this.selectAllModal = false; 
                 },
                 modalSearchBatch() { 
-                    this.modalBatchData = [ 
-                        { id: 901, batchNo: 'NEW-BATCH-01', category: '移动空调', total: 1000, used: 200, remaining: 800, inputQty: 0, checked: false }, 
-                        { id: 902, batchNo: 'NEW-BATCH-02', category: '模具', total: 50, used: 10, remaining: 40, inputQty: 0, checked: false } 
+                    // [Hotfix] Simulate "Prohibit cross-line addition" by adding productLine context
+                    const currentLine = this.formData.productLine;
+                    alert(`模拟查询: 只搜索产品线为 [${currentLine}] 的批次...`);
+
+                    // Mock data with productLine property to demonstrate validation/filter logic
+                    const mockDB = [ 
+                        { id: 901, batchNo: 'NEW-BATCH-01', category: '移动空调', productLine: 'AC', total: 1000, used: 200, remaining: 800, inputQty: 0, checked: false }, 
+                        { id: 902, batchNo: 'NEW-BATCH-02', category: '模具', productLine: 'AC', total: 50, used: 10, remaining: 40, inputQty: 0, checked: false },
+                        { id: 903, batchNo: 'ERR-BATCH-REF', category: '冰箱', productLine: 'REF', total: 100, used: 10, remaining: 90, inputQty: 0, checked: false } 
                     ]; 
+                    
+                    // Filter based on Page 2 Product Line constraint
+                    this.modalBatchData = mockDB.filter(i => i.productLine === currentLine || !currentLine); // If no currentLine set (shouldn't happen), show all? No, strict mode.
                     this.selectAllModal = false;
                 },
                 monitorModalQty(item) { 
