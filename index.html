@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTM 物流协同平台 - HHA物流委托 (V5.9.70 Hotfix)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .input-readonly { background-color: #F9FAFB; color: #6B7280; cursor: not-allowed; } 
+        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 8rem; color: rgba(200, 200, 200, 0.3); pointer-events: none; z-index: 9999; display: none;}
+        .show-watermark { display: block; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .nav-item.active { background-color: #2563eb; color: white; }
+        .nav-item:hover:not(.active) { background-color: #334155; color: white; }
+        
+        /* 列表紧凑样式 */
+        .compact-cell { padding: 0.75rem 0.5rem; white-space: nowrap; font-size: 13px; vertical-align: middle; border-bottom: 1px solid #E5E7EB; }
+        .qty-input-wrapper input:focus { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+        .required-star { color: #ef4444; margin-left: 2px; }
+        
+        /* Page 2 Specific Styles */
+        .p2-label { font-size: 12px; color: #6B7280; margin-bottom: 4px; display: block; font-weight: 500; }
+        .p2-input { width: 100%; height: 34px; border: 1px solid #D1D5DB; border-radius: 4px; padding: 0 8px; font-size: 13px; outline: none; transition: border-color 0.2s; background-color: #fff; }
+        .p2-input:focus { border-color: #3B82F6; ring: 1px solid #3B82F6; }
+        .p2-helper-text { font-size: 10px; color: #9CA3AF; margin-top: 2px; text-align: center; line-height: 1.2; display: block; }
+        
+        /* UI统一：卡片容器 */
+        .info-box { background-color: #fff; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); border: 1px solid #E5E7EB; padding: 1.5rem; margin-bottom: 1.5rem; }
+
+        /* UI统一：美化文本域 */
+        .beautified-textarea {
+            width: 100%;
+            height: 6rem; /* h-24 */
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.875rem; /* text-sm */
+            background-color: #F8FAFC;
+            transition: all 0.2s ease-in-out;
+            resize: none;
+            outline: none;
+        }
+        .beautified-textarea:focus {
+            background-color: #FFFFFF;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Action Buttons */
+        .action-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #E5E7EB; transition: all 0.2s; }
+        .btn-sync { color: #3B82F6; border-color: #BFDBFE; }
+        .btn-sync:hover { background-color: #EFF6FF; }
+        .btn-del { color: #EF4444; border-color: #FECACA; }
+        .btn-del:hover { background-color: #FEF2F2; }
+
+        .bg-section-header { background-color: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 6px; padding: 8px 12px; margin-bottom: 16px; }
+        .template-select { border: 1px solid #D1D5DB; border-radius: 4px; padding: 4px 8px; font-size: 12px; color: #4B5563; outline: none; }
+        .save-tpl-btn { color: #2563EB; font-size: 12px; font-weight: 500; margin-left: 8px; cursor: pointer; }
+        .save-tpl-btn:hover { text-decoration: underline; }
+        
+        /* 【新增】重置按钮样式 */
+        .reset-btn { color: #9CA3AF; font-size: 12px; font-weight: 500; margin-left: 12px; cursor: pointer; display: flex; align-items: center; }
+        .reset-btn:hover { color: #6B7280; }
+        
+        /* 状态机样式 */
+        .status-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
+        .status-none { background-color: #F3F4F6; color: #6B7280; }
+        .status-draft { background-color: #DBEAFE; color: #1E40AF; }
+        .status-executed { background-color: #D1FAE5; color: #065F46; }
+        .status-recalled { background-color: #FEF3C7; color: #92400E; }
+        .status-deleted { background-color: #FEE2E2; color: #991B1B; text-decoration: line-through; }
+
+        /* Print Style for PDF Export */
+        @media print {
+            .no-print, aside, .watermark { display: none !important; }
+            body, main { height: auto; overflow: visible; background-color: white; }
+            .p2-input, .beautified-textarea { border: 1px solid #ddd !important; background: white !important; }
+            .info-box { box-shadow: none; border: 1px solid #eee; break-inside: avoid; }
+            header { display: none; }
+            /* Show simple header for PDF */
+            .pdf-header { display: block !important; text-align: center; margin-bottom: 20px; font-size: 20px; font-weight: bold; }
+        }
+        .pdf-header { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 text-sm text-gray-800 h-screen flex overflow-hidden">
+
+    <div id="app" class="flex w-full h-full">
+
+        <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shrink-0 transition-all duration-300 no-print">
+            <div class="h-16 flex items-center px-6 bg-slate-950 text-white font-bold text-lg shadow-md shrink-0">
+                <i class="fa-solid fa-cube mr-3 text-blue-500"></i> HTM
+            </div>
+            <div class="flex-1 overflow-y-auto py-4">
+                
+                <nav class="space-y-1">
+                    <div class="mx-2 mt-2">
+                        <div class="flex items-center px-4 py-3 text-white font-medium bg-slate-800 rounded-t-lg border-l-4 border-blue-500">
+                            <i class="fa-solid fa-file-invoice w-6"></i> 
+                            <span class="ml-2">HHA物流委托</span>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-b-lg pb-2 pt-1">
+                            <a href="#" @click.prevent="navigate('create')" class="nav-item block pl-12 pr-4 py-2 text-sm transition-colors rounded-md mx-1 mb-1" :class="{ 'active': currentView === 'create' }">创建物流委托</a>
+                            <a href="#" @click.prevent="navigate('edit', 'direct')" class="nav-item block pl-12 pr-4 py-2 text-sm transition-colors rounded-md mx-1 mb-1" :class="{ 'active': currentView === 'edit' }">编辑物流委托</a>
+                            <a href="#" @click.prevent="navigate('list')" class="nav-item block pl-12 pr-4 py-2 text-sm transition-colors rounded-md mx-1 mb-1" :class="{ 'active': currentView === 'list' }">物流委托管理</a>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+            <div class="p-4 bg-slate-950 text-xs text-slate-500 border-t border-slate-800 shrink-0">
+                <div>用户: 订单岗</div><div>版本: V5.9.70</div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 bg-gray-50">
+            <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 shadow-sm shrink-0 z-20 no-print">
+                <div class="flex items-center text-gray-500">
+                    <span class="mr-2">HTM</span> / <span class="mx-2">HHA物流委托</span> / <span class="ml-2 font-bold text-gray-800">{{ pageTitle }}</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center hover:bg-blue-200 transition"><i class="fa-regular fa-bell"></i></button>
+                    <div class="w-8 h-8 rounded-full bg-slate-700 text-white flex items-center justify-center font-bold">U</div>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-auto p-8 relative">
+                <div :class="{'show-watermark': showDraftWatermark}" class="watermark">DRAFT</div>
+                
+                <div class="pdf-header">订舱委托书 (Booking Confirmation)</div>
+
+                <div v-if="currentView === 'create'" class="max-w-7xl mx-auto space-y-6">
+                    <div class="flex items-center border-l-4 border-blue-600 pl-4 py-1">
+                        <h1 class="text-xl font-bold tracking-tight text-slate-900">新建物流委托</h1>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                         <div class="flex flex-wrap items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <label class="text-gray-700 font-medium whitespace-nowrap required-star">产品线</label>
+                                <select v-model="createFilters.productLine" class="w-40 h-10 border border-gray-300 rounded px-3 outline-none bg-white text-sm focus:ring-2 focus:ring-blue-500">
+                                    <option value="">-- 请选择 --</option>
+                                    <option v-for="opt in config.productLines" :value="opt.value">{{opt.label}}</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-2 flex-1 min-w-[250px]"><label class="text-gray-700 font-medium whitespace-nowrap">批次号</label><input v-model="createFilters.batchNo" type="text" placeholder="输入批次号 (最多50个)..." class="flex-1 h-10 border border-gray-300 rounded px-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm"></div>
+                            <div class="flex items-center gap-2"><label class="text-gray-700 font-medium whitespace-nowrap">部件类型</label><select v-model="createFilters.category" class="w-40 h-10 border border-gray-300 rounded px-3 outline-none bg-white text-sm focus:ring-2 focus:ring-blue-500"><option value="ALL">全部类型</option><option value="AC">移动空调</option><option value="EC">电控</option><option value="HE">两器</option></select></div>
+                            <div class="flex items-center h-10 px-2"><label class="flex items-center cursor-pointer select-none"><input type="checkbox" v-model="createFilters.showCompleted" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"><span class="ml-2 text-gray-700 text-sm font-medium whitespace-nowrap">显示已做数量</span></label></div>
+                            <button @click="searchGSS" class="bg-blue-600 text-white px-6 h-10 rounded hover:bg-blue-700 transition shadow-sm font-medium flex items-center"><i class="fa-solid fa-magnifying-glass mr-2"></i> 查询批次</button>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-3 w-10"><input type="checkbox" v-model="selectAllPage1" @change="toggleSelectAll('create')" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"></th>
+                                    <th class="px-6 py-3">批次号</th><th class="px-6 py-3">部件类型</th><th class="px-6 py-3">销售型号</th><th class="px-6 py-3">产品型号(原型)</th><th class="px-6 py-3">委托单号</th><th class="px-6 py-3 text-right">排产总量</th><th class="px-6 py-3 text-right">已做委托数量</th><th class="px-6 py-3 text-right">剩余可用量</th><th class="px-6 py-3 w-32 bg-blue-50/50 text-blue-700 font-semibold border-l pl-4">此次要做数量</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr v-for="item in sortedGssData" :key="item.id" :class="{'opacity-50 bg-slate-50': item.relatedDocs && item.relatedDocs !== '-', 'hover:bg-blue-50/30 transition': !item.relatedDocs || item.relatedDocs === '-'}">
+                                    <td class="px-6 py-4 align-middle"><input type="checkbox" :disabled="item.relatedDocs && item.relatedDocs !== '-'" v-model="item.checked" @change="toggleCheck(item)" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"></td>
+                                    <td class="px-6 py-4 font-mono font-medium text-slate-700 align-middle">{{ item.batchNo }}</td><td class="px-6 py-4 align-middle"><span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs border border-gray-200">{{ item.category }}</span></td><td class="px-6 py-4 text-gray-600 align-middle">{{ item.salesModel }}</td><td class="px-6 py-4 text-gray-600 align-middle">{{ item.productModel }}</td>
+                                    <td class="px-6 py-4 align-middle"><a v-if="item.relatedDocs && item.relatedDocs !== '-'" @click.prevent="jumpToEdit(item.relatedDocs)" href="#" class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs border border-blue-100 font-mono hover:bg-blue-100 hover:underline">{{ item.relatedDocs }}</a><span v-else class="text-gray-400">-</span></td>
+                                    <td class="px-6 py-4 text-right font-mono text-gray-500 align-middle">{{ item.total }}</td><td class="px-6 py-4 text-right font-mono text-gray-500 align-middle">{{ item.usedTotal }}</td><td class="px-6 py-4 text-right font-mono font-bold align-middle" :class="item.remaining > 0 ? 'text-green-600' : 'text-red-400'">{{ item.remaining }}</td>
+                                    <td class="px-4 py-3 border-l bg-slate-50/30 align-middle"><div class="relative qty-input-wrapper"><input type="number" v-model.number="item.inputQty" :disabled="item.relatedDocs && item.relatedDocs !== '-'" @input="validateQty(item)" class="w-full border rounded px-2 py-1 text-right font-mono focus:ring-2 outline-none transition-colors text-sm" :class="{'border-red-500 bg-red-50': item.hasError, 'border-blue-500 ring-1 ring-blue-500 bg-white': item.checked && !item.hasError && item.inputQty > 0, 'border-gray-300 bg-white': !item.checked && !item.hasError}"><div v-if="item.hasError" class="absolute right-0 -bottom-4 text-[10px] text-red-500 whitespace-nowrap">超量</div></div></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex justify-end pt-4"><button @click="goToEditFromCreate" :disabled="!hasValidSelection" :class="{'opacity-50 cursor-not-allowed': !hasValidSelection}" class="bg-blue-600 text-white px-8 py-3 rounded shadow-lg hover:bg-blue-700 transition flex items-center gap-2 text-base font-medium">创建委托单 <i class="fa-solid fa-arrow-right ml-1"></i></button></div>
+                </div>
+
+                <div v-if="currentView === 'edit'" class="max-w-[1600px] mx-auto space-y-6 pb-20">
+                    <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-0 z-30 no-print">
+                        <div class="flex items-center gap-4">
+                            <button @click="navigate('list')" class="text-gray-500 hover:text-gray-800 flex items-center gap-1 text-sm font-medium"><i class="fa-solid fa-arrow-left"></i> 返回列表</button>
+                            <div class="h-6 w-px bg-gray-300"></div>
+                            <div>
+                                <div class="text-xs text-gray-500">委托单号: <span class="font-mono text-gray-900 font-bold">{{ formData.commissionNo || '---' }}</span></div>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="status-badge" :class="statusBadgeClass">{{ statusMap[formData.status] }}</span>
+                                </div>
+                            </div>
+                            <button @click="showCommissionSearchModal=true" class="ml-2 bg-blue-50 text-blue-600 px-3 py-1 rounded text-xs border border-blue-200 hover:bg-blue-100"><i class="fa-solid fa-search mr-1"></i>查询单据</button>
+                        </div>
+                        <div class="flex gap-3">
+                            <button v-if="canSave" @click="referenceCreate" class="bg-purple-50 border border-purple-200 text-purple-600 px-4 py-2 rounded hover:bg-purple-100 shadow-sm text-sm font-medium">参考创建</button>
+                            
+                            <button @click="exportPDF" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 shadow-sm text-sm font-medium">导出 PDF</button>
+                            <button v-if="canSave" @click="saveDraft(false)" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-50 shadow-sm text-sm font-medium">暂存草稿</button>
+                            <button v-if="formData.status === 'EXECUTED'" @click="recallCommission" class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-2 rounded hover:bg-yellow-100 shadow-sm text-sm font-medium">撤回</button>
+                            <button v-if="canDelete" @click="deleteCommission" class="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded hover:bg-red-100 shadow-sm text-sm font-medium">删除单据</button>
+                            <button v-if="canSubmit" @click="submitCommission" :disabled="isSubmitting" :class="{'opacity-50 cursor-not-allowed': isSubmitting}" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 shadow-sm flex items-center text-sm font-medium">
+                                <i v-if="isSubmitting" class="fa-solid fa-spinner fa-spin mr-2"></i> 提交委托
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-sm font-bold text-blue-600 mb-4 flex items-center"><i class="fa-regular fa-file-lines mr-2"></i> 基础信息</h2>
+                        <div class="grid grid-cols-4 gap-6 mb-4">
+                            <div><span class="p2-label required-star">产品线</span><select v-model="formData.productLine" disabled class="p2-input input-readonly" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.productLine}"><option v-for="opt in config.productLines" :value="opt.value">{{opt.label}}</option></select></div>
+                            <div><span class="p2-label required-star">出口国家</span><select v-model="formData.country" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.country}"><option value="JP">日本</option><option value="UK">英国</option><option value="TH">泰国</option></select></div>
+                            <div><span class="p2-label required-star">生产基地</span><select v-model="formData.base" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.base}"><option value="HZ">湖州工厂</option><option value="QD">青岛工厂</option></select></div>
+                            <div><span class="p2-label required-star">报关主体</span><select v-model="formData.entity" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.entity}"><option value="HZ_ENT">海信(浙江)空调有限公司</option><option value="QD_ENT">海信(山东)空调有限公司</option></select></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-6 mb-4">
+                            <div><span class="p2-label required-star">销售组织</span><select v-model="formData.salesOrg" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.salesOrg}"><option value="HSHA">HSHA</option><option value="HTM">HTM</option></select></div>
+
+                            <div><span class="p2-label required-star">运输方式</span><select v-model="formData.transportMode" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.transportMode}"><option value="BY SEA">BY SEA</option><option value="BY AIR">BY AIR</option></select></div>
+                            <div><span class="p2-label">贸易方式</span><select v-model="formData.tradeMode" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.tradeMode}"><option v-for="opt in config.tradeModes" :value="opt.value">{{opt.label}}</option></select></div>
+                            <div><span class="p2-label required-star">价格条款</span><select v-model="formData.priceTerms" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.priceTerms}"><option value="EXW">EXW</option><option value="FOB">FOB</option><option value="CIF">CIF</option></select></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-6 mb-4">
+                            <div><span class="p2-label required-star">订单人</span><input type="text" v-model="formData.orderer" disabled class="p2-input input-readonly"></div>
+                            <div><span class="p2-label required-star">订舱人</span><select v-model="formData.booker" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.booker}"><option value="">-- 请选择 --</option><option v-for="name in config.bookers" :value="name">{{name}}</option></select></div>
+                            <div><span class="p2-label required-star">船期 (ETD)</span><input type="date" v-model="formData.etd" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.etd}"></div>
+                            <div><span class="p2-label required-star">落货日期 (Cut-off)</span><input type="date" v-model="formData.cutoff" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.cutoff}"></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-6 mb-4">
+                            <div><span class="p2-label required-star">起运港 (POL)</span><select v-model="formData.pol" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.pol}"><option value="HUZHOU">HUZHOU</option><option value="QINGDAO">QINGDAO</option></select></div>
+                            <div><span class="p2-label required-star">目的港 (POD)</span><select v-model="formData.pod" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.pod}"><option value="LAEM CHABANG">LAEM CHABANG</option><option value="FELIXSTOWE">FELIXSTOWE</option></select></div>
+                            <div><span class="p2-label">创建时间</span><input type="text" :value="formData.createTime" class="p2-input input-readonly" readonly></div>
+                            <div><span class="p2-label">更新时间</span><input type="text" :value="formData.updateTime" class="p2-input input-readonly" readonly></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-6 mb-4">
+                            <div><span class="p2-label">总柜量 (Total)</span><input type="text" :value="totalContainersString" class="p2-input input-readonly" readonly></div>
+                        </div>
+                        
+                        <div class="mt-4 border-t pt-4 grid grid-cols-2 gap-8">
+                            <div>
+                                <span class="p2-label required-star mb-2 block">箱型箱量录入</span>
+                                <div class="space-y-3">
+                                    <div v-for="(c, idx) in formData.containers" :key="idx" class="flex items-center gap-2">
+                                        <select v-model="c.type" @change="handleContainerTypeChange(idx, c.type)" class="p2-input w-32" :disabled="isReadOnly"><option>40HQ</option><option>20GP</option><option>NONE</option></select>
+                                        <span class="text-gray-400">×</span>
+                                        <input type="number" v-model="c.qty" class="p2-input w-24 text-center" :disabled="isReadOnly || c.type === 'NONE'">
+                                        <button @click="removeContainer(idx)" class="text-gray-400 hover:text-red-500 ml-2 no-print" :disabled="isReadOnly"><i class="fa-solid fa-trash-can text-lg"></i></button>
+                                    </div>
+                                    <button @click="addContainer" class="text-blue-600 text-sm font-bold flex items-center hover:underline no-print" :disabled="isReadOnly || isNoneContainerSelected"><i class="fa-solid fa-plus mr-1"></i>添加箱型</button>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="p2-label required-star block mb-2">装柜方案 (Loading Plan)</span>
+                                <textarea v-model="formData.loadingPlan" :disabled="isReadOnly" class="w-full border border-gray-300 rounded p-2 text-sm h-24 resize-none" placeholder="输入装柜方案..." :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.loadingPlan}"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                         <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                            <h3 class="font-bold text-blue-600 flex items-center gap-2"><i class="fa-solid fa-layer-group"></i> 批次明细</h3>
+                            <div class="flex gap-2">
+                                <button @click="exportBatchDetails" class="bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm font-bold hover:bg-gray-50 no-print" :disabled="isReadOnly"><i class="fa-solid fa-file-export mr-1"></i>导出明细</button>
+                                <button @click="openImportModal" class="bg-white border border-green-500 text-green-600 px-3 py-1.5 rounded text-sm font-bold hover:bg-green-50 no-print" :disabled="isReadOnly"><i class="fa-solid fa-file-import mr-1"></i>导入批次 (Import)</button>
+                                <button @click="openAddBatchModal" class="bg-white border border-blue-500 text-blue-600 px-3 py-1.5 rounded text-sm font-bold hover:bg-blue-50 no-print" :disabled="isReadOnly">+ 添加批次 (Add Batch)</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200 whitespace-nowrap">
+                                    <tr>
+                                        <th class="compact-cell">滚动计划号</th><th class="compact-cell">部件类型</th><th class="compact-cell text-center">排产/已做</th><th class="compact-cell text-center w-24 bg-blue-50">此次数量</th>
+                                        <th class="compact-cell">产品编码 (PLM)</th><th class="compact-cell">客户型号</th><th class="compact-cell">产品型号(原型)</th><th class="compact-cell">币种</th>
+                                        <th class="compact-cell text-center w-24">报关单价</th><th class="compact-cell text-right">报关总价</th>
+                                        <th class="compact-cell text-center w-24 text-blue-600">HSHA单价</th><th class="compact-cell text-right font-bold text-blue-600">HSHA总价</th>
+                                        <th class="compact-cell text-center w-24">加价率%</th>
+                                        <th class="compact-cell text-center no-print">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    <tr v-for="(item, idx) in formData.items" :key="item.id" class="hover:bg-gray-50">
+                                        <td class="compact-cell font-mono">{{ item.batchNo }}</td><td class="compact-cell">{{ item.category }}</td><td class="compact-cell text-center text-gray-500">{{ item.totalPlan }}/{{ item.used }}</td>
+                                        
+                                        <td class="compact-cell text-center bg-blue-50/30">
+                                            <div class="flex items-center justify-center gap-1">
+                                                <input type="number" v-model.number="item.tempQty" v-if="item.isEditing" class="w-16 border border-blue-500 rounded px-1 py-0.5 text-center font-bold text-blue-700 outline-none">
+                                                <span v-else class="font-bold text-blue-700 cursor-pointer border-b border-dashed border-blue-500" @click="startEditQty(item)">{{ item.qty }}</span>
+                                                <button v-if="item.isEditing" @click="confirmQty(item)" class="text-green-600 hover:text-green-800 no-print"><i class="fa-solid fa-check"></i></button>
+                                                <button v-if="item.isEditing" @click="cancelQty(item)" class="text-gray-400 hover:text-gray-600 no-print"><i class="fa-solid fa-xmark"></i></button>
+                                            </div>
+                                        </td>
+                                        
+                                        <td class="compact-cell font-mono text-gray-500">{{ item.plmCode }}</td><td class="compact-cell font-bold">{{ item.salesModel }}</td><td class="compact-cell text-gray-500">{{ item.productModel }}</td>
+                                        <td class="compact-cell font-mono">
+                                            <select v-model="item.currency" :disabled="isReadOnly" class="border rounded px-1 py-0.5 text-xs outline-none focus:border-blue-500 bg-transparent">
+                                                <option value="CNY">CNY</option>
+                                                <option value="USD">USD</option>
+                                                <option value="EUR">EUR</option>
+                                            </select>
+                                        </td>
+                                        
+                                        <td class="compact-cell text-center"><input type="number" v-model.number="item.customsPrice" :disabled="isReadOnly" class="w-20 border border-gray-300 rounded px-1 py-1 text-center font-mono focus:ring-1 focus:ring-blue-500"><div class="p2-helper-text">SAP获取</div></td>
+                                        <td class="compact-cell text-right font-mono text-gray-600">{{ (item.customsPrice * item.qty).toFixed(2) }}</td>
+                                        
+                                        <td class="compact-cell text-center"><div class="bg-blue-50 border border-blue-100 rounded px-1 py-1 text-center font-mono text-blue-600">{{ ((item.customsPrice * item.qty * (1 + item.markupRate/100)) / (item.qty || 1)).toFixed(2) }}</div></td>
+                                        <td class="compact-cell text-right font-mono font-bold text-blue-600">{{ (item.customsPrice * item.qty * (1 + item.markupRate/100)).toFixed(2) }}</td>
+                                        
+                                        <td class="compact-cell text-center"><input type="number" v-model.number="item.markupRate" :disabled="isReadOnly" class="w-16 border border-gray-300 rounded px-1 py-1 text-center font-mono focus:ring-1 focus:ring-blue-500"><div class="p2-helper-text">支持负数</div></td>
+                                        
+                                        <td class="compact-cell text-center no-print">
+                                            <div class="flex gap-2 justify-center">
+                                                <button @click="confirmSync(item)" title="从GSS/SAP拉取最新价格和批次信息" class="text-blue-600 hover:text-blue-800 text-xs font-medium" :disabled="isReadOnly">同步</button>
+                                                <span class="text-gray-300">|</span>
+                                                <button @click="removeItem(idx)" title="删除此批次" class="text-red-600 hover:text-red-800 text-xs font-medium" :disabled="isReadOnly">删除</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-6 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-6">
+                            <div class="bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm cursor-pointer hover:shadow-md transition" @click="copyToClipboard(customsTotalString)">
+                                <div class="text-xs text-gray-400 uppercase font-bold tracking-wider">报关总额 (Customs)</div>
+                                <div class="text-xl font-mono font-bold text-gray-700">{{ customsTotalString }}</div>
+                            </div>
+                             <div class="bg-blue-600 border border-blue-700 rounded-lg px-4 py-2 shadow-sm cursor-pointer hover:bg-blue-700 transition" @click="copyToClipboard(hshaTotalString)">
+                                <div class="text-xs text-blue-200 uppercase font-bold tracking-wider">HSHA 总额 (Total)</div>
+                                <div class="text-xl font-mono font-bold text-white">{{ hshaTotalString }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-for="cat in uniqueCategories" :key="cat" class="info-box info-box-blue mt-6">
+                        <div class="bg-section-header flex justify-between items-center mb-4">
+                            <h3 class="text-blue-600 font-bold flex items-center gap-2"><i class="fa-solid fa-circle-info"></i> {{ cat }} - 备注事项</h3>
+                            <div class="flex items-center gap-2">
+                                <select v-model="selectedNoteTemplates[cat]" @change="applyNotesTemplate(cat)" class="template-select"><option value="">-- 选择模板 --</option><option v-for="(tpl, key) in notesTemplates" :key="key" :value="key">{{ key }}</option></select>
+                                <span class="save-tpl-btn" @click="updateTemplate('note', cat)">保存修改</span>
+                                <span class="save-tpl-btn" @click="openSaveTemplateModal('note', cat)">+ 存为新模板</span>
+                                <span class="reset-btn text-red-500 hover:text-red-700" @click="deleteTemplate('note', cat)">删除模板</span>
+                                <span class="reset-btn" @click="resetNotes(cat)"><i class="fa-solid fa-eraser mr-1"></i>重置</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-6">
+                            <div><span class="p2-label">船务注意事项</span><textarea v-model="formData.notes[cat].shipping" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.notes[cat].shipping}"></textarea></div>
+                            <div><span class="p2-label">发货注意事项</span><textarea v-model="formData.notes[cat].delivery" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.notes[cat].delivery}"></textarea></div>
+                            <div><span class="p2-label">单证注意事项</span><textarea v-model="formData.notes[cat].docs" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.notes[cat].docs}"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div class="info-box mt-6">
+                        <div class="bg-section-header flex justify-between items-center mb-4">
+                            <h3 class="text-blue-600 font-bold flex items-center gap-2"><i class="fa-solid fa-address-card"></i> 收发通信息 (Parties)</h3>
+                            <div class="flex items-center gap-2">
+                                <select v-model="selectedPartyTemplate" @change="applyPartyTemplate" class="template-select"><option value="">-- 选择模板 --</option><option v-for="(tpl, key) in partyTemplates" :key="key" :value="key">{{ key }}</option></select>
+                                <span class="save-tpl-btn" @click="updateTemplate('party')">保存修改</span>
+                                <span class="save-tpl-btn" @click="openSaveTemplateModal('party')">+ 存为新模板</span>
+                                <span class="reset-btn text-red-500 hover:text-red-700" @click="deleteTemplate('party')">删除模板</span>
+                                <span class="reset-btn" @click="resetParties"><i class="fa-solid fa-eraser mr-1"></i>重置</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-6">
+                             <div><span class="p2-label required-star">发货人 (Shipper)</span><textarea v-model="formData.shipper" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.shipper}"></textarea></div>
+                             <div><span class="p2-label required-star">收货人 (Consignee)</span><textarea v-model="formData.consignee" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.consignee}"></textarea></div>
+                             <div><span class="p2-label required-star">通知人 (Notify Party)</span><textarea v-model="formData.notifyParty" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.notifyParty}"></textarea></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="currentView === 'list'" class="max-w-full mx-auto space-y-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <div class="grid grid-cols-4 gap-4 mb-4">
+                            <div><label class="block text-xs text-gray-500 mb-1">委托单号</label><input type="text" class="w-full border rounded px-3 py-2"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">状态</label><select class="w-full border rounded px-3 py-2"><option>全部</option><option>执行</option><option>草稿</option></select></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">批次号</label><input type="text" class="w-full border rounded px-3 py-2"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">起运港</label><select class="w-full border rounded px-3 py-2"><option>全部</option></select></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-4 mb-4">
+                            <div><label class="block text-xs text-gray-500 mb-1">船期</label><input type="date" class="w-full border rounded px-3 py-2"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">创建时间</label><input type="date" class="w-full border rounded px-3 py-2"></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">订单人</label><select class="w-full border rounded px-3 py-2"><option value="">全部</option><option v-for="name in config.orderers" :value="name">{{name}}</option></select></div>
+                            <div><label class="block text-xs text-gray-500 mb-1">订舱人</label><select class="w-full border rounded px-3 py-2"><option value="">全部</option><option v-for="name in config.bookers" :value="name">{{name}}</option></select></div>
+                        </div>
+                        <div class="flex justify-end gap-2"><button class="px-4 py-2 bg-gray-100 rounded">重置</button><button class="px-4 py-2 bg-blue-600 text-white rounded">查询</button></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                            <h2 class="font-bold text-gray-700">物流委托列表</h2>
+                            <div class="flex gap-2">
+                                <button class="bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs font-bold hover:bg-gray-50">按物流委托导出</button>
+                                <button class="bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs font-bold hover:bg-gray-50">按批次导出</button>
+                                <button class="bg-green-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-green-700"><i class="fa-solid fa-ship mr-1"></i>订舱</button>
+                                <button @click="navigate('create')" class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700">新建</button>
+                            </div>
+                        </div>
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-600 border-b">
+                                <tr>
+                                    <th class="px-4 py-3 w-10"><input type="checkbox" v-model="selectAllPage3" class="w-4 h-4 text-blue-600 border-gray-300 rounded"></th>
+                                    <th class="px-4 py-3">委托单号</th><th class="px-4 py-3">状态</th><th class="px-4 py-3">包含批次</th><th class="px-4 py-3">运输方式</th><th class="px-4 py-3">起运港</th><th class="px-4 py-3">目的港</th><th class="px-4 py-3">船期</th><th class="px-4 py-3 text-right">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="doc in listData" :key="doc.id" class="hover:bg-blue-50/30 cursor-pointer" @click="editDoc(doc)">
+                                    <td class="px-4 py-3"><input type="checkbox" v-model="doc.checked" class="w-4 h-4 text-blue-600 border-gray-300 rounded"></td>
+                                    <td class="px-4 py-3 font-medium text-blue-600">{{ doc.id }}</td>
+                                    <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs font-bold" :class="doc.status === 'EXECUTED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'">{{ statusMap[doc.status] }}</span></td>
+                                    <td class="px-4 py-3"><div class="flex gap-1"><span v-for="b in doc.batches" class="bg-gray-100 px-1 rounded text-xs border">{{ b }}</span></div></td>
+                                    <td class="px-4 py-3 text-gray-500"><i :class="doc.transport === 'BY SEA' ? 'fa-solid fa-ship' : 'fa-solid fa-plane'"></i> {{ doc.transport }}</td>
+                                    <td class="px-4 py-3">{{ doc.pol }}</td><td class="px-4 py-3">{{ doc.pod }}</td><td class="px-4 py-3">{{ doc.etd }}</td>
+                                    <td class="px-4 py-3 text-right"><button class="text-blue-600 hover:text-blue-800 text-xs px-2 py-1 border border-blue-200 rounded" @click.stop="editDoc(doc)">详情</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="px-6 py-4 border-t flex justify-between items-center">
+                            <span class="text-xs text-gray-500">显示 1-4 条，共 4 条</span>
+                            <div class="flex gap-2 items-center">
+                                <select v-model="pagination.pageSize" class="border rounded px-2 py-1 text-xs bg-white text-gray-600 outline-none"><option value="10">10 条/页</option><option value="20">20 条/页</option><option value="50">50 条/页</option><option value="100">100 条/页</option></select>
+                                <div class="flex gap-1"><button class="px-3 py-1 border rounded text-xs">上一页</button><button class="px-3 py-1 border rounded text-xs">下一页</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+        
+        <div v-if="showAddBatchModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+             <div class="bg-white rounded-lg shadow-xl w-[900px] max-h-[80vh] flex flex-col">
+                <div class="p-4 border-b flex justify-between items-center"><h3 class="font-bold">添加批次明细 ({{ formData.productLine }})</h3><button @click="showAddBatchModal=false"><i class="fa-solid fa-xmark"></i></button></div>
+                <div class="p-4 bg-gray-50 border-b flex gap-2">
+                    <input v-model="modalSearchQuery" type="text" placeholder="输入批次号 (支持逗号分割)..." class="border rounded px-3 py-2 flex-1"><button @click="modalSearchBatch" class="bg-blue-600 text-white px-4 rounded">查询</button>
+                </div>
+                <div class="overflow-y-auto flex-1 p-0">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-100 text-gray-600 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-2 w-10"><input type="checkbox" v-model="selectAllModal" @change="toggleSelectAllModal"></th>
+                                <th class="px-4 py-2">批次</th>
+                                <th class="px-4 py-2">类型</th>
+                                <th class="px-4 py-2 text-right">排产</th>
+                                <th class="px-4 py-2 text-right">已做</th>
+                                <th class="px-4 py-2 text-right">剩余</th>
+                                <th class="px-4 py-2 w-32">此次数量</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="mItem in modalBatchData" :key="mItem.id" class="border-b">
+                                <td class="px-4 py-2"><input type="checkbox" v-model="mItem.checked" @change="toggleModalRowCheck(mItem)"></td>
+                                <td class="px-4 py-2 font-mono">{{ mItem.batchNo }}</td><td class="px-4 py-2">{{ mItem.category }}</td>
+                                <td class="px-4 py-2 text-right text-gray-500">{{ mItem.total }}</td><td class="px-4 py-2 text-right text-gray-500">{{ mItem.used }}</td>
+                                <td class="px-4 py-2 text-right font-bold text-green-600">{{ mItem.remaining }}</td>
+                                <td class="px-4 py-2"><input type="number" v-model.number="mItem.inputQty" @input="monitorModalQty(mItem)" class="border rounded w-full px-2 py-1 text-right"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 border-t flex justify-end gap-3">
+                    <button @click="showAddBatchModal=false" class="px-4 py-2 border rounded">取消</button>
+                    <button @click="confirmAddBatchItems" class="px-4 py-2 bg-blue-600 text-white rounded">确认添加</button>
+                </div>
+             </div>
+        </div>
+
+        <div v-if="showImportModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-xl w-[600px] flex flex-col">
+                <div class="p-4 border-b flex justify-between items-center"><h3 class="font-bold">批量导入批次 (Import)</h3><button @click="showImportModal=false"><i class="fa-solid fa-xmark"></i></button></div>
+                <div class="p-6 space-y-4">
+                    <div class="bg-blue-50 border border-blue-200 p-3 rounded text-sm text-blue-700">
+                        <i class="fa-solid fa-circle-info mr-2"></i>说明：单次最多上传 99 行数据。校验失败将无法导入。
+                    </div>
+                    <div class="flex gap-4 items-center">
+                        <button @click="downloadTemplate" class="text-blue-600 underline text-sm">下载 Excel 模板</button>
+                    </div>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition" @click="$refs.fileInput.click()">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
+                        <div class="text-sm text-gray-600">点击上传文件 (.xlsx, .csv)</div>
+                        <input type="file" ref="fileInput" class="hidden" @change="handleFileUpload">
+                    </div>
+                    <div v-if="importPreview.length > 0" class="border rounded max-h-40 overflow-y-auto">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-gray-50"><tr><th class="p-2">批次</th><th class="p-2">类型</th><th class="p-2 text-right">数量</th></tr></thead>
+                            <tbody><tr v-for="(row, i) in importPreview" :key="i" class="border-t"><td class="p-2">{{row.batch}}</td><td class="p-2">{{row.cat}}</td><td class="p-2 text-right">{{row.qty}}</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="p-4 border-t flex justify-end gap-3">
+                    <button @click="showImportModal=false" class="px-4 py-2 border rounded">取消</button>
+                    <button @click="confirmImport" class="px-4 py-2 bg-green-600 text-white rounded">开始导入</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showSyncConfirmModal" class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center">
+             <div class="bg-white rounded-lg shadow-xl w-[400px] p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">确认同步数据？</h3><p class="text-gray-500 text-sm mb-4">此操作将从 GSS 和 SAP 拉取最新价格，并覆盖当前批次数据。</p>
+                <div class="flex justify-end gap-3"><button @click="showSyncConfirmModal=false" class="px-4 py-2 border rounded">取消</button><button @click="executeSync" class="px-4 py-2 bg-blue-600 text-white rounded">确定同步</button></div>
+             </div>
+        </div>
+
+        <div v-if="showCommissionSearchModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-xl w-[500px] p-6">
+                <h3 class="font-bold text-lg mb-4">查询物流委托</h3>
+                <div class="mb-4">
+                    <input v-model="commissionSearchQuery" type="text" class="w-full border p-2 rounded" placeholder="输入委托单号 (如 HA202512001)...">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button @click="showCommissionSearchModal=false" class="border px-4 py-2 rounded text-gray-600">取消</button>
+                    <button @click="searchAndLoadCommission" class="bg-blue-600 text-white px-4 py-2 rounded">查询并加载</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showSaveTemplateModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"><div class="bg-white p-6 rounded w-[400px]"><h3 class="font-bold mb-4">存为新模板</h3><input v-model="newTemplateName" class="border w-full p-2 mb-4" placeholder="名称..."><div class="flex justify-end gap-2"><button @click="showSaveTemplateModal=false" class="border px-4 py-2 rounded">取消</button><button @click="confirmSaveTemplate" class="bg-blue-600 text-white px-4 py-2 rounded">保存</button></div></div></div>
+
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    currentView: 'create', selectAllPage1: false, selectAllPage3: false, 
+                    // [Hotfix] Added productLine to createFilters
+                    createFilters: { batchNo: '', category: 'ALL', showCompleted: false, productLine: '' },
+                    isSubmitting: false,
+                    showCommissionSearchModal: false,
+                    commissionSearchQuery: '',
+                    showValidationErrors: false, 
+                    syncTargetItem: null,
+                    selectAllModal: false,
+                    showAddBatchModal: false,
+                    modalSearchQuery: '',
+                    modalBatchData: [],
+                    
+                    // Import Feature Data
+                    showImportModal: false,
+                    importPreview: [],
+                    
+                    // Template Editing State
+                    selectedPartyTemplate: '',
+                    selectedNoteTemplates: {},
+
+                    // Configs (Hotfix Added)
+                    config: {
+                        productLines: [
+                            { label: '空调', value: 'AC' },
+                            { label: '冰箱', value: 'REF' },
+                            { label: '冷柜', value: 'FRZ' },
+                            { label: '洗衣机', value: 'WASH' }
+                        ],
+                        tradeModes: [
+                            { label: '一般贸易', value: 'General' },
+                            { label: '货样广告', value: 'Sample' }
+                        ],
+                        orderers: ['辛海洋', '李进键'],
+                        bookers: ['郭美芹', '马筱然', '张暖']
+                    },
+
+                    gssData: [
+                        { id: 1, batchNo: 'K8FVX', category: '移动空调', salesModel: 'AP0722CW1W', productModel: 'YAP0722', total: 3000, usedTotal: 3000, remaining: 0, relatedDocs: 'HA202511099, HA202511100', inputQty: 0, checked: false, hasError: false, base: 'HZ', entity: 'HZ_ENT', salesOrg: 'HSHA' },
+                        { id: 2, batchNo: 'K9GTY', category: '两器', salesModel: 'HE-COOL-01', productModel: 'HE-PROTO', total: 1000, usedTotal: 1000, remaining: 0, relatedDocs: 'HA202511088', inputQty: 0, checked: false, hasError: false, base: 'HZ', entity: 'HZ_ENT', salesOrg: 'HSHA' },
+                        { id: 3, batchNo: 'L2MNO', category: '电控', salesModel: 'EC-X', productModel: 'EC-V1', total: 5000, usedTotal: 0, remaining: 5000, relatedDocs: '-', inputQty: 0, checked: false, hasError: false, base: 'QD', entity: 'QD_ENT', salesOrg: 'HSHA' },
+                        { id: 4, batchNo: 'P5QRS', category: '移动空调', salesModel: 'AP0999', productModel: 'YAP0999', total: 200, usedTotal: 0, remaining: 200, relatedDocs: '-', inputQty: 0, checked: false, hasError: false, base: 'HZ', entity: 'HZ_ENT', salesOrg: 'HSHA' },
+                        { id: 5, batchNo: 'X8YZW', category: '模具', salesModel: 'MO-001', productModel: 'MO-Proto', total: 10, usedTotal: 0, remaining: 10, relatedDocs: '-', inputQty: 0, checked: false, hasError: false, base: 'QD', entity: 'QD_ENT', salesOrg: 'HSHA' },
+                        { id: 6, batchNo: 'B222A', category: '移动空调', salesModel: 'B222', productModel: 'P222', total: 1000, usedTotal: 0, remaining: 1000, relatedDocs: '-', inputQty: 0, checked: false, hasError: false, base: 'HZ', entity: 'HZ_ENT', salesOrg: 'HSHA' },
+                        { id: 7, batchNo: 'B333B', category: '电控', salesModel: 'B333', productModel: 'P333', total: 500, usedTotal: 0, remaining: 500, relatedDocs: '-', inputQty: 0, checked: false, hasError: false, base: 'QD', entity: 'QD_ENT', salesOrg: 'HSHA' }
+                    ],
+                    formData: { 
+                        commissionNo: '', status: 'NONE', 
+                        productLine: '', country: 'TH', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'EXW', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
+                        orderer: 'Current User', // [Hotfix] Set to current user fixed string
+                        booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
+                        items: [], 
+                        notes: {}, 
+                        etd: '', cutoffDate: '', pol: '', pod: '', shipper: '', consignee: '', notifyParty: '' 
+                    },
+                    partyTemplates: { 
+                        "泰国海信标准": { shipper: "HISENSE (THAILAND) CO., LTD.\nNO. 123 BANGNA-TRAD ROAD...", consignee: "THAI DISTRIBUTOR CO., LTD.", notify: "SAME AS CONSIGNEE" }, 
+                        "日本海信": { shipper: "HISENSE JAPAN CORPORATION\nTOKYO, JAPAN", consignee: "JAPAN RETAIL GROUP", notify: "LOGISTICS PARTNER JP" },
+                        "英国海信": { shipper: "HISENSE UK LTD\nLEEDS, UK", consignee: "BRITISH APPLIANCES LTD", notify: "UK FORWARDER INC" }
+                    },
+                    notesTemplates: { 
+                        "标准模板": { shipping: "Original BL required.", delivery: "Handle with care.", docs: "Invoice, Packing List" },
+                        "紧急空运": { shipping: "Urgent Air Freight. Do not stack.", delivery: "Immediate delivery upon arrival.", docs: "Express release" },
+                        "危险品": { shipping: "DG Class 9. Label required.", delivery: "DG Warehouse only.", docs: "MSDS attached" }
+                    },
+                    listData: [ 
+                        { id: 'HA202512001', status: 'EXECUTED', batches: ['K8FVX'], transport: 'BY SEA', pol: 'HUZHOU', pod: 'LAEM CHABANG', etd: '2025-12-20', checked: false },
+                        { id: 'HA202512002', status: 'DRAFT', batches: ['L2MNO', 'P5QRS'], transport: 'BY AIR', pol: 'QINGDAO', pod: 'FELIXSTOWE', etd: '2025-12-25', checked: false },
+                        { id: 'HA202512003', status: 'RECALLED', batches: ['X8YZW'], transport: 'BY SEA', pol: 'HUZHOU', pod: 'LAEM CHABANG', etd: '2025-12-30', checked: false },
+                        { id: 'HA202512004', status: 'EXECUTED', batches: ['B222A', 'B333B', 'K9GTY'], transport: 'BY SEA', pol: 'QINGDAO', pod: 'LAEM CHABANG', etd: '2026-01-05', checked: false }
+                    ],
+                    pagination: { pageSize: 10 },
+                    showSaveTemplateModal: false, newTemplateName: '', saveTemplateType: '', saveTemplateCategory: '', showDraftWatermark: false, 
+                    statusMap: { 'NONE': '新单据', 'DRAFT': '草稿', 'EXECUTED': '执行', 'RECALLED': '撤回', 'DELETED': '已删除' }
+                }
+            },
+            computed: {
+                pageTitle() { if (this.currentView === 'create') return '新建物流委托'; if (this.currentView === 'edit') return '编辑物流委托'; return '物流委托管理'; },
+                hasValidSelection() { return this.gssData.some(i => i.checked && i.inputQty > 0 && !i.hasError); },
+                isReadOnly() { return this.formData.status === 'EXECUTED' || this.formData.status === 'DELETED'; },
+                canSave() { return ['NONE', 'DRAFT', 'RECALLED'].includes(this.formData.status); },
+                canSubmit() { return ['DRAFT', 'RECALLED'].includes(this.formData.status); },
+                canDelete() { return ['DRAFT', 'RECALLED', 'EXECUTED'].includes(this.formData.status); },
+                
+                statusBadgeClass() { 
+                    const s = this.formData.status;
+                    if (s === 'DRAFT') return 'status-draft';
+                    if (s === 'EXECUTED') return 'status-executed';
+                    if (s === 'RECALLED') return 'status-recalled';
+                    if (s === 'DELETED') return 'status-deleted';
+                    return 'status-none';
+                },
+                
+                isNoneContainerSelected() { return this.formData.containers.some(c => c.type === 'NONE'); },
+                totalContainersString() {
+                    if (this.formData.containers.some(c => c.type === 'NONE')) return 'NONE';
+                    const counts = {};
+                    this.formData.containers.forEach(c => { if (!counts[c.type]) counts[c.type] = 0; counts[c.type] += (c.qty || 0); });
+                    return Object.entries(counts).map(([type, qty]) => `${type}*${qty}`).join(', ');
+                },
+                customsTotalString() { const totals = {}; this.formData.items.forEach(item => { const amt = item.customsPrice * (item.qty || 0); if (!totals[item.currency]) totals[item.currency] = 0; totals[item.currency] += amt; }); const parts = Object.keys(totals).map(curr => `${this.formatMoney(totals[curr])} ${curr}`); return parts.length > 0 ? parts.join(' + ') : '0.00'; },
+                
+                // [Hotfix] Updated HSHA Total Calculation Logic: CustomsTotal * (1 + Markup)
+                hshaTotalString() { 
+                    const totals = {}; 
+                    this.formData.items.forEach(item => { 
+                        const customsTotal = item.customsPrice * (item.qty || 0);
+                        const hshaTotal = customsTotal * (1 + (item.markupRate || 0) / 100); 
+                        if (!totals[item.currency]) totals[item.currency] = 0; 
+                        totals[item.currency] += hshaTotal; 
+                    }); 
+                    const parts = Object.keys(totals).map(curr => `${this.formatMoney(totals[curr])} ${curr}`); 
+                    return parts.length > 0 ? parts.join(' + ') : '0.00'; 
+                },
+                
+                sortedGssData() { 
+                    let data = [...this.gssData];
+                    if (!this.createFilters.showCompleted) {
+                         data = data.filter(item => !item.relatedDocs || item.relatedDocs === '-');
+                    }
+                    return data.sort((a, b) => b.remaining - a.remaining);
+                },
+                uniqueCategories() { return [...new Set(this.formData.items.map(item => item.category))]; }
+            },
+            watch: { selectAllPage3(val) { this.listData.forEach(d => d.checked = val); }, 'formData.items': { handler(newItems) { const cats = new Set(newItems.map(i => i.category)); cats.forEach(cat => { if (!this.formData.notes[cat]) { this.formData.notes[cat] = { shipping: '', delivery: '', docs: '' }; } }); }, deep: true } },
+            methods: {
+                navigate(view, mode) { 
+                    this.currentView = view; 
+                    if (view === 'create') { 
+                        this.gssData.forEach(i => { i.checked = false; i.inputQty = 0; i.hasError = false; }); 
+                        this.selectAllPage1 = false;
+                        // [Hotfix] Reset create filters slightly but keep defaults if needed
+                        this.createFilters.batchNo = '';
+                    }
+                    if (view === 'edit' && mode === 'direct') {
+                        this.resetFormData();
+                        this.formData.status = 'NONE';
+                    }
+                },
+                
+                // Helper to simulate fetching current GSS totals for validation
+                async fetchGSS_Total(items) {
+                    console.log("Fetching fresh GSS totals for validation...");
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            // Mock logic: return current known totals
+                            // In real app, this would hit API.
+                            const results = items.map(i => ({ batchNo: i.batchNo, total: i.totalPlan, used: i.used }));
+                            resolve(results);
+                        }, 200);
+                    });
+                },
+
+                // Helper to simulate SAP Price fetch
+                async fetchSAP_Price(items) {
+                    console.log("Fetching SAP prices...");
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            // Mock return default price
+                            resolve(150.00); 
+                        }, 300);
+                    });
+                },
+
+                goToEditFromCreate() {
+                    const selected = this.gssData.filter(i => i.checked && i.inputQty > 0);
+
+                    const hasOverQtyError = this.gssData.some(i => i.hasError);
+                    if (hasOverQtyError) {
+                        alert("创建委托单失败：请修正所有超量输入的批次数量。");
+                        return;
+                    }
+                    if (selected.length === 0) {
+                        alert("请至少选择一个批次并输入数量。");
+                        return;
+                    }
+
+                    this.resetFormData();
+                    
+                    // [Hotfix] Inherit Product Line from Page 1 Filters
+                    this.formData.productLine = this.createFilters.productLine;
+                    this.formData.country = 'TH';
+                    this.formData.transportMode = 'BY SEA';
+                    this.formData.priceTerms = 'EXW';
+
+                    const uniqueBases = [...new Set(selected.map(i => i.base))];
+                    const uniqueEntities = [...new Set(selected.map(i => i.entity))];
+                    const uniqueSalesOrgs = [...new Set(selected.map(i => i.salesOrg))];
+                    
+                    this.formData.base = uniqueBases.length === 1 ? uniqueBases[0] : '';
+                    this.formData.entity = uniqueEntities.length === 1 ? uniqueEntities[0] : '';
+                    this.formData.salesOrg = uniqueSalesOrgs.length === 1 ? uniqueSalesOrgs[0] : '';
+
+                    // Trigger SAP fetch simulation
+                    this.fetchSAP_Price(selected).then(price => {
+                        selected.forEach(i => {
+                            this.formData.items.push({
+                                id: Date.now() + Math.random(),
+                                batchNo: i.batchNo, category: i.category, plmCode: 'MOCK-PLM', salesModel: i.salesModel, productModel: i.productModel, totalPlan: i.total, used: i.usedTotal + i.inputQty,
+                                currency: 'CNY', customsPrice: price, markupRate: 10, qty: i.inputQty, remaining: i.remaining - i.inputQty, 
+                                base: i.base, entity: i.entity, salesOrg: 'HSHA', isEditing: false, tempQty: 0
+                            });
+                            // Mock updating GSS local view
+                            i.usedTotal += i.inputQty;
+                            i.remaining -= i.inputQty;
+                            i.inputQty = 0;
+                            i.checked = false;
+                            i.hasError = false;
+                        });
+                        this.formData.status = 'DRAFT';
+                        this.currentView = 'edit';
+                    });
+                },
+                
+                resetFormData() {
+                    this.formData = { 
+                        commissionNo: '', status: 'NONE', 
+                        productLine: '', country: 'TH', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'EXW', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
+                        orderer: 'Current User', // [Hotfix] Set to current user fixed string
+                        booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
+                        items: [], 
+                        notes: {}, 
+                        etd: '', cutoffDate: '', pol: '', pod: '', shipper: '', consignee: '', notifyParty: '' 
+                    };
+                    this.showValidationErrors = false; 
+                    this.selectedPartyTemplate = '';
+                    this.selectedNoteTemplates = {};
+                },
+                resetParties() { this.formData.shipper = ''; this.formData.consignee = ''; this.formData.notifyParty = ''; this.selectedPartyTemplate = ''; },
+                resetNotes(cat) { if(this.formData.notes[cat]) { this.formData.notes[cat].shipping = ''; this.formData.notes[cat].delivery = ''; this.formData.notes[cat].docs = ''; this.selectedNoteTemplates[cat] = ''; } },
+
+                formatMoney(num) { return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
+                searchGSS() { 
+                    // [Hotfix] Added Validation for Product Line
+                    if (!this.createFilters.productLine) {
+                        alert("请先选择产品线");
+                        return;
+                    }
+
+                    const batches = this.createFilters.batchNo.split(',').filter(b => b.trim());
+                    // [Hotfix] Changed limit 10 -> 50
+                    if (batches.length > 50) {
+                        alert("单次查询最多支持50个批次");
+                        return;
+                    }
+                    alert("模拟查询 GSS 接口 (已携带产品线: " + this.createFilters.productLine + ")..."); 
+                },
+                
+                toggleSelectAll(view) { 
+                    if (view === 'create') {
+                        this.gssData.forEach(item => { 
+                            const isDoable = !item.relatedDocs || item.relatedDocs === '-';
+                            if (isDoable && item.remaining > 0) {
+                                item.checked = this.selectAllPage1; 
+                                if (item.checked) {
+                                    item.inputQty = item.remaining;
+                                    item.hasError = false;
+                                } else {
+                                    item.inputQty = 0;
+                                    item.hasError = false;
+                                }
+                            }
+                        }); 
+                    }
+                    if (view === 'list') this.listData.forEach(doc => doc.checked = this.selectAllPage3); 
+                },
+                
+                toggleCheck(item) { if (item.checked) { item.inputQty = item.remaining; item.hasError = false; } else { item.inputQty = 0; item.hasError = false; } },
+                validateQty(item) { 
+                    if (item.inputQty < 0 || isNaN(item.inputQty)) {
+                        item.inputQty = 0;
+                    }
+                    
+                    if (item.inputQty > item.remaining) {
+                        item.hasError = true; 
+                    } else {
+                        item.hasError = false; 
+                    }
+
+                    if (item.inputQty > 0 && !item.hasError) {
+                        item.checked = true; 
+                    } else if (item.inputQty === 0) {
+                        item.checked = false; 
+                    }
+                },
+                
+                searchAndLoadCommission() {
+                    if (!this.commissionSearchQuery) { alert("请输入单号"); return; }
+                    this.resetFormData();
+                    this.formData.commissionNo = this.commissionSearchQuery;
+                    this.formData.status = 'DRAFT'; 
+                    this.formData.productLine = 'AC'; // Mock loaded product line
+                    this.formData.items = [
+                         { id: 99, batchNo: 'LOADED-01', category: 'AC', plmCode: 'L-01', salesModel: 'L-SM', productModel: 'L-PM', currency: 'USD', customsPrice: 120, markupRate: 10, qty: 100, remaining: 500, base: 'HZ', entity: 'HZ_ENT', salesOrg: 'HSHA', totalPlan: 1000, used: 500, isEditing: false, tempQty: 0 },
+                         { id: 100, batchNo: 'LOADED-02', category: 'EC', plmCode: 'L-02', salesModel: 'E-SM', productModel: 'E-PM', currency: 'CNY', customsPrice: 800, markupRate: 0, qty: 200, remaining: 800, base: 'QD', entity: 'QD_ENT', salesOrg: 'HSHA', totalPlan: 1000, used: 200, isEditing: false, tempQty: 0 }
+                    ];
+                    this.formData.createTime = '2025-12-16 10:00';
+                    this.formData.updateTime = '2025-12-16 10:05';
+                    this.showCommissionSearchModal = false;
+                    alert(`查询成功！\n单号：${this.commissionSearchQuery}\n状态：${this.statusMap[this.formData.status]}\n\n说明：未提交（草稿、撤回）状态下可修改单据信息；执行状态下仅能查看或撤回。`);
+                },
+
+                openAddBatchModal() { 
+                    this.showAddBatchModal = true; 
+                    this.modalSearchQuery = ''; 
+                    this.modalBatchData = [];
+                    this.selectAllModal = false; 
+                },
+                modalSearchBatch() { 
+                    // [Hotfix] Simulate "Prohibit cross-line addition" by adding productLine context
+                    const currentLine = this.formData.productLine;
+                    alert(`模拟查询: 只搜索产品线为 [${currentLine}] 的批次...`);
+
+                    // Mock data with productLine property to demonstrate validation/filter logic
+                    const mockDB = [ 
+                        { id: 901, batchNo: 'NEW-BATCH-01', category: '移动空调', productLine: 'AC', total: 1000, used: 200, remaining: 800, inputQty: 0, checked: false }, 
+                        { id: 902, batchNo: 'NEW-BATCH-02', category: '模具', productLine: 'AC', total: 50, used: 10, remaining: 40, inputQty: 0, checked: false },
+                        { id: 903, batchNo: 'ERR-BATCH-REF', category: '冰箱', productLine: 'REF', total: 100, used: 10, remaining: 90, inputQty: 0, checked: false } 
+                    ]; 
+                    
+                    // Filter based on Page 2 Product Line constraint
+                    this.modalBatchData = mockDB.filter(i => i.productLine === currentLine || !currentLine); // If no currentLine set (shouldn't happen), show all? No, strict mode.
+                    this.selectAllModal = false;
+                },
+                monitorModalQty(item) { 
+                    if (item.inputQty < 0 || isNaN(item.inputQty)) item.inputQty = 0;
+                    if (item.inputQty > 0) item.checked = true; 
+                    else item.checked = false; 
+                },
+                
+                toggleSelectAllModal() {
+                    this.modalBatchData.forEach(item => {
+                        item.checked = this.selectAllModal;
+                        if(item.checked) item.inputQty = item.remaining;
+                        else item.inputQty = 0;
+                    });
+                },
+                toggleModalRowCheck(item) {
+                    if(item.checked) item.inputQty = item.remaining;
+                    else item.inputQty = 0;
+                },
+
+                // Import Batch Functions
+                openImportModal() { this.showImportModal = true; this.importPreview = []; },
+                downloadTemplate() { alert("模拟下载 ImportTemplate.xlsx"); },
+                handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    // Mock parsing
+                    this.importPreview = [
+                        { batch: 'IMP-001', cat: 'AC', qty: 50 },
+                        { batch: 'IMP-002', cat: 'EC', qty: 100 }
+                    ];
+                    if (this.importPreview.length > 99) {
+                        alert("导入失败：单次最多上传 99 行");
+                        this.importPreview = [];
+                        return;
+                    }
+                },
+                confirmImport() {
+                    if (this.importPreview.length === 0) return;
+                    // Mock validation against GSS (Atomic check)
+                    // If all good, call sync to get price/details
+                    this.fetchSAP_Price().then(price => {
+                        this.importPreview.forEach(row => {
+                            this.formData.items.push({
+                                id: Date.now() + Math.random(), batchNo: row.batch, category: row.cat, plmCode: 'IMP-PLM', salesModel: 'IMP-SM', productModel: 'IMP-PM', totalPlan: 1000, used: 200,
+                                currency: 'USD', customsPrice: price, markupRate: 10, qty: row.qty, remaining: 800, 
+                                base: 'QD', entity: 'QD_ENT', salesOrg: 'HSHA', isEditing: false, tempQty: 0
+                            });
+                        });
+                        this.showImportModal = false;
+                        this.saveDraft(true);
+                    });
+                },
+
+                confirmAddBatchItems() { 
+                    const added = this.modalBatchData.filter(i => i.checked && i.inputQty > 0);
+                    if (added.length === 0) return;
+                    
+                    const invalid = added.filter(i => i.inputQty > i.remaining);
+                    if (invalid.length > 0) { alert(`数量超限: ${invalid[0].batchNo}`); return; }
+
+                    // Duplicate Check Logic (New Requirement)
+                    const duplicates = added.filter(i => this.formData.items.some(existing => existing.batchNo === i.batchNo && existing.category === i.category));
+                    if (duplicates.length > 0) {
+                        alert(`添加失败：以下批次+产品类型已存在，不能重复添加：\n${duplicates.map(d => d.batchNo + '-' + d.category).join(', ')}`);
+                        return;
+                    }
+
+                    this.fetchSAP_Price(added).then(price => {
+                        added.forEach(i => { 
+                            this.formData.items.push({ 
+                                id: Date.now() + Math.random(), batchNo: i.batchNo, category: i.category, plmCode: 'ADD-PLM', salesModel: 'ADD-SM', productModel: 'ADD-PM', totalPlan: i.total, used: i.used + i.inputQty,
+                                currency: 'USD', customsPrice: price, markupRate: 10, qty: i.inputQty, remaining: i.remaining - i.inputQty, 
+                                base: 'QD', entity: 'QD_ENT', salesOrg: 'HSHA', isEditing: false, tempQty: 0
+                            }); 
+                        }); 
+                        this.showAddBatchModal = false; 
+                        this.saveDraft(true);
+                    });
+                },
+
+                validateHeaders() {
+                     const f = this.formData;
+                     return f.productLine && f.country && f.base && f.entity && f.transportMode && f.tradeMode && f.priceTerms && f.orderer && f.booker && f.pol && f.pod && f.shipper && f.consignee && f.notifyParty && f.loadingPlan;
+                },
+
+                async saveDraft(isSilent = false) {
+                    this.showValidationErrors = true; 
+
+                    if (!this.validateHeaders()) { 
+                        if(!isSilent) alert("保存失败：请填写所有红色必填项"); 
+                        return; 
+                    }
+                    if (this.formData.items.length === 0) {
+                        if(!isSilent) alert("保存失败：至少需要包含一个批次"); 
+                        return;
+                    }
+                    
+                    // GSS Sync Validation (Only Total Qty)
+                    await this.fetchGSS_Total(this.formData.items);
+                    // Assume validation passes for this mock
+                    
+                    if (!this.formData.commissionNo) this.formData.commissionNo = 'HA' + Date.now().toString().slice(-8);
+                    
+                    this.formData.status = 'DRAFT';
+                    this.formData.updateTime = new Date().toLocaleString();
+                    if (!this.formData.createTime) this.formData.createTime = new Date().toLocaleString();
+                    
+                    if(!isSilent) alert("已暂存草稿 (GSS总量校验通过)");
+                },
+
+                async submitCommission() {
+                    if (this.isSubmitting) return; 
+                    
+                    this.showValidationErrors = true; 
+
+                    if (!this.validateHeaders()) {
+                        alert("提交失败：请完善所有基础必填信息"); return;
+                    }
+                    
+                    if (this.formData.items.length === 0) {
+                        alert("提交失败：明细行不能为空"); return;
+                    }
+                    
+                    const invalidPrice = this.formData.items.some(i => !i.customsPrice || i.customsPrice <= 0);
+                    if (invalidPrice) {
+                        alert("提交失败：所有批次的【报关单价】必须大于0"); return;
+                    }
+
+                    // GSS Sync Validation (Only Total Qty)
+                    await this.fetchGSS_Total(this.formData.items);
+
+                    this.isSubmitting = true;
+                    setTimeout(() => {
+                        this.formData.status = 'EXECUTED';
+                        this.formData.updateTime = new Date().toLocaleString();
+                        this.isSubmitting = false;
+                        alert("提交成功！单据已生效 (GSS总量校验通过)");
+                    }, 1000);
+                },
+
+                recallCommission() {
+                    if (!confirm("确定要撤回此单据吗？撤回后可重新编辑，但库存不会释放。")) return;
+                    this.formData.status = 'RECALLED';
+                    this.formData.updateTime = new Date().toLocaleString();
+                },
+
+                deleteCommission() {
+                    if (!confirm("确定要删除此单据吗？此操作不可恢复，并将释放库存。")) return;
+                    this.formData.status = 'DELETED';
+                    this.formData.items = []; 
+                    alert("单据已删除，库存已释放");
+                },
+
+                confirmSync(item) { 
+                    this.syncTargetItem = item; 
+                    this.showSyncConfirmModal = true; 
+                },
+                executeSync() { 
+                    if (!this.syncTargetItem) return;
+                    const newPrice = 160.00; 
+                    // Simulate GSS Sync (Total) + SAP Sync (Price)
+                    Object.assign(this.syncTargetItem, {
+                        customsPrice: newPrice, 
+                        // Simulate updating GSS props
+                        productModel: 'SYNCED-MODEL'
+                    });
+                    this.showSyncConfirmModal = false;
+                    this.syncTargetItem = null;
+                    alert(`同步成功！\n已从 GSS 同步批次信息\n已从 SAP 900 同步最新价格: ${newPrice}\n当前录入信息已被覆盖。`);
+                },
+                
+                jumpToEdit(docId) { this.formData.commissionNo = docId; this.formData.status = 'DRAFT'; this.currentView = 'edit'; },
+                editDoc(doc) { this.currentView = 'edit'; this.formData.status = doc.status; this.formData.commissionNo = doc.id; },
+                addContainer() { this.formData.containers.push({ type: '40HQ', qty: 1 }); },
+                removeContainer(idx) { this.formData.containers.splice(idx, 1); },
+                handleContainerTypeChange(idx, type) { 
+                    if (type === 'NONE') { this.formData.containers = [{ type: 'NONE', qty: 0 }]; } 
+                    else {
+                        this.formData.containers = this.formData.containers.filter(c => c.type !== 'NONE');
+                        if (this.formData.containers[idx].qty === 0) this.formData.containers[idx].qty = 1;
+                    }
+                },
+                removeItem(idx) { 
+                    if(!confirm('确定要删除该批次吗？')) return; 
+                    const removedItem = this.formData.items[idx];
+                    const originalGssItem = this.gssData.find(i => i.batchNo === removedItem.batchNo);
+                    if (originalGssItem) {
+                        originalGssItem.usedTotal -= removedItem.qty;
+                        originalGssItem.remaining += removedItem.qty;
+                    }
+                    this.formData.items.splice(idx, 1); 
+                },
+                openSaveTemplateModal(type, cat) { this.newTemplateName = ''; this.saveTemplateType = type; this.saveTemplateCategory = cat; this.showSaveTemplateModal = true; },
+                confirmSaveTemplate() { 
+                    if (!this.newTemplateName) return;
+                    if (this.saveTemplateType === 'party') {
+                         this.partyTemplates[this.newTemplateName] = { shipper: this.formData.shipper, consignee: this.formData.consignee, notify: this.formData.notifyParty };
+                         this.selectedPartyTemplate = this.newTemplateName;
+                    } else if (this.saveTemplateType === 'note') {
+                         const cat = this.saveTemplateCategory;
+                         if (cat) {
+                             this.notesTemplates[this.newTemplateName] = { ...this.formData.notes[cat] };
+                             this.selectedNoteTemplates[cat] = this.newTemplateName;
+                         }
+                    }
+                    this.showSaveTemplateModal = false; 
+                },
+                
+                // Update Existing Template Logic
+                updateTemplate(type, cat) {
+                    if (type === 'party') {
+                        if (!this.selectedPartyTemplate) { alert("请先选择一个模板"); return; }
+                        if (!confirm(`确认更新模板【${this.selectedPartyTemplate}】吗？`)) return;
+                        this.partyTemplates[this.selectedPartyTemplate] = {
+                            shipper: this.formData.shipper,
+                            consignee: this.formData.consignee,
+                            notify: this.formData.notifyParty
+                        };
+                        alert("模板更新成功");
+                    } else if (type === 'note') {
+                        const tplName = this.selectedNoteTemplates[cat];
+                        if (!tplName) { alert("请先选择一个模板"); return; }
+                        if (!confirm(`确认更新模板【${tplName}】吗？`)) return;
+                        this.notesTemplates[tplName] = { ...this.formData.notes[cat] };
+                        alert("模板更新成功");
+                    }
+                },
+
+                deleteTemplate(type, cat) {
+                    if (type === 'party') {
+                        if (!this.selectedPartyTemplate) { alert("请先选择一个模板"); return; }
+                        if (!confirm(`确认删除模板【${this.selectedPartyTemplate}】吗？`)) return;
+                        delete this.partyTemplates[this.selectedPartyTemplate];
+                        this.selectedPartyTemplate = '';
+                        alert("模板已删除");
+                    } else if (type === 'note') {
+                        const tplName = this.selectedNoteTemplates[cat];
+                        if (!tplName) { alert("请先选择一个模板"); return; }
+                        if (!confirm(`确认删除模板【${tplName}】吗？`)) return;
+                        delete this.notesTemplates[tplName];
+                        this.selectedNoteTemplates[cat] = '';
+                        alert("模板已删除");
+                    }
+                },
+
+                applyPartyTemplate() { const key = this.selectedPartyTemplate; if (!key) return; const tpl = this.partyTemplates[key]; if (tpl) { this.formData.shipper = tpl.shipper; this.formData.consignee = tpl.consignee; this.formData.notifyParty = tpl.notify; } },
+                applyNotesTemplate(category) { const key = this.selectedNoteTemplates[category]; if (!key) return; const tpl = this.notesTemplates[key]; if (tpl && this.formData.notes[category]) { this.formData.notes[category] = { ...tpl }; } },
+                
+                copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => { alert("已复制"); }); },
+                exportPDF() {
+                    if (this.currentView !== 'edit') {
+                         alert("请进入编辑页面进行导出");
+                         return;
+                    }
+                    const isDraft = ['NONE', 'DRAFT', 'RECALLED'].includes(this.formData.status);
+                    this.showDraftWatermark = isDraft;
+                    setTimeout(() => {
+                        window.print();
+                    }, 100);
+                },
+                
+                // Export Batch Details Logic
+                exportBatchDetails() {
+                    if (this.formData.items.length === 0) { alert("无数据可导出"); return; }
+                    console.table(this.formData.items);
+                    alert("已导出批次明细 (模拟下载 .xlsx 文件)");
+                },
+
+                startEditQty(item) { 
+                    if(this.isReadOnly) return; 
+                    item.tempQty = item.qty; 
+                    item.isEditing = true; 
+                },
+                cancelQty(item) { item.isEditing = false; },
+                confirmQty(item) { 
+                    const originalQty = item.qty;
+                    const newQty = item.tempQty;
+                    const originalGssItem = this.gssData.find(i => i.batchNo === item.batchNo);
+                    if (originalGssItem) {
+                        const totalUsedAfterChange = (originalGssItem.usedTotal - originalQty) + newQty;
+                        if (newQty <= 0) {
+                            alert("数量必须大于0");
+                            item.tempQty = originalQty; 
+                            return;
+                        }
+                        // GSS Sync check triggered here ideally
+                        if (totalUsedAfterChange > originalGssItem.total) {
+                            alert(`数量超限! 总排产: ${originalGssItem.total}，当前项最大允许: ${originalGssItem.total - (originalGssItem.usedTotal - originalQty)}`);
+                            item.tempQty = originalQty; 
+                            return;
+                        }
+                        originalGssItem.usedTotal = totalUsedAfterChange;
+                        originalGssItem.remaining = originalGssItem.total - totalUsedAfterChange;
+                    }
+                    item.qty = newQty; 
+                    item.isEditing = false; 
+                },
+                referenceCreate() {
+                    if (this.isReadOnly) return; // Although v-if handles this, safe guard
+                    const refId = prompt("请输入参考的委托单号：");
+                    if (!refId) return;
+
+                    // Mock check: in reality, call API. Here we assume any input is valid for testing.
+                    // We prompt user for confirmation.
+                    
+                    if (confirm(`检测到单号 [${refId}] 存在。\n是否确认使用该单据信息覆盖当前页面内容？\n注意：当前填写的信息将被清空。`)) {
+                        // Mock fetching data and overwriting
+                        // Keeping orderer/createTime as is, but overwriting business fields
+                        this.formData.productLine = 'REF';
+                        this.formData.country = 'UK';
+                        this.formData.base = 'QD';
+                        this.formData.entity = 'QD_ENT';
+                        this.formData.transportMode = 'BY AIR';
+                        this.formData.items = [
+                            { 
+                                id: Date.now(), batchNo: 'REF-BATCH-01', category: 'AC', plmCode: 'REF-PLM', 
+                                salesModel: 'REF-SM', productModel: 'REF-PM', currency: 'USD', 
+                                customsPrice: 200, markupRate: 15, qty: 50, remaining: 500, 
+                                base: 'QD', entity: 'QD_ENT', salesOrg: 'HSHA', totalPlan: 1000, 
+                                used: 500, isEditing: false, tempQty: 0 
+                            }
+                        ];
+                        // Reset containers/notes based on new data (mock)
+                        this.formData.containers = [{ type: '20GP', qty: 1 }];
+                        alert("引用成功！数据已覆盖。");
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
