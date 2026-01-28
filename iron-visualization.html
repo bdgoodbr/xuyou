@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>铁运可视化（上报 + 查询） - HTM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body { background: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    .tab { padding: 10px 14px; font-size: 13px; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer; transition: all .15s; user-select: none; }
+    .tab.active { color: #2563EB; border-bottom-color: #2563EB; font-weight: 600; }
+    .tab:hover { color: #2563EB; }
+    iframe { border: none; width: 100%; height: calc(100vh - 170px); background: white; box-shadow: inset 0 0 0 1px #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <div class="text-sm text-slate-500">HTM / 铁运可视化</div>
+        <div class="text-xl font-bold text-slate-900 mt-1">铁运可视化（上报 + 查询）</div>
+      </div>
+      <div class="flex gap-2 text-xs text-slate-500">
+        <a class="text-blue-600 hover:underline" href="TYVISV0.1.html" target="_blank" rel="noopener">上报单页直达</a>
+        <span class="text-slate-300">|</span>
+        <a class="text-blue-600 hover:underline" href="TYVISQ_V0.1.html" target="_blank" rel="noopener">查询单页直达</a>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+      <div class="flex items-center gap-3 px-4 border-b border-gray-200">
+        <div id="tab-upload" class="tab active" onclick="switchView('upload')">
+          <i class="fa-solid fa-cloud-arrow-up mr-1"></i>铁运可视化信息上报
+        </div>
+        <div id="tab-query" class="tab" onclick="switchView('query')">
+          <i class="fa-solid fa-magnifying-glass mr-1"></i>铁运可视化查询
+        </div>
+      </div>
+      <div class="p-0">
+        <iframe id="iframe-view" src="TYVISV0.1.html"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchView(view) {
+      const iframe = document.getElementById('iframe-view');
+      document.getElementById('tab-upload').classList.toggle('active', view === 'upload');
+      document.getElementById('tab-query').classList.toggle('active', view === 'query');
+      iframe.src = view === 'upload' ? 'TYVISV0.1.html' : 'TYVISQ_V0.1.html';
+    }
+  </script>
+</body>
+</html>
