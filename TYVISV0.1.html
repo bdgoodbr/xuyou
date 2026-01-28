@@ -1448,6 +1448,16 @@
                 }
             },
             mounted() {
+                // Allow deep-linking: ?view=query or ?view=upload
+                try {
+                    const params = new URLSearchParams(window.location.search || '');
+                    const view = params.get('view');
+                    if (view === 'query' || view === 'upload') {
+                        this.currentView = view;
+                    }
+                } catch (e) {
+                    // ignore
+                }
                 this.updateUploadTime();
                 this.filteredData = this.tableData;
                 this.search();
