@@ -41,6 +41,13 @@
             display: flex;
             overflow: hidden;
         }
+
+        /* Hard guarantee for layout stretching (avoid any Tailwind/JIT surprises) */
+        .main-content {
+            flex: 1 1 0%;
+            min-width: 0;
+            width: 100%;
+        }
         
         /* Sidebar */
         .nav-item {
@@ -436,7 +443,7 @@
             </div>
 
             <!-- Main Content Area -->
-            <div class="flex-1 flex flex-col bg-slate-50 overflow-hidden relative min-w-0">
+            <div class="main-content flex flex-col bg-slate-50 overflow-hidden relative">
                 <!-- Header -->
                 <div class="h-14 bg-white border-b border-slate-200 flex justify-between items-center px-6 shrink-0 z-20">
                     <div class="text-compact text-slate-500">
