@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>铁运可视化查询 - HTM</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            slate: { 850: '#1e293b', 900: '#0f172a', 950: '#020617' },
+            blue: { 50: '#eff6ff', 100: '#dbeafe', 600: '#2563EB', 700: '#1D4ED8' },
+            gray: { 50: '#F9FAFB', 100: '#F3F4F6', 200: '#E5E7EB', 300: '#D1D5DB', 400: '#9CA3AF', 500: '#6B7280' },
+            green: { 50: '#f0fdf4', 600: '#16a34a', 700: '#15803d' },
+            amber: { 50: '#fffbeb', 600: '#d97706' }
+          },
+          fontSize: {
+            'compact': '13px',
+            'xxs': '11px'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #334155;
+      margin: 0;
+      padding: 0;
+    }
+    #ui-container {
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+    .nav-item { color: #374151; }
+    .nav-item.active {
+      background-color: #dbeafe;
+      border-left: 4px solid #2563EB;
+      color: #1e40af;
+      font-weight: 600;
+    }
+    .nav-item:hover:not(.active) { background-color: #f3f4f6; }
+
+    .htm-input {
+      height: 34px;
+      font-size: 13px;
+      border: 1px solid #D1D5DB;
+      border-radius: 4px;
+      padding: 0 12px;
+      width: 100%;
+      transition: all 0.2s;
+      background-color: #fff;
+    }
+    .htm-input:focus {
+      outline: none;
+      border-color: #2563EB;
+      box-shadow: 0 0 0 1px #2563EB;
+    }
+    .tab {
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #64748b;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .tab.active {
+      color: #2563EB;
+      border-bottom-color: #2563EB;
+      font-weight: 600;
+    }
+    .tab:hover { color: #2563EB; }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 9999px;
+      background: #10b981;
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .status-line {
+      height: 2px;
+      background: #e2e8f0;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+    .status-line::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, #34d399, #60a5fa);
+      opacity: 0.7;
+    }
+
+    .table-compact th {
+      background: #f8fafc;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 12px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+      text-align: left;
+    }
+    .table-compact td {
+      padding: 10px 12px;
+      font-size: 13px;
+      border-bottom: 1px solid #f1f5f9;
+      white-space: nowrap;
+      color: #334155;
+    }
+    .table-compact tr:hover { background: #f8fafc; }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div id="ui-container">
+      <!-- Sidebar (复用TYVISV0.1风格) -->
+      <div class="w-64 bg-gray-200 flex flex-col shrink-0 border-r border-gray-300">
+        <div class="h-14 flex items-center px-6 font-bold text-lg border-b border-gray-300 tracking-wide bg-gray-200">
+          <i class="fas fa-cube text-blue-600 mr-3"></i> <span class="text-gray-800">HTM</span>
+        </div>
+        <div class="flex-1 overflow-y-auto py-4 bg-gray-200">
+          <div class="mt-2">
+            <div class="px-6 py-2 text-sm font-semibold text-gray-700 flex items-center bg-gray-200 border-b border-gray-300">
+              <i class="fas fa-folder-open mr-2 text-blue-600"></i> 业务操作模块
+            </div>
+            <div class="mt-1">
+              <div class="nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors" @click="goUpload">
+                <span>铁运可视化信息上报</span>
+              </div>
+              <div class="nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors active">
+                <span>铁运可视化查询</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="h-14 border-t border-gray-300 flex items-center px-6 bg-gray-200">
+          <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs text-white">U</div>
+          <div class="ml-3 text-xs text-gray-700">
+            <div class="font-bold">用户 (物流岗)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main -->
+      <div class="flex-1 flex flex-col bg-slate-50 overflow-hidden relative">
+        <!-- Header -->
+        <div class="h-14 bg-white border-b border-slate-200 flex justify-between items-center px-6 shrink-0 z-20">
+          <div class="text-compact text-slate-500">
+            HTM / 可视化 / <span class="text-slate-900 font-semibold">铁运可视化查询</span>
+          </div>
+          <div class="flex items-center gap-3 text-slate-400">
+            <span class="text-xs text-slate-500">租户：</span>
+            <select class="htm-input" style="height: 30px; width: 160px;">
+              <option>HGCC (...)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+          <!-- Tabs (参考截图) -->
+          <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
+            <div class="flex items-center gap-2 border-b border-gray-200 px-4">
+              <div :class="['tab', activeTab==='tracking'?'active':'']" @click="activeTab='tracking'">节点可视 Tracking Status</div>
+              <div :class="['tab', activeTab==='map'?'active':'']" @click="activeTab='map'">地图可视 Tracking on Map</div>
+              <div :class="['tab', activeTab==='congestion'?'active':'']" @click="activeTab='congestion'">港口拥堵报告 Port Congestion Report</div>
+            </div>
+
+            <!-- Query Bar -->
+            <div class="p-4 flex items-center justify-between gap-4">
+              <div class="flex items-center gap-2">
+                <select v-model="queryType" class="htm-input" style="width: 150px;">
+                  <option value="so">订舱号 SO NO.</option>
+                  <option value="lhz">落货纸号</option>
+                  <option value="waybill">物流运单号</option>
+                </select>
+                <input v-model="queryValue" class="htm-input font-mono" style="width: 220px;" placeholder="请输入...">
+                <button @click="doQuery" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-4 h-9 rounded shadow-sm transition-colors">
+                  查询 QUERY
+                </button>
+              </div>
+              <div class="flex items-center gap-2">
+                <button class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-9 rounded shadow-sm">订舱信息 Booking information</button>
+                <button class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-9 rounded shadow-sm">导出列表信息 Export list information</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subscription / Status strip (参考截图横条) -->
+          <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 p-4">
+            <div class="grid grid-cols-4 gap-6 items-center">
+              <div class="flex items-center gap-3">
+                <div class="status-dot"></div>
+                <div>
+                  <div class="text-xs text-slate-500">订阅方 Date From</div>
+                  <div class="text-sm font-semibold text-slate-800">{{ subscription.from }}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="status-dot"></div>
+                <div>
+                  <div class="text-xs text-slate-500">订阅状态 Subscription Status</div>
+                  <div class="text-sm font-semibold text-green-700">{{ subscription.status }}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="status-dot"></div>
+                <div>
+                  <div class="text-xs text-slate-500">数据状态 Data Status</div>
+                  <div class="text-sm font-semibold text-slate-800">{{ subscription.dataStatus }}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3 justify-end">
+                <div class="text-right">
+                  <div class="text-xs text-slate-500">更新时间 Update</div>
+                  <div class="text-sm font-semibold text-slate-800">{{ subscription.updatedAt }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 mt-3">
+              <div class="status-line"></div>
+            </div>
+            <div class="text-xs text-slate-500 mt-2">
+              - 海运：订阅方显示船公司/数据源，逻辑不变；铁运：订阅方显示具体货代名称，完成订舱后默认订阅成功。
+            </div>
+          </div>
+
+          <!-- Basic Information (参考截图) -->
+          <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
+            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <div class="font-bold text-slate-900">
+                基本信息 <span class="text-slate-400 text-xs font-normal">Basic information</span>
+              </div>
+              <div class="text-xs text-slate-500">
+                运输方式：<span class="font-semibold text-slate-800">{{ basic.transport }}</span>
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="grid grid-cols-3 gap-0 border border-gray-200 rounded overflow-hidden">
+                <!-- Col 1 -->
+                <div class="border-r border-gray-200">
+                  <table class="w-full table-compact">
+                    <tbody>
+                      <tr><th class="w-48">物流运单号 Hisense Tracking No.</th><td class="font-mono">{{ basic.waybillNo }}</td></tr>
+                      <tr><th>落货纸号 delivery note.</th><td class="font-mono">{{ basic.deliveryNotes }}</td></tr>
+                      <tr><th>货代 Shipping Carrier</th><td>{{ basic.carrier }}</td></tr>
+                      <tr><th>起运港 POL</th><td>{{ basic.pol }}</td></tr>
+                      <tr><th>接货地 Place of Receipt</th><td>{{ basic.placeOfReceipt }}</td></tr>
+                      <tr><th>订舱ETD ETD (Booking)</th><td>{{ basic.etdBooking }}</td></tr>
+                      <tr><th>实时ETD ETD (Update)</th><td>{{ basic.etdUpdate }}</td></tr>
+                      <tr><th>物流岗 Booking Operator</th><td>{{ basic.bookingOperator }}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <!-- Col 2 -->
+                <div class="border-r border-gray-200">
+                  <table class="w-full table-compact">
+                    <tbody>
+                      <tr><th class="w-48">SO NO.</th><td class="font-mono">{{ basic.soNo }}</td></tr>
+                      <tr><th>价格条款 Price Terms</th><td>{{ basic.priceTerms }}</td></tr>
+                      <tr><th>船名/航次 Ocean Vessel/Voy. No.</th><td>{{ basic.vesselVoy || '-' }}</td></tr>
+                      <tr><th>中转港 Port of Transshipment</th><td>{{ basic.transshipment || '-' }}</td></tr>
+                      <tr><th>装货港 POL</th><td>{{ basic.pol2 }}</td></tr>
+                      <tr><th>订舱ETA ETA (Booking)</th><td>{{ basic.etaBooking }}</td></tr>
+                      <tr><th>实时ETA ETA (Update)</th><td>{{ basic.etaUpdate }}</td></tr>
+                      <tr><th>单证人员 Document Operator</th><td>{{ basic.docOperator }}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <!-- Col 3 -->
+                <div>
+                  <table class="w-full table-compact">
+                    <tbody>
+                      <tr><th class="w-48">提单号 B/L No.</th><td>{{ basic.blNo || '-' }}</td></tr>
+                      <tr><th>箱型箱量 Size and Qty. of</th><td>{{ basic.sizeQty }}</td></tr>
+                      <tr><th>目的站 Port of Delivery</th><td>{{ basic.destination }}</td></tr>
+                      <tr><th>卸货地 Place of Delivery</th><td>{{ basic.placeOfDelivery }}</td></tr>
+                      <tr><th>ATD</th><td>{{ basic.atd }}</td></tr>
+                      <tr><th>ATA</th><td>{{ basic.ata }}</td></tr>
+                      <tr><th>多式联运 Multi-transportation</th><td>{{ basic.multi || '-' }}</td></tr>
+                      <tr><th>备注</th><td>{{ basic.remark || '-' }}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-time schedule (仅两个动态：起运港发船 / 目的站到港) -->
+          <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
+            <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <div class="font-bold text-slate-900">
+                实时船期 <span class="text-slate-400 text-xs font-normal">Real-time schedule</span>
+              </div>
+              <div class="text-xs text-slate-500">
+                距离境外始发站：<span class="font-semibold text-slate-800">{{ latestDistances.kmFromOverseasOrigin ?? '-' }}</span>
+                <span class="mx-2 text-slate-300">|</span>
+                距离目的站：<span class="font-semibold text-slate-800">{{ latestDistances.kmToDestinationStation ?? '-' }}</span>
+                <span class="mx-2 text-slate-300">|</span>
+                取值：最新上传
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="grid grid-cols-2 gap-6">
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="text-xs text-slate-500">起运港发船</div>
+                      <div class="text-sm font-bold text-slate-900">{{ realtimeNodes.depart.pol }}</div>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-xs text-slate-500">实际离港时间</div>
+                      <div class="text-sm font-semibold text-slate-800">{{ realtimeNodes.depart.time || '-' }}</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <div class="text-xs text-slate-500">目的站到港</div>
+                      <div class="text-sm font-bold text-slate-900">{{ realtimeNodes.arrive.station }}</div>
+                    </div>
+                    <div class="text-right">
+                      <div class="text-xs text-slate-500">实际到港时间</div>
+                      <div class="text-sm font-semibold text-slate-800">{{ realtimeNodes.arrive.time || '-' }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="text-xs text-slate-500 mt-3">
+                - 铁运实时船期仅展示两个动态：起运港发船、目的站到港；距离字段来源于货代上传，若多次上传则取上传时间最新的一条。
+              </div>
+            </div>
+          </div>
+
+          <!-- Detail table (占位，保持与截图一致有明细表) -->
+          <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div class="px-4 py-3 border-b border-gray-200 font-bold text-slate-900">
+              实时船期明细 <span class="text-slate-400 text-xs font-normal">Tracking Status</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full table-compact">
+                <thead>
+                  <tr>
+                    <th class="w-12">NO.</th>
+                    <th>Milestones</th>
+                    <th class="w-56">Location</th>
+                    <th class="w-56">Transport Mode</th>
+                    <th class="w-56">Actual Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, idx) in milestones" :key="idx">
+                    <td class="text-slate-500">{{ idx + 1 }}</td>
+                    <td>{{ row.milestone }}</td>
+                    <td class="font-mono text-xs text-slate-600">{{ row.location }}</td>
+                    <td class="text-slate-600">{{ row.mode }}</td>
+                    <td class="font-mono text-xs text-slate-600">{{ row.actualDate }}</td>
+                  </tr>
+                  <tr v-if="milestones.length===0">
+                    <td colspan="5" class="text-center text-slate-400 py-6">暂无数据</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const { createApp, reactive, computed } = Vue;
+
+    createApp({
+      setup() {
+        const state = reactive({
+          activeTab: 'tracking',
+          queryType: 'so',
+          queryValue: 'COSU64321333310',
+          // 模拟：运输方式切换（海运/铁运），用于验证“订阅方横条”逻辑
+          transportType: 'rail', // 'sea' | 'rail'
+
+          basic: {
+            transport: '铁运',
+            waybillNo: '1696176(H)',
+            deliveryNotes: '1696175,1696176',
+            carrier: 'HGCC (货代)',
+            pol: 'QINGDAO-CN',
+            placeOfReceipt: 'QINGDAO-CN',
+            etdBooking: '2025-10-30',
+            etdUpdate: '2025-10-30',
+            bookingOperator: 'A-华鑫',
+
+            soNo: 'COSU64321333310',
+            priceTerms: 'DAP',
+            vesselVoy: '-',
+            transshipment: '-',
+            pol2: 'QINGDAO-CN',
+            etaBooking: '2025-12-24',
+            etaUpdate: '2025-12-29',
+            docOperator: 'A-周培',
+
+            blNo: '',
+            sizeQty: '40HQ*1',
+            destination: 'RIJEKA,HR',
+            placeOfDelivery: 'RIJEKA,HR',
+            atd: '2025-10-30',
+            ata: '2025-12-29',
+            multi: '-',
+            remark: ''
+          },
+
+          uploads: [
+            // 货代多次上传：取 uploadTime 最新一条作为距离字段展示
+            { uploadTime: '2026-01-18 09:10:00', kmFromOverseasOrigin: 420, kmToDestinationStation: 980 },
+            { uploadTime: '2026-01-19 09:18:04', kmFromOverseasOrigin: 410, kmToDestinationStation: 960 }
+          ],
+
+          realtimeNodes: {
+            depart: { pol: 'QINGDAO-CN', time: '2025-10-30 14:46:00' },
+            arrive: { station: 'RIJEKA,HR', time: '2025-12-29 21:14:00' }
+          },
+
+          milestones: [
+            { milestone: '起运港发船 / Departure from Origin', location: 'QINGDAO-CN', mode: 'Rail', actualDate: '2025-10-30 14:46:00' },
+            { milestone: '目的站到港 / Arrival at Destination', location: 'RIJEKA,HR', mode: 'Rail', actualDate: '2025-12-29 21:14:00' }
+          ]
+        });
+
+        const latestUpload = computed(() => {
+          if (!state.uploads || state.uploads.length === 0) return null;
+          return [...state.uploads].sort((a, b) => (a.uploadTime || '').localeCompare(b.uploadTime || '')).slice(-1)[0];
+        });
+
+        const latestDistances = computed(() => {
+          const u = latestUpload.value;
+          return {
+            kmFromOverseasOrigin: u?.kmFromOverseasOrigin ?? null,
+            kmToDestinationStation: u?.kmToDestinationStation ?? null
+          };
+        });
+
+        const subscription = computed(() => {
+          const isSea = state.transportType === 'sea';
+          return {
+            from: isSea ? 'COSCO' : state.basic.carrier, // 铁运：订阅方=具体货代名称
+            status: isSea ? '订阅成功' : '订阅成功', // 铁运：完成订舱后默认订阅成功（原型直接展示成功）
+            dataStatus: isSea ? '数据已推送' : '数据已推送',
+            updatedAt: (state.uploads && state.uploads.length > 0) ? (latestUpload.value?.uploadTime || '-') : '-'
+          };
+        });
+
+        const doQuery = () => {
+          alert(`Mock查询：${state.queryType} = ${state.queryValue}\n（原型演示，不接后端）`);
+        };
+
+        const goUpload = () => {
+          alert('可跳转至：铁运可视化信息上报（此处为原型占位）');
+        };
+
+        return {
+          ...Vue.toRefs(state),
+          subscription,
+          latestDistances,
+          doQuery,
+          goUpload
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
+
