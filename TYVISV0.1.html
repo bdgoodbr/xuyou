@@ -356,20 +356,20 @@
                                     <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
                                 </th>
                                 <th class="min-w-[120px]">落货纸号</th>
-                                <th class="min-w-[100px]">所属货代</th>
                                 <th class="min-w-[100px]">箱号</th>
                                 <th>箱型</th>
                                 <th>起运港</th>
                                 <th>目的港</th>
                                 <th>当前位置</th>
-                                <th>距离口岸(KM)</th>
-                                <th>距离目的地(KM)</th>
                                 <th>实时ETD</th>
                                 <th>ATD</th>
                                 <th>实时ETA</th>
                                 <th>ATA</th>
+                                <th>距离口岸(KM)</th>
+                                <th>距离目的地(KM)</th>
                                 <th>上传时间</th>
                                 <th>上传人</th>
+                                <th class="min-w-[100px]">所属货代</th>
                                 <th class="text-center w-32 sticky right-0 bg-gray-50 z-10">操作</th>
                             </tr>
                         </thead>
@@ -379,20 +379,20 @@
                                     <input type="checkbox" :value="item.id" v-model="selectedIds">
                                 </td>
                                 <td class="font-mono text-blue-600 font-medium min-w-[120px]">{{ item.lhzOrder }}</td>
-                                <td class="text-gray-700 min-w-[100px]">{{ item.carrier || '-' }}</td>
                                 <td class="font-mono min-w-[100px]">{{ item.containerNo }}</td>
                                 <td>{{ item.containerSize }}</td>
                                 <td>{{ item.pol }}</td>
                                 <td>{{ item.pod }}</td>
                                 <td>{{ item.currentLocation }}</td>
-                                <td>{{ item.kmToBorder }}</td>
-                                <td>{{ item.kmToDestination || '-' }}</td>
                                 <td class="font-mono text-xs">{{ formatDateOnly(item.realETD) }}</td>
                                 <td class="font-mono text-xs">{{ formatDateOnly(item.atd) }}</td>
                                 <td class="font-mono text-xs">{{ formatDateOnly(item.realETA) }}</td>
                                 <td class="font-mono text-xs">{{ formatDateOnly(item.ata) }}</td>
+                                <td>{{ item.kmToBorder }}</td>
+                                <td>{{ item.kmToDestination || '-' }}</td>
                                 <td class="font-mono text-xs text-gray-500">{{ item.uploadTime }}</td>
                                 <td>{{ item.uploadUser || '-' }}</td>
+                                <td class="text-gray-700 min-w-[100px]">{{ item.carrier || '-' }}</td>
                                 <td class="text-center sticky right-0 bg-white z-10">
                                     <button v-if="canDelete" @click="deleteItem(item)" class="text-red-600 hover:text-red-800 text-xs font-medium transition-colors">删除</button>
                                 </td>
