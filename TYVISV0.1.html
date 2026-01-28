@@ -286,18 +286,30 @@
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 mb-1.5">起运港</label>
-                        <input v-model="filters.pol" type="text" class="htm-input" placeholder="请输入起运港（枚举值）">
+                        <select v-model="filters.pol" multiple class="htm-input" style="min-height: 64px;" size="3">
+                            <option v-for="port in portOptions" :key="port" :value="port">{{ port }}</option>
+                        </select>
+                        <div v-if="filters.pol && filters.pol.length > 0" class="text-xs text-gray-400 mt-1">
+                            已选择: {{ filters.pol.join(', ') }}
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 mb-1.5">目的港</label>
-                        <input v-model="filters.pod" type="text" class="htm-input" placeholder="请输入目的港（枚举值）">
+                        <select v-model="filters.pod" multiple class="htm-input" style="min-height: 64px;" size="3">
+                            <option v-for="port in portOptions" :key="port" :value="port">{{ port }}</option>
+                        </select>
+                        <div v-if="filters.pod && filters.pod.length > 0" class="text-xs text-gray-400 mt-1">
+                            已选择: {{ filters.pod.join(', ') }}
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 mb-1.5">箱型</label>
-                        <select v-model="filters.containerSize" class="htm-input">
-                            <option value="">全部</option>
+                        <select v-model="filters.containerSize" multiple class="htm-input" style="min-height: 64px;" size="3">
                             <option v-for="size in containerSizes" :key="size" :value="size">{{ size }}</option>
                         </select>
+                        <div v-if="filters.containerSize && filters.containerSize.length > 0" class="text-xs text-gray-400 mt-1">
+                            已选择: {{ filters.containerSize.join(', ') }}
+                        </div>
                     </div>
                     <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5">上传时间</label>
@@ -692,9 +704,9 @@
                     filters: {
                         lhzOrder: '',
                         containerNo: '',
-                        pol: '',
-                        pod: '',
-                        containerSize: '',
+                        pol: [],
+                        pod: [],
+                        containerSize: [],
                         uploadTimeRange: '',
                         carrier: '',
                         uploadUser: ''
@@ -921,13 +933,19 @@
                 search() {
                     const lhzList = this.parseList(this.filters.lhzOrder);
                     const ctnList = this.parseList(this.filters.containerNo);
-                    const polVal = this.filters.pol.trim();
-                    const podVal = this.filters.pod.trim();
-                    const sizeVal = this.filters.containerSize;
+                    const polList = Array.isArray(this.filters.pol) ? this.filters.pol : [];
+                    const podList = Array.isArray(this.filters.pod) ? this.filters.pod : [];
+                    const sizeList = Array.isArray(this.filters.containerSize) ? this.filters.containerSize : [];
                     const carrierVal = this.filters.carrier.trim();
                     const uploadUserVal = this.filters.uploadUser.trim();
+                    const uploadTimeRange = this.filters.uploadTimeRange.trim();
 
                     let result = [...this.tableData];
+
+                    // 数据权限过滤：货代A不能搜索到货代B上传的数据
+                    if (this.userRole === 'carrier') {
+                        result = result.filter(item => (item.carrier || '') === this.currentUser.carrier);
+                    }
 
                     if (lhzList.length) {
                         result = result.filter(item => lhzList.includes(item.lhzOrder));
@@ -935,20 +953,44 @@
                     if (ctnList.length) {
                         result = result.filter(item => ctnList.includes(item.containerNo));
                     }
-                    if (polVal) {
-                        result = result.filter(item => item.pol && item.pol.toUpperCase().includes(polVal.toUpperCase()));
+                    if (polList.length > 0) {
+                        result = result.filter(item => polList.includes(item.pol));
                     }
-                    if (podVal) {
-                        result = result.filter(item => item.pod && item.pod.toUpperCase().includes(podVal.toUpperCase()));
+                    if (podList.length > 0) {
+                        result = result.filter(item => podList.includes(item.pod));
                     }
-                    if (sizeVal) {
-                        result = result.filter(item => item.containerSize === sizeVal);
+                    if (sizeList.length > 0) {
+                        result = result.filter(item => sizeList.includes(item.containerSize));
                     }
                     if (carrierVal) {
-                        result = result.filter(item => (item.carrier || '').includes(carrierVal));
+                        // 货代搜索：货代A只能搜索到自己货代的数据
+                        if (this.userRole === 'carrier') {
+                            result = result.filter(item => (item.carrier || '').includes(carrierVal) && (item.carrier || '') === this.currentUser.carrier);
+                        } else {
+                            result = result.filter(item => (item.carrier || '').includes(carrierVal));
+                        }
                     }
                     if (uploadUserVal) {
-                        result = result.filter(item => (item.uploadUser || '').includes(uploadUserVal));
+                        // 上传人搜索：货代A只能搜索到自己货代内用户上传的数据
+                        if (this.userRole === 'carrier') {
+                            result = result.filter(item => (item.uploadUser || '').includes(uploadUserVal) && (item.carrier || '') === this.currentUser.carrier);
+                        } else {
+                            result = result.filter(item => (item.uploadUser || '').includes(uploadUserVal));
+                        }
+                    }
+                    if (uploadTimeRange) {
+                        // 时间范围查询：格式 YYYY-MM-DD - YYYY-MM-DD
+                        const parts = uploadTimeRange.split('-').map(s => s.trim());
+                        if (parts.length === 2) {
+                            const startDate = new Date(parts[0]);
+                            const endDate = new Date(parts[1]);
+                            endDate.setHours(23, 59, 59, 999); // 结束时间设为当天最后一刻
+                            result = result.filter(item => {
+                                if (!item.uploadTime) return false;
+                                const uploadDate = new Date(item.uploadTime);
+                                return uploadDate >= startDate && uploadDate <= endDate;
+                            });
+                        }
                     }
 
                     this.filteredData = result;
@@ -960,9 +1002,9 @@
                     this.filters = {
                         lhzOrder: '',
                         containerNo: '',
-                        pol: '',
-                        pod: '',
-                        containerSize: '',
+                        pol: [],
+                        pod: [],
+                        containerSize: [],
                         uploadTimeRange: '',
                         carrier: '',
                         uploadUser: ''
