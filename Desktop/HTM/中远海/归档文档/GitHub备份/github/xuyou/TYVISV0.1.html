@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>铁运可视化信息上报 - HTM</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: { 850: '#1e293b', 900: '#0f172a', 950: '#020617' },
+                        blue: { 50: '#eff6ff', 100: '#dbeafe', 600: '#2563EB', 700: '#1D4ED8' },
+                        gray: { 50: '#F9FAFB', 100: '#F3F4F6', 200: '#E5E7EB', 300: '#D1D5DB', 400: '#9CA3AF', 500: '#6B7280' }
+                    },
+                    fontSize: {
+                        'compact': '13px',
+                        'xxs': '11px'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { 
+            background-color: #f8fafc; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            color: #334155; 
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Layout Container */
+        #ui-container {
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        .nav-item {
+            color: #374151;
+        }
+        .nav-item.active {
+            background-color: #dbeafe;
+            border-left: 4px solid #2563EB;
+            color: #1e40af;
+            font-weight: 600;
+        }
+        .nav-item:hover:not(.active) {
+            background-color: #f3f4f6;
+        }
+        
+        /* Form Controls */
+        .htm-input {
+            height: 34px;
+            font-size: 13px;
+            border: 1px solid #D1D5DB;
+            border-radius: 4px;
+            padding: 0 12px;
+            width: 100%;
+            transition: all 0.2s;
+            background-color: #fff;
+        }
+        .htm-input:focus { 
+            outline: none; 
+            border-color: #2563EB; 
+            box-shadow: 0 0 0 1px #2563EB; 
+        }
+        .htm-input:disabled, .htm-input[readonly] { 
+            background-color: #F8FAFC; 
+            color: #94a3b8; 
+            cursor: not-allowed; 
+            border-color: #E2E8F0; 
+        }
+        .htm-input.error {
+            border-color: #EF4444;
+            background-color: #FEF2F2;
+        }
+        
+        /* Custom Multi-select Dropdown */
+        .custom-multiselect {
+            position: relative;
+            width: 100%;
+        }
+        .multiselect-input {
+            position: relative;
+            min-height: 34px;
+            border: 1px solid #D1D5DB;
+            border-radius: 4px;
+            padding: 4px 30px 4px 8px;
+            background-color: #fff;
+            cursor: pointer;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+            transition: all 0.2s;
+        }
+        .multiselect-input:focus,
+        .multiselect-input.open {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 1px #2563EB;
+        }
+        .multiselect-tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #EFF6FF;
+            color: #1E40AF;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 2px 0;
+        }
+        .multiselect-tag .remove {
+            margin-left: 4px;
+            cursor: pointer;
+            color: #3B82F6;
+            font-weight: bold;
+        }
+        .multiselect-tag .remove:hover {
+            color: #1E40AF;
+        }
+        .multiselect-placeholder {
+            color: #9CA3AF;
+            font-size: 13px;
+        }
+        .multiselect-arrow {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6B7280;
+            pointer-events: none;
+            transition: transform 0.2s;
+        }
+        .multiselect-input.open .multiselect-arrow {
+            transform: translateY(-50%) rotate(180deg);
+        }
+        .multiselect-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 4px;
+            background: white;
+            border: 1px solid #D1D5DB;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .multiselect-search {
+            padding: 8px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        .multiselect-search input {
+            width: 100%;
+            border: 1px solid #D1D5DB;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+        .multiselect-search input:focus {
+            outline: none;
+            border-color: #2563EB;
+        }
+        .multiselect-options {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .multiselect-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 13px;
+        }
+        .multiselect-option:hover {
+            background-color: #F3F4F6;
+        }
+        .multiselect-option.selected {
+            background-color: #EFF6FF;
+            color: #1E40AF;
+            font-weight: 500;
+        }
+        .multiselect-option.selected::before {
+            content: "✓ ";
+            color: #2563EB;
+            font-weight: bold;
+            margin-right: 4px;
+        }
+        
+        /* Error Message */
+        .error-message {
+            font-size: 12px;
+            color: #EF4444;
+            margin-top: 4px;
+            display: block;
+        }
+        
+        /* Table Styles */
+        .htm-table th { 
+            background-color: #F9FAFB; 
+            color: #6B7280; 
+            font-weight: 600; 
+            font-size: 14px; 
+            padding: 12px 8px; 
+            text-align: left; 
+            border-bottom: 1px solid #E5E7EB; 
+            white-space: nowrap; 
+        }
+        .htm-table td { 
+            padding: 12px 8px; 
+            font-size: 13px; 
+            border-bottom: 1px solid #E5E7EB; 
+            color: #334155; 
+            white-space: nowrap; 
+            transition: background 0.1s; 
+        }
+        .htm-table tr:hover td { 
+            background-color: #F9FAFB; 
+        }
+        
+        /* Required Field */
+        .required::after { 
+            content: " *"; 
+            color: #EF4444; 
+            margin-left: 2px; 
+        }
+        
+        /* Modal */
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(15, 23, 42, 0.6); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1000; 
+            backdrop-filter: blur(2px); 
+        }
+        .modal-content { 
+            background: white; 
+            border-radius: 12px; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); 
+            width: 800px; 
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.2s ease-out; 
+        }
+        @keyframes slideIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        
+        /* Upload Area */
+        .dashed-upload { 
+            border: 2px dashed #CBD5E1; 
+            border-radius: 8px; 
+            padding: 32px; 
+            text-align: center; 
+            color: #64748B; 
+            margin-top: 16px; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            background: #F8FAFC; 
+        }
+        .dashed-upload:hover { 
+            border-color: #2563EB; 
+            background: #EFF6FF; 
+            color: #2563EB; 
+        }
+        .dashed-upload.dragover {
+            border-color: #2563EB;
+            background: #EFF6FF;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2563EB;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 2000;
+            animation: toastSlideIn 0.3s ease-out;
+        }
+        .toast.error {
+            background: #EF4444;
+        }
+        @keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
+        /* Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+        
+        input[type="checkbox"] { accent-color: #2563EB; width: 14px; height: 14px; cursor: pointer; }
+        
+        /* Breadcrumb */
+        .breadcrumb {
+            font-size: 13px;
+            color: #6B7280;
+        }
+        .breadcrumb a {
+            color: #2563EB;
+            text-decoration: none;
+        }
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        .breadcrumb .current {
+            color: #1F2937;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="ui-container">
+            <!-- Sidebar -->
+            <div class="w-64 bg-gray-200 flex flex-col shrink-0 border-r border-gray-300">
+                <!-- Logo Area -->
+                <div class="h-14 flex items-center px-6 font-bold text-lg border-b border-gray-300 tracking-wide bg-gray-200">
+                    <i class="fas fa-cube text-blue-600 mr-3"></i> <span class="text-gray-800">HTM</span>
+                </div>
+                
+                <!-- Navigation Menu -->
+                <div class="flex-1 overflow-y-auto py-4 custom-scroll bg-gray-200">
+                    <!-- 业务操作模块 -->
+                    <div class="mt-2">
+                        <div class="px-6 py-2 text-sm font-semibold text-gray-700 flex items-center bg-gray-200 border-b border-gray-300">
+                            <i class="fas fa-folder-open mr-2 text-blue-600"></i> 业务操作模块
+                        </div>
+                        <div class="mt-1">
+                            <div @click="navigateToPage" :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', 'active']">
+                                <span>铁运可视化信息上报</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- User Info -->
+                <div class="h-14 border-t border-gray-300 flex items-center px-6 bg-gray-200">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs text-white">U</div>
+                    <div class="ml-3 text-xs text-gray-700">
+                        <div class="font-bold">用户 (货代)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col bg-slate-50 overflow-hidden relative">
+                <!-- Header -->
+                <div class="h-14 bg-white border-b border-slate-200 flex justify-between items-center px-6 shrink-0 z-20">
+                    <div class="text-compact text-slate-500">
+                        HTM / 业务操作模块 / <span class="text-slate-900 font-semibold">铁运可视化信息上报</span>
+                    </div>
+                    <div class="flex space-x-4 text-slate-400">
+                        <i class="fas fa-bell hover:text-blue-600 cursor-pointer transition-colors"></i>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="flex-1 p-6 overflow-y-auto flex flex-col custom-scroll">
+                    <!-- Filter Section -->
+            <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-4">
+                <div class="grid grid-cols-5 gap-4">
+                    <div class="col-span-1">
+                        <label class="block text-xs text-gray-500 mb-1.5">落货纸号</label>
+                        <textarea v-model="filters.lhzOrder" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="block text-xs text-gray-500 mb-1.5">箱号</label>
+                        <textarea v-model="filters.containerNo" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1.5">起运港</label>
+                        <div class="custom-multiselect">
+                            <div class="multiselect-input" :class="{open: showPolDropdown}" @click="showPolDropdown = !showPolDropdown">
+                                <template v-if="filters.pol && filters.pol.length > 0">
+                                    <span v-for="port in filters.pol" :key="port" class="multiselect-tag">
+                                        {{ port }}
+                                        <span class="remove" @click.stop="removePol(port)">×</span>
+                                    </span>
+                                </template>
+                                <span v-else class="multiselect-placeholder">请选择起运港</span>
+                                <i class="fas fa-chevron-down multiselect-arrow"></i>
+                            </div>
+                            <div v-if="showPolDropdown" class="multiselect-dropdown" @click.stop>
+                                <div class="multiselect-search">
+                                    <input type="text" v-model="polSearch" placeholder="搜索起运港..." @click.stop>
+                                </div>
+                                <div class="multiselect-options">
+                                    <div v-for="port in filteredPolOptions" :key="port" 
+                                         class="multiselect-option" 
+                                         :class="{selected: filters.pol && filters.pol.includes(port)}"
+                                         @click="togglePol(port)">
+                                        {{ port }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1.5">目的港</label>
+                        <div class="custom-multiselect">
+                            <div class="multiselect-input" :class="{open: showPodDropdown}" @click="showPodDropdown = !showPodDropdown">
+                                <template v-if="filters.pod && filters.pod.length > 0">
+                                    <span v-for="port in filters.pod" :key="port" class="multiselect-tag">
+                                        {{ port }}
+                                        <span class="remove" @click.stop="removePod(port)">×</span>
+                                    </span>
+                                </template>
+                                <span v-else class="multiselect-placeholder">请选择目的港</span>
+                                <i class="fas fa-chevron-down multiselect-arrow"></i>
+                            </div>
+                            <div v-if="showPodDropdown" class="multiselect-dropdown" @click.stop>
+                                <div class="multiselect-search">
+                                    <input type="text" v-model="podSearch" placeholder="搜索目的港..." @click.stop>
+                                </div>
+                                <div class="multiselect-options">
+                                    <div v-for="port in filteredPodOptions" :key="port" 
+                                         class="multiselect-option" 
+                                         :class="{selected: filters.pod && filters.pod.includes(port)}"
+                                         @click="togglePod(port)">
+                                        {{ port }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1.5">箱型</label>
+                        <div class="custom-multiselect">
+                            <div class="multiselect-input" :class="{open: showSizeDropdown}" @click="showSizeDropdown = !showSizeDropdown">
+                                <template v-if="filters.containerSize && filters.containerSize.length > 0">
+                                    <span v-for="size in filters.containerSize" :key="size" class="multiselect-tag">
+                                        {{ size }}
+                                        <span class="remove" @click.stop="removeSize(size)">×</span>
+                                    </span>
+                                </template>
+                                <span v-else class="multiselect-placeholder">请选择箱型</span>
+                                <i class="fas fa-chevron-down multiselect-arrow"></i>
+                            </div>
+                            <div v-if="showSizeDropdown" class="multiselect-dropdown" @click.stop>
+                                <div class="multiselect-search">
+                                    <input type="text" v-model="sizeSearch" placeholder="搜索箱型..." @click.stop>
+                                </div>
+                                <div class="multiselect-options">
+                                    <div v-for="size in filteredSizeOptions" :key="size" 
+                                         class="multiselect-option" 
+                                         :class="{selected: filters.containerSize && filters.containerSize.includes(size)}"
+                                         @click="toggleSize(size)">
+                                        {{ size }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs text-gray-500 mb-1.5">上传时间</label>
+                        <input v-model="filters.uploadTimeRange" type="text" class="htm-input" placeholder="YYYY-MM-DD - YYYY-MM-DD">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1.5">货代</label>
+                        <input v-model="filters.carrier" type="text" class="htm-input" placeholder="请输入货代">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1.5">上传人</label>
+                        <input v-model="filters.uploadUser" type="text" class="htm-input" placeholder="请输入上传人">
+                    </div>
+                    <div class="flex items-end justify-end space-x-2 col-span-2">
+                        <button @click="resetFilters" class="bg-white text-gray-600 text-xs px-4 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
+                            重置
+                        </button>
+                        <button @click="search" class="bg-blue-600 text-white text-xs px-6 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
+                            <i class="fas fa-search mr-1"></i> 查询
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="flex justify-between items-center mb-3">
+                <div class="text-sm font-bold text-slate-700 flex items-center">
+                    列表 ({{ pagination.total }})
+                    <span v-if="selectedIds.length > 0" class="text-blue-600 text-xs font-normal ml-2 bg-blue-50 px-2 py-0.5 rounded-full">
+                        已选择 {{ selectedIds.length }} 项
+                    </span>
+                </div>
+                <div class="space-x-2">
+                    <button v-if="canUpload" @click="showAddModal = true" class="bg-blue-600 text-white text-xs px-4 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
+                        <i class="fas fa-plus mr-1"></i> 新建
+                    </button>
+                    <button @click="showBatchModal = true" class="bg-white border border-gray-300 text-gray-700 text-xs px-4 h-10 rounded hover:bg-gray-50 shadow-sm transition-colors">
+                        <i class="fas fa-file-upload mr-1"></i> 批量导入
+                    </button>
+                    <button v-if="selectedIds.length > 0 && canDelete" @click="showDeleteConfirm = true" class="bg-white border border-gray-300 text-gray-700 text-xs px-4 h-10 rounded hover:bg-gray-50 shadow-sm transition-colors">
+                        <i class="fas fa-trash mr-1"></i> 批量删除
+                    </button>
+                    <button @click="exportData" class="bg-white border border-gray-300 text-gray-700 text-xs px-4 h-10 rounded hover:bg-gray-50 shadow-sm transition-colors">
+                        <i class="fas fa-file-export mr-1"></i> 导出
+                    </button>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto custom-scroll">
+                    <table class="w-full htm-table" style="min-width: 1800px;">
+                        <thead class="bg-gray-50 sticky top-0 z-10">
+                            <tr>
+                                <th class="w-10 text-center">
+                                    <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
+                                </th>
+                                <th class="min-w-[120px]">落货纸号</th>
+                                <th class="min-w-[100px]">箱号</th>
+                                <th>箱型</th>
+                                <th>起运港</th>
+                                <th>目的港</th>
+                                <th>当前位置</th>
+                                <th>实时ETD</th>
+                                <th>ATD</th>
+                                <th>实时ETA</th>
+                                <th>ATA</th>
+                                <th>距离始发站口岸(KM)</th>
+                                <th>距离目的地(KM)</th>
+                                <th>上传时间</th>
+                                <th>上传人</th>
+                                <th class="min-w-[100px]">所属货代</th>
+                                <th class="text-center w-32 sticky right-0 bg-gray-50 z-10">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="item in paginatedData" :key="item.id">
+                                <td class="text-center">
+                                    <input type="checkbox" :value="item.id" v-model="selectedIds">
+                                </td>
+                                <td class="font-mono text-blue-600 font-medium min-w-[120px]">{{ item.lhzOrder }}</td>
+                                <td class="font-mono min-w-[100px]">{{ item.containerNo }}</td>
+                                <td>{{ item.containerSize }}</td>
+                                <td>{{ item.pol }}</td>
+                                <td>{{ item.pod }}</td>
+                                <td>{{ item.currentLocation }}</td>
+                                <td class="font-mono text-xs">{{ formatDateOnly(item.realETD) }}</td>
+                                <td class="font-mono text-xs">{{ formatDateOnly(item.atd) }}</td>
+                                <td class="font-mono text-xs">{{ formatDateOnly(item.realETA) }}</td>
+                                <td class="font-mono text-xs">{{ formatDateOnly(item.ata) }}</td>
+                                <td>{{ item.kmToBorder }}</td>
+                                <td>{{ item.kmToDestination || '-' }}</td>
+                                <td class="font-mono text-xs text-gray-500">{{ item.uploadTime }}</td>
+                                <td>{{ item.uploadUser || '-' }}</td>
+                                <td class="text-gray-700 min-w-[100px]">{{ item.carrier || '-' }}</td>
+                                <td class="text-center w-32 sticky right-0 bg-white z-10">
+                                    <button v-if="canDelete" @click="deleteItem(item)" class="text-red-600 hover:text-red-800 text-xs font-medium transition-colors">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <div class="h-12 border-t border-gray-200 bg-gray-50 flex justify-between items-center px-4 text-xs">
+                    <div class="text-gray-500">
+                        显示第 {{ (pagination.current - 1) * pagination.size + 1 }} 到 {{ Math.min(pagination.current * pagination.size, pagination.total) }} 条，共 {{ pagination.total }} 条
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span>每页显示</span>
+                        <select v-model="pagination.size" @change="pagination.current = 1; search()" class="htm-input w-20 h-8 text-xs">
+                            <option :value="10">10</option>
+                            <option :value="20">20</option>
+                            <option :value="50">50</option>
+                            <option :value="100">100</option>
+                        </select>
+                        <span>条</span>
+                        <button @click="pagination.current = 1; search()" :disabled="pagination.current === 1" class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">首页</button>
+                        <button @click="pagination.current--; search()" :disabled="pagination.current === 1" class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">上一页</button>
+                        <span>第 {{ pagination.current }} / {{ pagination.pages }} 页</span>
+                        <button @click="pagination.current++; search()" :disabled="pagination.current >= pagination.pages" class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">下一页</button>
+                        <button @click="pagination.current = pagination.pages; search()" :disabled="pagination.current >= pagination.pages" class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">末页</button>
+                        <span>跳至</span>
+                        <input v-model.number="jumpPage" @keyup.enter="jumpToPage" type="number" class="htm-input w-16 h-8 text-xs" :min="1" :max="pagination.pages">
+                        <span>页</span>
+                    </div>
+                </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Add Modal -->
+        <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
+            <div class="modal-content" @click.stop>
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-bold text-slate-900">新增可视化信息</h2>
+                </div>
+                <div class="p-6">
+                    <form @submit.prevent="saveItem">
+                        <div class="grid grid-cols-4 gap-6">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5 required">起运港</label>
+                                <input v-model="form.pol" type="text" class="htm-input" :class="{error: errors.pol}" placeholder="请选择或输入起运港" @blur="validateField('pol')">
+                                <span v-if="errors.pol" class="error-message">{{ errors.pol }}</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5 required">目的港</label>
+                                <input v-model="form.pod" type="text" class="htm-input" :class="{error: errors.pod}" placeholder="请选择或输入目的港" @blur="validateField('pod')">
+                                <span v-if="errors.pod" class="error-message">{{ errors.pod }}</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5 required">落货纸号</label>
+                                <input v-model="form.lhzOrder" type="text" class="htm-input" :class="{error: errors.lhzOrder}" placeholder="请输入落货纸号" @blur="validateField('lhzOrder')">
+                                <span v-if="errors.lhzOrder" class="error-message">{{ errors.lhzOrder }}</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5 required">箱号</label>
+                                <input v-model="form.containerNo" type="text" class="htm-input" :class="{error: errors.containerNo}" placeholder="请输入箱号" @blur="validateField('containerNo')">
+                                <span v-if="errors.containerNo" class="error-message">{{ errors.containerNo }}</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5 required">箱型</label>
+                                <select v-model="form.containerSize" class="htm-input" :class="{error: errors.containerSize}" @blur="validateField('containerSize')">
+                                    <option value="">请选择</option>
+                                    <option v-for="size in containerSizes" :key="size" :value="size">{{ size }}</option>
+                                </select>
+                                <span v-if="errors.containerSize" class="error-message">{{ errors.containerSize }}</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5 required">当前位置</label>
+                                <input v-model="form.currentLocation" type="text" class="htm-input" :class="{error: errors.currentLocation}" placeholder="请输入当前位置" @blur="validateField('currentLocation')">
+                                <span v-if="errors.currentLocation" class="error-message">{{ errors.currentLocation }}</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5 required">距离始发站口岸(KM)</label>
+                                <input v-model.number="form.kmToBorder" type="number" step="0.01" min="0" class="htm-input" :class="{error: errors.kmToBorder}" placeholder="请输入距离" @blur="validateField('kmToBorder')">
+                                <span v-if="errors.kmToBorder" class="error-message">{{ errors.kmToBorder }}</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5">距离目的地(KM)</label>
+                                <input v-model.number="form.kmToDestination" type="number" step="0.01" min="0" class="htm-input" placeholder="请输入距离">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5">实时ETD</label>
+                                <input v-model="form.realETD" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5">ATD</label>
+                                <input v-model="form.atd" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5">实时ETA</label>
+                                <input v-model="form.realETA" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5">ATA</label>
+                                <input v-model="form.ata" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5">货代</label>
+                                <input :value="currentUser.carrier" type="text" class="htm-input" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5">上传人</label>
+                                <input :value="currentUser.name" type="text" class="htm-input" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5">上传时间</label>
+                                <input :value="currentUploadTime" type="text" class="htm-input" readonly>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
+                            <button type="button" @click="closeAddModal" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
+                                取消
+                            </button>
+                            <button type="submit" class="bg-blue-600 text-white text-sm px-6 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
+                                保存
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Upload Modal -->
+        <div v-if="showBatchModal" class="modal-overlay" @click.self="closeBatchModal">
+            <div class="modal-content" style="width: 600px;" @click.stop>
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-bold text-slate-900">批量导入可视化信息</h2>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4 text-sm text-gray-600">
+                        <p class="mb-2"><strong>说明：</strong></p>
+                        <ul class="list-disc list-inside space-y-1 text-xs">
+                            <li>支持Excel格式（.xlsx、.xls）</li>
+                            <li>文件大小限制：10MB</li>
+                            <li class="text-red-600 font-medium">批量导入规则：如果存在不符合要求的记录，所有记录都不会入库，请修正错误后重新导入</li>
+                        </ul>
+                    </div>
+                    <div class="mb-4">
+                        <a href="#" @click.prevent="downloadTemplate" class="text-blue-600 hover:text-blue-800 text-sm">
+                            <i class="fas fa-download mr-1"></i> 下载模板
+                        </a>
+                    </div>
+                    <div class="dashed-upload" 
+                         @click="triggerFileInput"
+                         @dragover.prevent="dragOver = true"
+                         @dragleave.prevent="dragOver = false"
+                         @drop.prevent="handleFileDrop"
+                         :class="{dragover: dragOver}">
+                        <i class="fas fa-cloud-upload-alt text-3xl mb-2"></i>
+                        <p class="text-sm font-medium">点击选择文件或拖拽文件到此处</p>
+                        <p class="text-xs text-gray-400 mt-1">支持 .xlsx、.xls 格式</p>
+                        <input ref="fileInput" type="file" @change="handleFileSelect" accept=".xlsx,.xls" style="display: none;">
+                    </div>
+                    <div v-if="selectedFile" class="mt-4 p-3 bg-gray-50 rounded border border-gray-200">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-gray-700">
+                                <i class="fas fa-file-excel text-green-600 mr-2"></i>
+                                {{ selectedFile.name }}
+                            </span>
+                            <button @click="selectedFile = null" class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div v-if="importProgress > 0 && importProgress < 100" class="mt-4">
+                        <div class="flex justify-between text-xs text-gray-600 mb-1">
+                            <span>正在导入，请稍候...</span>
+                            <span>{{ importProgress }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" :style="{width: importProgress + '%'}"></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
+                        <button @click="closeBatchModal" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
+                            取消
+                        </button>
+                        <button @click="startImport" :disabled="!selectedFile || importProgress > 0" class="bg-blue-600 text-white text-sm px-6 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            开始导入
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import Result Modal -->
+        <div v-if="showImportResult" class="modal-overlay" @click.self="closeImportResult">
+            <div class="modal-content" style="width: 800px; max-height: 80vh;" @click.stop>
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-bold text-slate-900">批量导入结果</h2>
+                </div>
+                <div class="p-6">
+                    <div v-if="importResult.failed > 0" class="mb-4 p-4 rounded-lg bg-red-50 border border-red-200">
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-circle text-red-600 text-xl mr-3 mt-0.5"></i>
+                            <div class="flex-1">
+                                <p class="font-bold text-red-800 mb-2">导入失败</p>
+                                <p class="text-sm text-red-700 mb-1">本次导入共 {{ importResult.success + importResult.failed }} 条记录，其中 {{ importResult.failed }} 条记录不符合要求，已全部回滚，未入库任何数据。</p>
+                                <p class="text-sm text-red-700 font-medium">请修正错误后重新导入。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="mb-4 p-4 rounded-lg bg-green-50 border border-green-200">
+                        <div class="flex items-start">
+                            <i class="fas fa-check-circle text-green-600 text-xl mr-3 mt-0.5"></i>
+                            <div class="flex-1">
+                                <p class="font-bold text-green-800 mb-1">导入成功</p>
+                                <p class="text-sm text-green-700">成功导入 {{ importResult.success }} 条记录。</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="importResult.errors && importResult.errors.length > 0" class="mt-4">
+                        <div class="mb-2">
+                            <h3 class="text-sm font-bold text-gray-700">不符合要求的记录明细</h3>
+                            <p class="text-xs text-gray-500 mt-1">以下 {{ importResult.failed }} 条记录不符合要求，请修正后重新导入：</p>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs border-collapse">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="border border-gray-200 px-3 py-2 text-left">行号</th>
+                                        <th class="border border-gray-200 px-3 py-2 text-left">落货纸号</th>
+                                        <th class="border border-gray-200 px-3 py-2 text-left">箱号</th>
+                                        <th class="border border-gray-200 px-3 py-2 text-left">错误原因</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(error, index) in importResult.errors" :key="index">
+                                        <td class="border border-gray-200 px-3 py-2">{{ error.row }}</td>
+                                        <td class="border border-gray-200 px-3 py-2">{{ error.lhzOrder || '-' }}</td>
+                                        <td class="border border-gray-200 px-3 py-2">{{ error.containerNo || '-' }}</td>
+                                        <td class="border border-gray-200 px-3 py-2 text-red-600">{{ error.message }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-6 pt-6 border-t border-gray-200">
+                        <button @click="closeImportResult" class="bg-blue-600 text-white text-sm px-6 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
+                            关闭
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirm Modal -->
+        <div v-if="showDeleteConfirm" class="modal-overlay" @click.self="showDeleteConfirm = false">
+            <div class="modal-content" style="width: 400px;" @click.stop>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl mb-2"></i>
+                        <p class="text-sm text-gray-700">确定要删除选中的 {{ selectedIds.length }} 条记录吗？</p>
+                        <p class="text-xs text-gray-500 mt-1">删除后不可恢复。</p>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button @click="showDeleteConfirm = false" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
+                            取消
+                        </button>
+                        <button @click="confirmDelete" class="bg-red-600 text-white text-sm px-6 h-10 rounded hover:bg-red-700 font-medium shadow-sm transition-colors">
+                            确定删除
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div v-if="toast.show" class="toast" :class="{error: toast.type === 'error'}" @click="toast.show = false">
+            {{ toast.message }}
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    // User Role: 'carrier', 'logistics', 'admin'
+                    userRole: 'carrier', // 可切换测试：'carrier', 'logistics', 'admin'
+                    
+                    // Current User Info
+                    currentUser: {
+                        name: '用户A',
+                        carrier: '货代A'
+                    },
+                    currentUploadTime: '',
+                    
+                    // Filters
+                    filters: {
+                        lhzOrder: '',
+                        containerNo: '',
+                        pol: [],
+                        pod: [],
+                        containerSize: [],
+                        uploadTimeRange: '',
+                        carrier: '',
+                        uploadUser: ''
+                    },
+                    
+                    // Multi-select dropdown states
+                    showPolDropdown: false,
+                    showPodDropdown: false,
+                    showSizeDropdown: false,
+                    polSearch: '',
+                    podSearch: '',
+                    sizeSearch: '',
+                    
+                    // Container Sizes (HTM标准箱型)
+                    containerSizes: ['20GP', '40GP', '40HQ', '40NOR'],
+                    // 港口枚举
+                    portOptions: ['CNTAO', 'DEHAM', 'CNSHA', 'DEBRV', 'CNDLC'],
+                    
+                    // Table Data
+                    tableData: [
+                        {
+                            id: 1,
+                            lhzOrder: 'LHZ20250126001',
+                            carrier: '货代A',
+                            containerNo: 'CONT001',
+                            containerSize: '40HQ',
+                            pol: 'CNTAO',
+                            pod: 'DEHAM',
+                            currentLocation: '阿拉山口',
+                            kmToBorder: 120.5,
+                            kmToDestination: 3500.0,
+                            realETD: '2025-01-28',
+                            atd: '2025-01-28',
+                            realETA: '2025-02-15',
+                            ata: null,
+                            uploadTime: '2025-01-26 09:30:00',
+                            uploadUser: '用户A'
+                        },
+                        {
+                            id: 2,
+                            lhzOrder: 'LHZ20250126002',
+                            carrier: '货代A',
+                            containerNo: 'CONT002',
+                            containerSize: '20GP',
+                            pol: 'CNTAO',
+                            pod: 'DEHAM',
+                            currentLocation: '霍尔果斯',
+                            kmToBorder: 80.0,
+                            kmToDestination: 3800.0,
+                            realETD: '2025-01-29',
+                            atd: null,
+                            realETA: '2025-02-16',
+                            ata: null,
+                            uploadTime: '2025-01-26 10:15:00',
+                            uploadUser: '用户A'
+                        },
+                        {
+                            id: 3,
+                            lhzOrder: 'LHZ20250126003',
+                            carrier: '货代B',
+                            containerNo: 'CONT003',
+                            containerSize: '40GP',
+                            pol: 'CNSHA',
+                            pod: 'DEBRV',
+                            currentLocation: '满洲里',
+                            kmToBorder: 95.3,
+                            kmToDestination: 4200.0,
+                            realETD: '2025-01-30',
+                            atd: '2025-01-30',
+                            realETA: '2025-02-18',
+                            ata: null,
+                            uploadTime: '2025-01-26 11:20:00',
+                            uploadUser: '用户B'
+                        },
+                        {
+                            id: 4,
+                            lhzOrder: 'LHZ20250126004',
+                            carrier: '货代B',
+                            containerNo: 'CONT004',
+                            containerSize: '40HQ',
+                            pol: 'CNTAO',
+                            pod: 'DEHAM',
+                            currentLocation: '二连浩特',
+                            kmToBorder: 150.8,
+                            kmToDestination: 3900.0,
+                            realETD: '2025-01-31',
+                            atd: null,
+                            realETA: '2025-02-17',
+                            ata: null,
+                            uploadTime: '2025-01-26 14:45:00',
+                            uploadUser: '用户B'
+                        },
+                        {
+                            id: 5,
+                            lhzOrder: 'LHZ20250126005',
+                            carrier: '货代C',
+                            containerNo: 'CONT005',
+                            containerSize: '20GP',
+                            pol: 'CNDLC',
+                            pod: 'DEHAM',
+                            currentLocation: '阿拉山口',
+                            kmToBorder: 110.2,
+                            kmToDestination: 3600.0,
+                            realETD: '2025-02-01',
+                            atd: '2025-02-01',
+                            realETA: '2025-02-19',
+                            ata: null,
+                            uploadTime: '2025-01-27 08:15:00',
+                            uploadUser: '用户C'
+                        },
+                        {
+                            id: 6,
+                            lhzOrder: 'LHZ20250127001',
+                            carrier: '货代A',
+                            containerNo: 'CONT006',
+                            containerSize: '40HQ',
+                            pol: 'CNTAO',
+                            pod: 'DEBRV',
+                            currentLocation: '霍尔果斯',
+                            kmToBorder: 85.6,
+                            kmToDestination: 4100.0,
+                            realETD: '2025-02-02',
+                            atd: null,
+                            realETA: '2025-02-20',
+                            ata: null,
+                            uploadTime: '2025-01-27 09:30:00',
+                            uploadUser: '用户A'
+                        }
+                    ],
+                    
+                    // Selection
+                    selectedIds: [],
+                    filteredData: [],
+                    
+                    // Pagination
+                    pagination: {
+                        current: 1,
+                        size: 10,
+                        total: 0,
+                        pages: 0
+                    },
+                    jumpPage: 1,
+                    
+                    // Modals
+                    showAddModal: false,
+                    showBatchModal: false,
+                    showImportResult: false,
+                    showDeleteConfirm: false,
+                    
+                    // Form
+                    form: {
+                        pol: '',
+                        pod: '',
+                        lhzOrder: '',
+                        containerNo: '',
+                        containerSize: '',
+                        currentLocation: '',
+                        kmToBorder: null,
+                        kmToDestination: null,
+                        realETD: '',
+                        atd: '',
+                        realETA: '',
+                        ata: ''
+                    },
+                    errors: {},
+                    
+                    // Batch Upload
+                    selectedFile: null,
+                    dragOver: false,
+                    importProgress: 0,
+                    importResult: {
+                        success: 0,
+                        failed: 0,
+                        errors: []
+                    },
+                    
+                    // Toast
+                    toast: {
+                        show: false,
+                        message: '',
+                        type: 'success'
+                    }
+                }
+            },
+            computed: {
+                isAllSelected() {
+                    return this.paginatedData.length > 0 && this.selectedIds.length === this.paginatedData.length;
+                },
+                paginatedData() {
+                    const start = (this.pagination.current - 1) * this.pagination.size;
+                    const end = start + this.pagination.size;
+                    return this.filteredData.slice(start, end);
+                },
+                canUpload() {
+                    return this.userRole === 'carrier' || this.userRole === 'logistics' || this.userRole === 'admin';
+                },
+                canDelete() {
+                    return this.userRole === 'carrier' || this.userRole === 'admin';
+                },
+                filteredPolOptions() {
+                    if (!this.polSearch) return this.portOptions;
+                    const search = this.polSearch.toLowerCase();
+                    return this.portOptions.filter(port => port.toLowerCase().includes(search));
+                },
+                filteredPodOptions() {
+                    if (!this.podSearch) return this.portOptions;
+                    const search = this.podSearch.toLowerCase();
+                    return this.portOptions.filter(port => port.toLowerCase().includes(search));
+                },
+                filteredSizeOptions() {
+                    if (!this.sizeSearch) return this.containerSizes;
+                    const search = this.sizeSearch.toLowerCase();
+                    return this.containerSizes.filter(size => size.toLowerCase().includes(search));
+                }
+            },
+            mounted() {
+                this.updateUploadTime();
+                this.filteredData = this.tableData;
+                this.search();
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.custom-multiselect')) {
+                        this.showPolDropdown = false;
+                        this.showPodDropdown = false;
+                        this.showSizeDropdown = false;
+                    }
+                });
+            },
+            methods: {
+                parseList(value) {
+                    if (!value) return [];
+                    return value
+                        .split(/[\n,，\s]+/)
+                        .map(v => v.trim())
+                        .filter(Boolean);
+                },
+                isValidPort(value) {
+                    if (!value) return true;
+                    return this.portOptions.includes(value.trim().toUpperCase());
+                },
+                updateUploadTime() {
+                    const now = new Date();
+                    this.currentUploadTime = now.toLocaleString('zh-CN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    }).replace(/\//g, '-');
+                },
+                navigateToPage() {
+                    // 导航到当前页面（已选中状态）
+                },
+                search() {
+                    const lhzList = this.parseList(this.filters.lhzOrder);
+                    const ctnList = this.parseList(this.filters.containerNo);
+                    const polList = Array.isArray(this.filters.pol) ? this.filters.pol : [];
+                    const podList = Array.isArray(this.filters.pod) ? this.filters.pod : [];
+                    const sizeList = Array.isArray(this.filters.containerSize) ? this.filters.containerSize : [];
+                    const carrierVal = this.filters.carrier.trim();
+                    const uploadUserVal = this.filters.uploadUser.trim();
+                    const uploadTimeRange = this.filters.uploadTimeRange.trim();
+
+                    let result = [...this.tableData];
+
+                    // 数据权限过滤：货代A不能搜索到货代B上传的数据
+                    if (this.userRole === 'carrier') {
+                        result = result.filter(item => (item.carrier || '') === this.currentUser.carrier);
+                    }
+
+                    if (lhzList.length) {
+                        result = result.filter(item => lhzList.includes(item.lhzOrder));
+                    }
+                    if (ctnList.length) {
+                        result = result.filter(item => ctnList.includes(item.containerNo));
+                    }
+                    if (polList.length > 0) {
+                        result = result.filter(item => polList.includes(item.pol));
+                    }
+                    if (podList.length > 0) {
+                        result = result.filter(item => podList.includes(item.pod));
+                    }
+                    if (sizeList.length > 0) {
+                        result = result.filter(item => sizeList.includes(item.containerSize));
+                    }
+                    if (carrierVal) {
+                        // 货代搜索：货代A只能搜索到自己货代的数据
+                        if (this.userRole === 'carrier') {
+                            result = result.filter(item => (item.carrier || '').includes(carrierVal) && (item.carrier || '') === this.currentUser.carrier);
+                        } else {
+                            result = result.filter(item => (item.carrier || '').includes(carrierVal));
+                        }
+                    }
+                    if (uploadUserVal) {
+                        // 上传人搜索：货代A只能搜索到自己货代内用户上传的数据
+                        if (this.userRole === 'carrier') {
+                            result = result.filter(item => (item.uploadUser || '').includes(uploadUserVal) && (item.carrier || '') === this.currentUser.carrier);
+                        } else {
+                            result = result.filter(item => (item.uploadUser || '').includes(uploadUserVal));
+                        }
+                    }
+                    if (uploadTimeRange) {
+                        // 时间范围查询：格式 YYYY-MM-DD - YYYY-MM-DD
+                        const parts = uploadTimeRange.split('-').map(s => s.trim());
+                        if (parts.length === 2) {
+                            const startDate = new Date(parts[0]);
+                            const endDate = new Date(parts[1]);
+                            endDate.setHours(23, 59, 59, 999); // 结束时间设为当天最后一刻
+                            result = result.filter(item => {
+                                if (!item.uploadTime) return false;
+                                const uploadDate = new Date(item.uploadTime);
+                                return uploadDate >= startDate && uploadDate <= endDate;
+                            });
+                        }
+                    }
+
+                    this.filteredData = result;
+                    this.pagination.current = 1;
+                    this.pagination.total = result.length;
+                    this.pagination.pages = Math.max(1, Math.ceil(this.pagination.total / this.pagination.size));
+                },
+                resetFilters() {
+                    this.filters = {
+                        lhzOrder: '',
+                        containerNo: '',
+                        pol: [],
+                        pod: [],
+                        containerSize: [],
+                        uploadTimeRange: '',
+                        carrier: '',
+                        uploadUser: ''
+                    };
+                    this.polSearch = '';
+                    this.podSearch = '';
+                    this.sizeSearch = '';
+                    this.search();
+                },
+                // Multi-select methods for POL
+                togglePol(port) {
+                    if (!this.filters.pol) {
+                        this.$set(this.filters, 'pol', []);
+                    }
+                    const index = this.filters.pol.indexOf(port);
+                    if (index > -1) {
+                        this.filters.pol.splice(index, 1);
+                    } else {
+                        this.filters.pol.push(port);
+                    }
+                    this.search();
+                },
+                removePol(port) {
+                    if (!this.filters.pol) return;
+                    const index = this.filters.pol.indexOf(port);
+                    if (index > -1) {
+                        this.filters.pol.splice(index, 1);
+                        this.search();
+                    }
+                },
+                // Multi-select methods for POD
+                togglePod(port) {
+                    if (!this.filters.pod) {
+                        this.$set(this.filters, 'pod', []);
+                    }
+                    const index = this.filters.pod.indexOf(port);
+                    if (index > -1) {
+                        this.filters.pod.splice(index, 1);
+                    } else {
+                        this.filters.pod.push(port);
+                    }
+                    this.search();
+                },
+                removePod(port) {
+                    if (!this.filters.pod) return;
+                    const index = this.filters.pod.indexOf(port);
+                    if (index > -1) {
+                        this.filters.pod.splice(index, 1);
+                        this.search();
+                    }
+                },
+                // Multi-select methods for Container Size
+                toggleSize(size) {
+                    if (!this.filters.containerSize) {
+                        this.$set(this.filters, 'containerSize', []);
+                    }
+                    const index = this.filters.containerSize.indexOf(size);
+                    if (index > -1) {
+                        this.filters.containerSize.splice(index, 1);
+                    } else {
+                        this.filters.containerSize.push(size);
+                    }
+                    this.search();
+                },
+                removeSize(size) {
+                    if (!this.filters.containerSize) return;
+                    const index = this.filters.containerSize.indexOf(size);
+                    if (index > -1) {
+                        this.filters.containerSize.splice(index, 1);
+                        this.search();
+                    }
+                },
+                toggleSelectAll() {
+                    if (this.isAllSelected) {
+                        this.selectedIds = [];
+                    } else {
+                        this.selectedIds = this.paginatedData.map(item => item.id);
+                    }
+                },
+                validateField(field) {
+                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentLocation', 'kmToBorder'];
+                    if (requiredFields.includes(field) && !this.form[field]) {
+                        this.$set(this.errors, field, `请填写${this.getFieldLabel(field)}`);
+                        return;
+                    }
+                    if ((field === 'pol' || field === 'pod') && this.form[field] && !this.isValidPort(this.form[field])) {
+                        this.$set(this.errors, field, `${this.getFieldLabel(field)}需选择有效枚举值（如：CNTAO/DEHAM）`);
+                        return;
+                    }
+                    this.$set(this.errors, field, '');
+                },
+                getFieldLabel(field) {
+                    const labels = {
+                        pol: '起运港',
+                        pod: '目的港',
+                        lhzOrder: '落货纸号',
+                        containerNo: '箱号',
+                        containerSize: '箱型',
+                        currentLocation: '当前位置',
+                        kmToBorder: '距离始发站口岸'
+                    };
+                    return labels[field] || field;
+                },
+                validateForm() {
+                    this.errors = {};
+                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentLocation', 'kmToBorder'];
+                    let hasError = false;
+                    
+                    requiredFields.forEach(field => {
+                        if (!this.form[field]) {
+                            this.$set(this.errors, field, `请填写${this.getFieldLabel(field)}`);
+                            hasError = true;
+                        } else if ((field === 'pol' || field === 'pod') && !this.isValidPort(this.form[field])) {
+                            this.$set(this.errors, field, `${this.getFieldLabel(field)}需选择有效枚举值（如：CNTAO/DEHAM）`);
+                            hasError = true;
+                        }
+                    });
+                    
+                    // 业务校验：落货纸号校验（模拟）
+                    if (this.form.lhzOrder && !this.validateLhzOrder(this.form.lhzOrder)) {
+                        this.$set(this.errors, 'lhzOrder', '该落货纸不属于当前货代，无法上传');
+                        hasError = true;
+                    }
+                    
+                    if (hasError) {
+                        const missingFields = requiredFields.filter(f => !this.form[f]).map(f => this.getFieldLabel(f));
+                        this.showToast(`以下字段为必填项，请填写完整：${missingFields.join('、')}`, 'error');
+                    }
+                    
+                    return !hasError;
+                },
+                validateLhzOrder(lhzOrder) {
+                    // 模拟校验逻辑：实际应该调用接口校验
+                    // 这里简单模拟：如果落货纸号包含'INVALID'则校验失败
+                    return !lhzOrder.includes('INVALID');
+                },
+                saveItem() {
+                    if (!this.validateForm()) {
+                        return;
+                    }
+                    
+                    // 更新上传时间
+                    this.updateUploadTime();
+                    
+                    // 模拟保存
+                    const newItem = {
+                        id: this.tableData.length + 1,
+                        lhzOrder: this.form.lhzOrder,
+                        carrier: this.currentUser.carrier,
+                        containerNo: this.form.containerNo,
+                        containerSize: this.form.containerSize,
+                        pol: this.form.pol,
+                        pod: this.form.pod,
+                        currentLocation: this.form.currentLocation,
+                        kmToBorder: this.form.kmToBorder,
+                        kmToDestination: this.form.kmToDestination,
+                        realETD: this.formatDateOnly(this.formatDateTime(this.form.realETD)),
+                        atd: this.formatDateOnly(this.formatDateTime(this.form.atd)),
+                        realETA: this.formatDateOnly(this.formatDateTime(this.form.realETA)),
+                        ata: this.formatDateOnly(this.formatDateTime(this.form.ata)),
+                        uploadTime: this.currentUploadTime,
+                        uploadUser: this.currentUser.name
+                    };
+                    
+                    this.tableData.unshift(newItem);
+                    this.closeAddModal();
+                    this.search();
+                    this.showToast('保存成功', 'success');
+                },
+                formatDateTime(datetimeLocal) {
+                    if (!datetimeLocal) return null;
+                    return datetimeLocal.replace('T', ' ');
+                },
+                formatDateOnly(datetimeStr) {
+                    if (!datetimeStr || datetimeStr === '-') return '-';
+                    // 如果是日期时间格式，只取日期部分
+                    if (datetimeStr.includes(' ')) {
+                        return datetimeStr.split(' ')[0];
+                    }
+                    // 如果是日期格式，直接返回
+                    if (datetimeStr.includes('-') && datetimeStr.length === 10) {
+                        return datetimeStr;
+                    }
+                    return datetimeStr;
+                },
+                closeAddModal() {
+                    this.showAddModal = false;
+                    this.updateUploadTime();
+                    this.form = {
+                        pol: '',
+                        pod: '',
+                        lhzOrder: '',
+                        containerNo: '',
+                        containerSize: '',
+                        currentLocation: '',
+                        kmToBorder: null,
+                        kmToDestination: null,
+                        realETD: '',
+                        atd: '',
+                        realETA: '',
+                        ata: ''
+                    };
+                    this.errors = {};
+                },
+                deleteItem(item) {
+                    if (confirm(`确定要删除落货纸号 ${item.lhzOrder} 的箱号 ${item.containerNo} 的记录吗？`)) {
+                        const index = this.tableData.findIndex(d => d.id === item.id);
+                        if (index > -1) {
+                            this.tableData.splice(index, 1);
+                            this.search();
+                            this.showToast('删除成功', 'success');
+                        }
+                    }
+                },
+                confirmDelete() {
+                    this.selectedIds.forEach(id => {
+                        const index = this.tableData.findIndex(d => d.id === id);
+                        if (index > -1) {
+                            this.tableData.splice(index, 1);
+                        }
+                    });
+                    this.selectedIds = [];
+                    this.showDeleteConfirm = false;
+                    this.search();
+                    this.showToast('批量删除成功', 'success');
+                },
+                triggerFileInput() {
+                    this.$refs.fileInput.click();
+                },
+                handleFileSelect(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        if (file.size > 10 * 1024 * 1024) {
+                            this.showToast('文件大小不能超过10MB', 'error');
+                            return;
+                        }
+                        if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                            this.showToast('仅支持 .xlsx 和 .xls 格式', 'error');
+                            return;
+                        }
+                        this.selectedFile = file;
+                    }
+                },
+                handleFileDrop(event) {
+                    this.dragOver = false;
+                    const file = event.dataTransfer.files[0];
+                    if (file) {
+                        if (file.size > 10 * 1024 * 1024) {
+                            this.showToast('文件大小不能超过10MB', 'error');
+                            return;
+                        }
+                        if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                            this.showToast('仅支持 .xlsx 和 .xls 格式', 'error');
+                            return;
+                        }
+                        this.selectedFile = file;
+                    }
+                },
+                downloadTemplate() {
+                    // 模拟下载模板
+                    this.showToast('模板下载功能待实现', 'success');
+                },
+                startImport() {
+                    if (!this.selectedFile) return;
+                    
+                    this.importProgress = 0;
+                    const interval = setInterval(() => {
+                        this.importProgress += 10;
+                        if (this.importProgress >= 100) {
+                            clearInterval(interval);
+                            
+                            // 模拟导入结果：8条记录，5条符合要求，3条不符合
+                            const totalCount = 8;
+                            const successCount = 5;
+                            const failedCount = 3;
+                            const errors = [
+                                {row: 2, lhzOrder: 'LHZ001', containerNo: 'CTU1', message: '请填写起运港'},
+                                {row: 5, lhzOrder: 'LHZ002', containerNo: 'CTU2', message: '该SO未处于已订舱状态，无法上传可视化信息'},
+                                {row: 8, lhzOrder: 'LHZ003', containerNo: 'CTU3', message: '该落货纸不属于当前货代，无法上传'}
+                            ];
+                            
+                            // 规则：如果有失败的记录，所有记录都不入库（全部回滚）
+                            if (failedCount > 0) {
+                                // 有失败的记录，不添加任何数据到tableData
+                                // 设置导入结果
+                                this.importResult = {
+                                    success: successCount,
+                                    failed: failedCount,
+                                    errors: errors
+                                };
+                                
+                                this.showBatchModal = false;
+                                this.showImportResult = true;
+                                this.selectedFile = null;
+                                this.showToast('导入失败：存在不符合要求的记录，已全部回滚，未入库任何数据', 'error');
+                            } else {
+                                // 全部成功，才入库
+                                const now = new Date();
+                                const uploadTime = now.toLocaleString('zh-CN', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                }).replace(/\//g, '-');
+                                
+                                // 添加成功导入的记录
+                                for (let i = 0; i < successCount; i++) {
+                                    const newItem = {
+                                        id: this.tableData.length + 1 + i,
+                                        lhzOrder: `LHZ20250126${String(100 + i).padStart(3, '0')}`,
+                                        carrier: this.currentUser.carrier,
+                                        containerNo: `CONT${String(100 + i).padStart(3, '0')}`,
+                                        containerSize: '40HQ',
+                                        pol: 'CNTAO',
+                                        pod: 'DEHAM',
+                                        currentLocation: '阿拉山口',
+                                        kmToBorder: 120.5 + i,
+                                        kmToDestination: 3500.0 + i * 100,
+                                        realETD: '2025-01-28',
+                                        atd: null,
+                                        realETA: '2025-02-15',
+                                        ata: null,
+                                        uploadTime: uploadTime,
+                                        uploadUser: this.currentUser.name
+                                    };
+                                    this.tableData.unshift(newItem);
+                                }
+                                
+                                // 设置导入结果
+                                this.importResult = {
+                                    success: successCount,
+                                    failed: 0,
+                                    errors: []
+                                };
+                                
+                                this.showBatchModal = false;
+                                this.showImportResult = true;
+                                this.selectedFile = null;
+                                this.search();
+                                this.showToast(`成功导入 ${successCount} 条记录`, 'success');
+                            }
+                        }
+                    }, 200);
+                },
+                closeBatchModal() {
+                    this.showBatchModal = false;
+                    this.selectedFile = null;
+                    this.importProgress = 0;
+                    this.dragOver = false;
+                },
+                closeImportResult() {
+                    this.showImportResult = false;
+                    this.importResult = {
+                        success: 0,
+                        failed: 0,
+                        errors: []
+                    };
+                },
+                exportData() {
+                    // 模拟导出数据
+                    this.showToast('数据导出功能待实现', 'success');
+                },
+                jumpToPage() {
+                    if (this.jumpPage >= 1 && this.jumpPage <= this.pagination.pages) {
+                        this.pagination.current = this.jumpPage;
+                        this.search();
+                    } else {
+                        this.showToast(`请输入1到${this.pagination.pages}之间的页码`, 'error');
+                    }
+                },
+                showToast(message, type = 'success') {
+                    this.toast = {
+                        show: true,
+                        message: message,
+                        type: type
+                    };
+                    setTimeout(() => {
+                        this.toast.show = false;
+                    }, 3000);
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
