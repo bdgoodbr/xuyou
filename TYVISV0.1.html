@@ -356,9 +356,14 @@
                         <div class="px-6 py-2 text-sm font-semibold text-gray-700 flex items-center bg-gray-200 border-b border-gray-300">
                             <i class="fas fa-folder-open mr-2 text-blue-600"></i> 业务操作模块
                         </div>
-                        <div class="mt-1">
+                        <div class="mt-1 space-y-1">
                             <div @click="navigateToPage" :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', 'active']">
                                 <span>铁运可视化信息上报</span>
+                            </div>
+                            <!-- 铁运可视化查询入口：点击后在新标签页打开查询原型 -->
+                            <div @click="openRailVisualizationQuery" class="nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors">
+                                <span>铁运可视化查询</span>
+                                <i class="fas fa-up-right-from-square text-xs ml-2 text-gray-400"></i>
                             </div>
                         </div>
                     </div>
@@ -1131,6 +1136,11 @@
                 },
                 navigateToPage() {
                     // 导航到当前页面（已选中状态）
+                },
+                openRailVisualizationQuery() {
+                    // 在新标签页打开铁运可视化查询原型页面（GitHub Pages）
+                    const url = 'https://bdgoodbr.github.io/xuyou/Desktop/HTM/TYVISQ_V0.1.html';
+                    window.open(url, '_blank');
                 },
                 search() {
                     const lhzList = this.parseList(this.filters.lhzOrder);
