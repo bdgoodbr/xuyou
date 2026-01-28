@@ -83,6 +83,49 @@
             background-color: #FEF2F2;
         }
         
+        /* Multi-select dropdown styles */
+        .htm-multiselect {
+            height: auto !important;
+            min-height: 80px;
+            max-height: 120px;
+            padding: 4px 6px !important;
+            overflow-y: auto;
+            background-color: #fff;
+        }
+        .htm-multiselect option {
+            padding: 6px 10px;
+            margin: 2px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .htm-multiselect option:hover {
+            background-color: #EFF6FF;
+        }
+        .htm-multiselect option:checked {
+            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+            color: white;
+            font-weight: 500;
+        }
+        .htm-multiselect:focus {
+            border-color: #2563EB;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+        .htm-multiselect::-webkit-scrollbar {
+            width: 6px;
+        }
+        .htm-multiselect::-webkit-scrollbar-track {
+            background: #F1F5F9;
+            border-radius: 3px;
+        }
+        .htm-multiselect::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 3px;
+        }
+        .htm-multiselect::-webkit-scrollbar-thumb:hover {
+            background: #94A3B8;
+        }
+        
         /* Error Message */
         .error-message {
             font-size: 12px;
@@ -286,29 +329,29 @@
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 mb-1.5">起运港</label>
-                        <select v-model="filters.pol" multiple class="htm-input" style="min-height: 64px;" size="3">
+                        <select v-model="filters.pol" multiple class="htm-input htm-multiselect" size="4">
                             <option v-for="port in portOptions" :key="port" :value="port">{{ port }}</option>
                         </select>
-                        <div v-if="filters.pol && filters.pol.length > 0" class="text-xs text-gray-400 mt-1">
-                            已选择: {{ filters.pol.join(', ') }}
+                        <div v-if="filters.pol && filters.pol.length > 0" class="text-xs text-blue-600 mt-1 font-medium">
+                            已选择 {{ filters.pol.length }} 项: {{ filters.pol.join(', ') }}
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 mb-1.5">目的港</label>
-                        <select v-model="filters.pod" multiple class="htm-input" style="min-height: 64px;" size="3">
+                        <select v-model="filters.pod" multiple class="htm-input htm-multiselect" size="4">
                             <option v-for="port in portOptions" :key="port" :value="port">{{ port }}</option>
                         </select>
-                        <div v-if="filters.pod && filters.pod.length > 0" class="text-xs text-gray-400 mt-1">
-                            已选择: {{ filters.pod.join(', ') }}
+                        <div v-if="filters.pod && filters.pod.length > 0" class="text-xs text-blue-600 mt-1 font-medium">
+                            已选择 {{ filters.pod.length }} 项: {{ filters.pod.join(', ') }}
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 mb-1.5">箱型</label>
-                        <select v-model="filters.containerSize" multiple class="htm-input" style="min-height: 64px;" size="3">
+                        <select v-model="filters.containerSize" multiple class="htm-input htm-multiselect" size="4">
                             <option v-for="size in containerSizes" :key="size" :value="size">{{ size }}</option>
                         </select>
-                        <div v-if="filters.containerSize && filters.containerSize.length > 0" class="text-xs text-gray-400 mt-1">
-                            已选择: {{ filters.containerSize.join(', ') }}
+                        <div v-if="filters.containerSize && filters.containerSize.length > 0" class="text-xs text-blue-600 mt-1 font-medium">
+                            已选择 {{ filters.containerSize.length }} 项: {{ filters.containerSize.join(', ') }}
                         </div>
                     </div>
                     <div class="col-span-2">
@@ -836,7 +879,7 @@
                     // Pagination
                     pagination: {
                         current: 1,
-                        size: 20,
+                        size: 10,
                         total: 0,
                         pages: 0
                     },
