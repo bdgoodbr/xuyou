@@ -682,8 +682,9 @@
 
                 <!-- Query Content (Native) -->
                 <div v-if="currentView === 'query'" class="flex-1 p-6 overflow-y-auto overflow-x-hidden custom-scroll min-w-0 w-full self-stretch" style="width:100%;max-width:none;">
+                    <div class="w-full max-w-none">
                     <!-- Tabs -->
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
                         <div class="flex items-center gap-2 border-b border-gray-200 px-4">
                             <div :class="['q-tab', qActiveTab==='tracking'?'active':'']" @click="qActiveTab='tracking'">节点可视 Tracking Status</div>
                             <div :class="['q-tab', qActiveTab==='map'?'active':'']" @click="qActiveTab='map'">地图可视 Tracking on Map</div>
@@ -711,7 +712,7 @@
                     </div>
 
                     <!-- Subscription / Status strip -->
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 p-4">
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 p-4 w-full">
                         <div class="grid grid-cols-4 gap-6 items-center">
                             <div class="flex items-center gap-3">
                                 <div class="q-status-dot"></div>
@@ -750,7 +751,7 @@
                     </div>
 
                     <!-- Basic Information -->
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
                         <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                             <div class="font-bold text-slate-900">
                                 基本信息 <span class="text-slate-400 text-xs font-normal">Basic information</span>
@@ -808,7 +809,7 @@
                     </div>
 
                     <!-- Real-time schedule -->
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
                         <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                             <div class="font-bold text-slate-900">
                                 实时船期 <span class="text-slate-400 text-xs font-normal">Real-time schedule</span>
@@ -855,7 +856,7 @@
                     </div>
 
                     <!-- Detail table -->
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm w-full">
                         <div class="px-4 py-3 border-b border-gray-200 font-bold text-slate-900">
                             实时船期明细 <span class="text-slate-400 text-xs font-normal">Tracking Status</span>
                         </div>
@@ -884,6 +885,7 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
                     </div>
                 </div>
 
