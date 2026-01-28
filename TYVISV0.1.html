@@ -337,6 +337,15 @@
             color: #1F2937;
             font-weight: 600;
         }
+
+        /* Embedded Query View */
+        .embedded-iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #fff;
+            border-radius: 12px;
+        }
     </style>
 </head>
 <body>
@@ -357,13 +366,12 @@
                             <i class="fas fa-folder-open mr-2 text-blue-600"></i> 业务操作模块
                         </div>
                         <div class="mt-1 space-y-1">
-                            <div @click="navigateToPage" :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', 'active']">
+                            <div @click="switchView('upload')" :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', currentView==='upload' ? 'active' : '']">
                                 <span>铁运可视化信息上报</span>
                             </div>
-                            <!-- 铁运可视化查询入口：点击后在新标签页打开查询原型 -->
-                            <div @click="openRailVisualizationQuery" class="nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors">
+                            <!-- 铁运可视化查询入口：同页切换（不跳转） -->
+                            <div @click="switchView('query')" :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', currentView==='query' ? 'active' : '']">
                                 <span>铁运可视化查询</span>
-                                <i class="fas fa-up-right-from-square text-xs ml-2 text-gray-400"></i>
                             </div>
                         </div>
                     </div>
@@ -383,7 +391,7 @@
                 <!-- Header -->
                 <div class="h-14 bg-white border-b border-slate-200 flex justify-between items-center px-6 shrink-0 z-20">
                     <div class="text-compact text-slate-500">
-                        HTM / 业务操作模块 / <span class="text-slate-900 font-semibold">铁运可视化信息上报</span>
+                        HTM / 业务操作模块 / <span class="text-slate-900 font-semibold">{{ currentView === 'upload' ? '铁运可视化信息上报' : '铁运可视化查询' }}</span>
                     </div>
                     <div class="flex space-x-4 text-slate-400">
                         <i class="fas fa-bell hover:text-blue-600 cursor-pointer transition-colors"></i>
@@ -391,7 +399,7 @@
                 </div>
 
                 <!-- Main Content -->
-                <div class="flex-1 p-6 overflow-y-auto flex flex-col custom-scroll">
+                <div v-if="currentView === 'upload'" class="flex-1 p-6 overflow-y-auto flex flex-col custom-scroll">
                     <!-- Filter Section -->
             <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-4">
                 <div class="grid grid-cols-5 gap-4">
@@ -611,9 +619,16 @@
                         <input v-model.number="jumpPage" @keyup.enter="jumpToPage" type="number" class="htm-input w-16 h-8 text-xs" :min="1" :max="pagination.pages">
                         <span>页</span>
                     </div>
-                </div>
                     </div>
                 </div>
+            </div>
+                </div>
+
+                <!-- Query Content (Embedded) -->
+                <div v-if="currentView === 'query'" class="flex-1 p-6 overflow-hidden">
+                    <div class="h-full w-full border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
+                        <iframe class="embedded-iframe" :src="queryUrl"></iframe>
+                    </div>
             </div>
 
         <!-- Add Modal -->
@@ -1025,6 +1040,10 @@
                         pages: 0
                     },
                     jumpPage: 1,
+
+                // View switch (upload/query)
+                currentView: 'upload',
+                queryUrl: 'https://bdgoodbr.github.io/xuyou/Desktop/HTM/TYVISQ_V0.1.html',
                     
                     // Modals
                     showAddModal: false,
@@ -1137,10 +1156,8 @@
                 navigateToPage() {
                     // 导航到当前页面（已选中状态）
                 },
-                openRailVisualizationQuery() {
-                    // 在新标签页打开铁运可视化查询原型页面（GitHub Pages）
-                    const url = 'https://bdgoodbr.github.io/xuyou/Desktop/HTM/TYVISQ_V0.1.html';
-                    window.open(url, '_blank');
+                switchView(view) {
+                    this.currentView = view;
                 },
                 search() {
                     const lhzList = this.parseList(this.filters.lhzOrder);
