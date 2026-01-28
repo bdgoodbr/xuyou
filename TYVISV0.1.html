@@ -83,47 +83,118 @@
             background-color: #FEF2F2;
         }
         
-        /* Multi-select dropdown styles */
-        .htm-multiselect {
-            height: auto !important;
-            min-height: 80px;
-            max-height: 120px;
-            padding: 4px 6px !important;
-            overflow-y: auto;
-            background-color: #fff;
+        /* Custom Multi-select Dropdown */
+        .custom-multiselect {
+            position: relative;
+            width: 100%;
         }
-        .htm-multiselect option {
-            padding: 6px 10px;
-            margin: 2px 0;
+        .multiselect-input {
+            position: relative;
+            min-height: 34px;
+            border: 1px solid #D1D5DB;
             border-radius: 4px;
+            padding: 4px 30px 4px 8px;
+            background-color: #fff;
             cursor: pointer;
-            transition: all 0.15s;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+            transition: all 0.2s;
         }
-        .htm-multiselect option:hover {
+        .multiselect-input:focus,
+        .multiselect-input.open {
+            outline: none;
+            border-color: #2563EB;
+            box-shadow: 0 0 0 1px #2563EB;
+        }
+        .multiselect-tag {
+            display: inline-flex;
+            align-items: center;
             background-color: #EFF6FF;
+            color: #1E40AF;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 2px 0;
         }
-        .htm-multiselect option:checked {
-            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-            color: white;
+        .multiselect-tag .remove {
+            margin-left: 4px;
+            cursor: pointer;
+            color: #3B82F6;
+            font-weight: bold;
+        }
+        .multiselect-tag .remove:hover {
+            color: #1E40AF;
+        }
+        .multiselect-placeholder {
+            color: #9CA3AF;
+            font-size: 13px;
+        }
+        .multiselect-arrow {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6B7280;
+            pointer-events: none;
+            transition: transform 0.2s;
+        }
+        .multiselect-input.open .multiselect-arrow {
+            transform: translateY(-50%) rotate(180deg);
+        }
+        .multiselect-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 4px;
+            background: white;
+            border: 1px solid #D1D5DB;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .multiselect-search {
+            padding: 8px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        .multiselect-search input {
+            width: 100%;
+            border: 1px solid #D1D5DB;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+        .multiselect-search input:focus {
+            outline: none;
+            border-color: #2563EB;
+        }
+        .multiselect-options {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .multiselect-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 13px;
+        }
+        .multiselect-option:hover {
+            background-color: #F3F4F6;
+        }
+        .multiselect-option.selected {
+            background-color: #EFF6FF;
+            color: #1E40AF;
             font-weight: 500;
         }
-        .htm-multiselect:focus {
-            border-color: #2563EB;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-        }
-        .htm-multiselect::-webkit-scrollbar {
-            width: 6px;
-        }
-        .htm-multiselect::-webkit-scrollbar-track {
-            background: #F1F5F9;
-            border-radius: 3px;
-        }
-        .htm-multiselect::-webkit-scrollbar-thumb {
-            background: #CBD5E1;
-            border-radius: 3px;
-        }
-        .htm-multiselect::-webkit-scrollbar-thumb:hover {
-            background: #94A3B8;
+        .multiselect-option.selected::before {
+            content: "✓ ";
+            color: #2563EB;
+            font-weight: bold;
+            margin-right: 4px;
         }
         
         /* Error Message */
@@ -329,29 +400,86 @@
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 mb-1.5">起运港</label>
-                        <select v-model="filters.pol" multiple class="htm-input htm-multiselect" size="4">
-                            <option v-for="port in portOptions" :key="port" :value="port">{{ port }}</option>
-                        </select>
-                        <div v-if="filters.pol && filters.pol.length > 0" class="text-xs text-blue-600 mt-1 font-medium">
-                            已选择 {{ filters.pol.length }} 项: {{ filters.pol.join(', ') }}
+                        <div class="custom-multiselect">
+                            <div class="multiselect-input" :class="{open: showPolDropdown}" @click="showPolDropdown = !showPolDropdown">
+                                <template v-if="filters.pol && filters.pol.length > 0">
+                                    <span v-for="port in filters.pol" :key="port" class="multiselect-tag">
+                                        {{ port }}
+                                        <span class="remove" @click.stop="removePol(port)">×</span>
+                                    </span>
+                                </template>
+                                <span v-else class="multiselect-placeholder">请选择起运港</span>
+                                <i class="fas fa-chevron-down multiselect-arrow"></i>
+                            </div>
+                            <div v-if="showPolDropdown" class="multiselect-dropdown" @click.stop>
+                                <div class="multiselect-search">
+                                    <input type="text" v-model="polSearch" placeholder="搜索起运港..." @click.stop>
+                                </div>
+                                <div class="multiselect-options">
+                                    <div v-for="port in filteredPolOptions" :key="port" 
+                                         class="multiselect-option" 
+                                         :class="{selected: filters.pol && filters.pol.includes(port)}"
+                                         @click="togglePol(port)">
+                                        {{ port }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 mb-1.5">目的港</label>
-                        <select v-model="filters.pod" multiple class="htm-input htm-multiselect" size="4">
-                            <option v-for="port in portOptions" :key="port" :value="port">{{ port }}</option>
-                        </select>
-                        <div v-if="filters.pod && filters.pod.length > 0" class="text-xs text-blue-600 mt-1 font-medium">
-                            已选择 {{ filters.pod.length }} 项: {{ filters.pod.join(', ') }}
+                        <div class="custom-multiselect">
+                            <div class="multiselect-input" :class="{open: showPodDropdown}" @click="showPodDropdown = !showPodDropdown">
+                                <template v-if="filters.pod && filters.pod.length > 0">
+                                    <span v-for="port in filters.pod" :key="port" class="multiselect-tag">
+                                        {{ port }}
+                                        <span class="remove" @click.stop="removePod(port)">×</span>
+                                    </span>
+                                </template>
+                                <span v-else class="multiselect-placeholder">请选择目的港</span>
+                                <i class="fas fa-chevron-down multiselect-arrow"></i>
+                            </div>
+                            <div v-if="showPodDropdown" class="multiselect-dropdown" @click.stop>
+                                <div class="multiselect-search">
+                                    <input type="text" v-model="podSearch" placeholder="搜索目的港..." @click.stop>
+                                </div>
+                                <div class="multiselect-options">
+                                    <div v-for="port in filteredPodOptions" :key="port" 
+                                         class="multiselect-option" 
+                                         :class="{selected: filters.pod && filters.pod.includes(port)}"
+                                         @click="togglePod(port)">
+                                        {{ port }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs text-gray-500 mb-1.5">箱型</label>
-                        <select v-model="filters.containerSize" multiple class="htm-input htm-multiselect" size="4">
-                            <option v-for="size in containerSizes" :key="size" :value="size">{{ size }}</option>
-                        </select>
-                        <div v-if="filters.containerSize && filters.containerSize.length > 0" class="text-xs text-blue-600 mt-1 font-medium">
-                            已选择 {{ filters.containerSize.length }} 项: {{ filters.containerSize.join(', ') }}
+                        <div class="custom-multiselect">
+                            <div class="multiselect-input" :class="{open: showSizeDropdown}" @click="showSizeDropdown = !showSizeDropdown">
+                                <template v-if="filters.containerSize && filters.containerSize.length > 0">
+                                    <span v-for="size in filters.containerSize" :key="size" class="multiselect-tag">
+                                        {{ size }}
+                                        <span class="remove" @click.stop="removeSize(size)">×</span>
+                                    </span>
+                                </template>
+                                <span v-else class="multiselect-placeholder">请选择箱型</span>
+                                <i class="fas fa-chevron-down multiselect-arrow"></i>
+                            </div>
+                            <div v-if="showSizeDropdown" class="multiselect-dropdown" @click.stop>
+                                <div class="multiselect-search">
+                                    <input type="text" v-model="sizeSearch" placeholder="搜索箱型..." @click.stop>
+                                </div>
+                                <div class="multiselect-options">
+                                    <div v-for="size in filteredSizeOptions" :key="size" 
+                                         class="multiselect-option" 
+                                         :class="{selected: filters.containerSize && filters.containerSize.includes(size)}"
+                                         @click="toggleSize(size)">
+                                        {{ size }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-span-2">
@@ -755,6 +883,14 @@
                         uploadUser: ''
                     },
                     
+                    // Multi-select dropdown states
+                    showPolDropdown: false,
+                    showPodDropdown: false,
+                    showSizeDropdown: false,
+                    polSearch: '',
+                    podSearch: '',
+                    sizeSearch: '',
+                    
                     // Container Sizes (HTM标准箱型)
                     containerSizes: ['20GP', '40GP', '40HQ', '40NOR'],
                     // 港口枚举
@@ -940,12 +1076,35 @@
                 },
                 canDelete() {
                     return this.userRole === 'carrier' || this.userRole === 'admin';
+                },
+                filteredPolOptions() {
+                    if (!this.polSearch) return this.portOptions;
+                    const search = this.polSearch.toLowerCase();
+                    return this.portOptions.filter(port => port.toLowerCase().includes(search));
+                },
+                filteredPodOptions() {
+                    if (!this.podSearch) return this.portOptions;
+                    const search = this.podSearch.toLowerCase();
+                    return this.portOptions.filter(port => port.toLowerCase().includes(search));
+                },
+                filteredSizeOptions() {
+                    if (!this.sizeSearch) return this.containerSizes;
+                    const search = this.sizeSearch.toLowerCase();
+                    return this.containerSizes.filter(size => size.toLowerCase().includes(search));
                 }
             },
             mounted() {
                 this.updateUploadTime();
                 this.filteredData = this.tableData;
                 this.search();
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.custom-multiselect')) {
+                        this.showPolDropdown = false;
+                        this.showPodDropdown = false;
+                        this.showSizeDropdown = false;
+                    }
+                });
             },
             methods: {
                 parseList(value) {
@@ -1052,7 +1211,73 @@
                         carrier: '',
                         uploadUser: ''
                     };
+                    this.polSearch = '';
+                    this.podSearch = '';
+                    this.sizeSearch = '';
                     this.search();
+                },
+                // Multi-select methods for POL
+                togglePol(port) {
+                    if (!this.filters.pol) {
+                        this.$set(this.filters, 'pol', []);
+                    }
+                    const index = this.filters.pol.indexOf(port);
+                    if (index > -1) {
+                        this.filters.pol.splice(index, 1);
+                    } else {
+                        this.filters.pol.push(port);
+                    }
+                    this.search();
+                },
+                removePol(port) {
+                    if (!this.filters.pol) return;
+                    const index = this.filters.pol.indexOf(port);
+                    if (index > -1) {
+                        this.filters.pol.splice(index, 1);
+                        this.search();
+                    }
+                },
+                // Multi-select methods for POD
+                togglePod(port) {
+                    if (!this.filters.pod) {
+                        this.$set(this.filters, 'pod', []);
+                    }
+                    const index = this.filters.pod.indexOf(port);
+                    if (index > -1) {
+                        this.filters.pod.splice(index, 1);
+                    } else {
+                        this.filters.pod.push(port);
+                    }
+                    this.search();
+                },
+                removePod(port) {
+                    if (!this.filters.pod) return;
+                    const index = this.filters.pod.indexOf(port);
+                    if (index > -1) {
+                        this.filters.pod.splice(index, 1);
+                        this.search();
+                    }
+                },
+                // Multi-select methods for Container Size
+                toggleSize(size) {
+                    if (!this.filters.containerSize) {
+                        this.$set(this.filters, 'containerSize', []);
+                    }
+                    const index = this.filters.containerSize.indexOf(size);
+                    if (index > -1) {
+                        this.filters.containerSize.splice(index, 1);
+                    } else {
+                        this.filters.containerSize.push(size);
+                    }
+                    this.search();
+                },
+                removeSize(size) {
+                    if (!this.filters.containerSize) return;
+                    const index = this.filters.containerSize.indexOf(size);
+                    if (index > -1) {
+                        this.filters.containerSize.splice(index, 1);
+                        this.search();
+                    }
                 },
                 toggleSelectAll() {
                     if (this.isAllSelected) {
