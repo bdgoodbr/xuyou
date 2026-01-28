@@ -365,7 +365,7 @@
                                 <th>ATD</th>
                                 <th>实时ETA</th>
                                 <th>ATA</th>
-                                <th>距离口岸(KM)</th>
+                                <th>距离始发站口岸(KM)</th>
                                 <th>距离目的地(KM)</th>
                                 <th>上传时间</th>
                                 <th>上传人</th>
@@ -471,7 +471,7 @@
                                 <span v-if="errors.currentLocation" class="error-message">{{ errors.currentLocation }}</span>
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5 required">距离口岸(KM)</label>
+                                <label class="block text-xs text-gray-500 mb-1.5 required">距离始发站口岸(KM)</label>
                                 <input v-model.number="form.kmToBorder" type="number" step="0.01" min="0" class="htm-input" :class="{error: errors.kmToBorder}" placeholder="请输入距离" @blur="validateField('kmToBorder')">
                                 <span v-if="errors.kmToBorder" class="error-message">{{ errors.kmToBorder }}</span>
                             </div>
@@ -996,7 +996,7 @@
                         containerNo: '箱号',
                         containerSize: '箱型',
                         currentLocation: '当前位置',
-                        kmToBorder: '距离口岸'
+                        kmToBorder: '距离始发站口岸'
                     };
                     return labels[field] || field;
                 },
