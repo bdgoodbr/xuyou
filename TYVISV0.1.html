@@ -436,7 +436,7 @@
             </div>
 
             <!-- Main Content Area -->
-            <div class="flex-1 flex flex-col bg-slate-50 overflow-hidden relative">
+            <div class="flex-1 flex flex-col bg-slate-50 overflow-hidden relative min-w-0">
                 <!-- Header -->
                 <div class="h-14 bg-white border-b border-slate-200 flex justify-between items-center px-6 shrink-0 z-20">
                     <div class="text-compact text-slate-500">
@@ -448,7 +448,7 @@
                 </div>
 
                 <!-- Main Content -->
-                <div v-if="currentView === 'upload'" class="flex-1 p-6 overflow-y-auto flex flex-col custom-scroll">
+                <div v-if="currentView === 'upload'" class="flex-1 p-6 overflow-y-auto flex flex-col custom-scroll min-w-0 w-full">
                     <!-- Filter Section -->
             <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-4">
                 <div class="grid grid-cols-5 gap-4">
@@ -674,7 +674,7 @@
                 </div>
 
                 <!-- Query Content (Native) -->
-                <div v-if="currentView === 'query'" class="flex-1 p-6 overflow-y-auto custom-scroll">
+                <div v-if="currentView === 'query'" class="flex-1 p-6 overflow-y-auto custom-scroll min-w-0 w-full">
                     <!-- Tabs -->
                     <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
                         <div class="flex items-center gap-2 border-b border-gray-200 px-4">
