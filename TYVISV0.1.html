@@ -338,14 +338,63 @@
             font-weight: 600;
         }
 
-        /* Embedded Query View */
-        .embedded-iframe {
-            width: 100%;
-            height: 100%;
-            border: 0;
-            background: #fff;
-            border-radius: 12px;
+        /* Query View */
+        .q-tab {
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #64748b;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
         }
+        .q-tab.active {
+            color: #2563EB;
+            border-bottom-color: #2563EB;
+            font-weight: 600;
+        }
+        .q-tab:hover { color: #2563EB; }
+
+        .q-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 9999px;
+            background: #10b981;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+        }
+        .q-status-line {
+            height: 2px;
+            background: #e2e8f0;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        .q-status-line::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #34d399, #60a5fa);
+            opacity: 0.7;
+        }
+
+        .q-table-compact th {
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 12px;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+            text-align: left;
+        }
+        .q-table-compact td {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+            color: #334155;
+        }
+        .q-table-compact tr:hover { background: #f8fafc; }
     </style>
 </head>
 <body>
@@ -624,12 +673,212 @@
             </div>
                 </div>
 
-                <!-- Query Content (Embedded) -->
-                <div v-if="currentView === 'query'" class="flex-1 p-6 overflow-hidden">
-                    <div class="h-full w-full border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
-                        <iframe class="embedded-iframe" :src="queryUrl"></iframe>
+                <!-- Query Content (Native) -->
+                <div v-if="currentView === 'query'" class="flex-1 p-6 overflow-y-auto custom-scroll">
+                    <!-- Tabs -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
+                        <div class="flex items-center gap-2 border-b border-gray-200 px-4">
+                            <div :class="['q-tab', qActiveTab==='tracking'?'active':'']" @click="qActiveTab='tracking'">节点可视 Tracking Status</div>
+                            <div :class="['q-tab', qActiveTab==='map'?'active':'']" @click="qActiveTab='map'">地图可视 Tracking on Map</div>
+                            <div :class="['q-tab', qActiveTab==='congestion'?'active':'']" @click="qActiveTab='congestion'">港口拥堵报告 Port Congestion Report</div>
+                        </div>
+
+                        <!-- Query Bar -->
+                        <div class="p-4 flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-2">
+                                <select v-model="qQueryType" class="htm-input" style="width: 150px;">
+                                    <option value="so">订舱号 SO NO.</option>
+                                    <option value="lhz">落货纸号</option>
+                                    <option value="waybill">物流运单号</option>
+                                </select>
+                                <input v-model="qQueryValue" class="htm-input font-mono" style="width: 220px;" placeholder="请输入...">
+                                <button @click="qDoQuery" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-4 h-9 rounded shadow-sm transition-colors">
+                                    查询 QUERY
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button @click="qOpenBookingInfo" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-9 rounded shadow-sm">订舱信息 Booking information</button>
+                                <button @click="qExportList" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-9 rounded shadow-sm">导出列表信息 Export list information</button>
+                            </div>
+                        </div>
                     </div>
-            </div>
+
+                    <!-- Subscription / Status strip -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 p-4">
+                        <div class="grid grid-cols-4 gap-6 items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="q-status-dot"></div>
+                                <div>
+                                    <div class="text-xs text-slate-500">订阅方 Date From</div>
+                                    <div class="text-sm font-semibold text-slate-800">{{ qSubscription.from }}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="q-status-dot"></div>
+                                <div>
+                                    <div class="text-xs text-slate-500">订阅状态 Subscription Status</div>
+                                    <div class="text-sm font-semibold text-green-700">{{ qSubscription.status }}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="q-status-dot"></div>
+                                <div>
+                                    <div class="text-xs text-slate-500">数据状态 Data Status</div>
+                                    <div class="text-sm font-semibold text-slate-800">{{ qSubscription.dataStatus }}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 justify-end">
+                                <div class="text-right">
+                                    <div class="text-xs text-slate-500">更新时间 Update</div>
+                                    <div class="text-sm font-semibold text-slate-800">{{ qSubscription.updatedAt }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 mt-3">
+                            <div class="q-status-line"></div>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-2">
+                            - 海运：订阅方显示船公司/数据源，逻辑不变；铁运：订阅方显示具体货代名称，完成订舱后默认订阅成功。
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
+                        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                            <div class="font-bold text-slate-900">
+                                基本信息 <span class="text-slate-400 text-xs font-normal">Basic information</span>
+                            </div>
+                            <div class="text-xs text-slate-500">
+                                运输方式：<span class="font-semibold text-slate-800">{{ qBasic.transport }}</span>
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="grid grid-cols-3 gap-0 border border-gray-200 rounded overflow-hidden">
+                                <div class="border-r border-gray-200">
+                                    <table class="w-full q-table-compact">
+                                        <tbody>
+                                            <tr><th class="w-48">物流运单号 Hisense Tracking No.</th><td class="font-mono">{{ qBasic.waybillNo }}</td></tr>
+                                            <tr><th>落货纸号 delivery note.</th><td class="font-mono">{{ qBasic.deliveryNotes }}</td></tr>
+                                            <tr><th>货代 Shipping Carrier</th><td>{{ qBasic.carrier }}</td></tr>
+                                            <tr><th>起运港 POL</th><td>{{ qBasic.pol }}</td></tr>
+                                            <tr><th>接货地 Place of Receipt</th><td>{{ qBasic.placeOfReceipt }}</td></tr>
+                                            <tr><th>订舱ETD ETD (Booking)</th><td>{{ qBasic.etdBooking }}</td></tr>
+                                            <tr><th>实时ETD ETD (Update)</th><td>{{ qBasic.etdUpdate }}</td></tr>
+                                            <tr><th>物流岗 Booking Operator</th><td>{{ qBasic.bookingOperator }}</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="border-r border-gray-200">
+                                    <table class="w-full q-table-compact">
+                                        <tbody>
+                                            <tr><th class="w-48">SO NO.</th><td class="font-mono">{{ qBasic.soNo }}</td></tr>
+                                            <tr><th>价格条款 Price Terms</th><td>{{ qBasic.priceTerms }}</td></tr>
+                                            <tr><th>船名/航次 Ocean Vessel/Voy. No.</th><td>{{ qBasic.vesselVoy || '-' }}</td></tr>
+                                            <tr><th>中转港 Port of Transshipment</th><td>{{ qBasic.transshipment || '-' }}</td></tr>
+                                            <tr><th>装货港 POL</th><td>{{ qBasic.pol2 }}</td></tr>
+                                            <tr><th>订舱ETA ETA (Booking)</th><td>{{ qBasic.etaBooking }}</td></tr>
+                                            <tr><th>实时ETA ETA (Update)</th><td>{{ qBasic.etaUpdate }}</td></tr>
+                                            <tr><th>单证人员 Document Operator</th><td>{{ qBasic.docOperator }}</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div>
+                                    <table class="w-full q-table-compact">
+                                        <tbody>
+                                            <tr><th class="w-48">提单号 B/L No.</th><td>{{ qBasic.blNo || '-' }}</td></tr>
+                                            <tr><th>箱型箱量 Size and Qty. of</th><td>{{ qBasic.sizeQty }}</td></tr>
+                                            <tr><th>目的站 Port of Delivery</th><td>{{ qBasic.destination }}</td></tr>
+                                            <tr><th>卸货地 Place of Delivery</th><td>{{ qBasic.placeOfDelivery }}</td></tr>
+                                            <tr><th>ATD</th><td>{{ qBasic.atd }}</td></tr>
+                                            <tr><th>ATA</th><td>{{ qBasic.ata }}</td></tr>
+                                            <tr><th>多式联运 Multi-transportation</th><td>{{ qBasic.multi || '-' }}</td></tr>
+                                            <tr><th>备注</th><td>{{ qBasic.remark || '-' }}</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Real-time schedule -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
+                        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                            <div class="font-bold text-slate-900">
+                                实时船期 <span class="text-slate-400 text-xs font-normal">Real-time schedule</span>
+                            </div>
+                            <div class="text-xs text-slate-500">
+                                距离境外始发站：<span class="font-semibold text-slate-800">{{ qLatestDistances.kmFromOverseasOrigin ?? '-' }}</span>
+                                <span class="mx-2 text-slate-300">|</span>
+                                距离目的站：<span class="font-semibold text-slate-800">{{ qLatestDistances.kmToDestinationStation ?? '-' }}</span>
+                                <span class="mx-2 text-slate-300">|</span>
+                                取值：最新上传
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="text-xs text-slate-500">起运港发船</div>
+                                            <div class="text-sm font-bold text-slate-900">{{ qRealtimeNodes.depart.pol }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-xs text-slate-500">实际离港时间</div>
+                                            <div class="text-sm font-semibold text-slate-800">{{ qRealtimeNodes.depart.time || '-' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="text-xs text-slate-500">目的站到港</div>
+                                            <div class="text-sm font-bold text-slate-900">{{ qRealtimeNodes.arrive.station }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-xs text-slate-500">实际到港时间</div>
+                                            <div class="text-sm font-semibold text-slate-800">{{ qRealtimeNodes.arrive.time || '-' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-xs text-slate-500 mt-3">
+                                - 铁运实时船期仅展示两个动态：起运港发船、目的站到港；距离字段来源于货代上传，若多次上传则取上传时间最新的一条。
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail table -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+                        <div class="px-4 py-3 border-b border-gray-200 font-bold text-slate-900">
+                            实时船期明细 <span class="text-slate-400 text-xs font-normal">Tracking Status</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full q-table-compact">
+                                <thead>
+                                    <tr>
+                                        <th class="w-12">NO.</th>
+                                        <th>Milestones</th>
+                                        <th class="w-56">Location</th>
+                                        <th class="w-56">Transport Mode</th>
+                                        <th class="w-56">Actual Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(row, idx) in qMilestones" :key="idx">
+                                        <td class="text-slate-500">{{ idx + 1 }}</td>
+                                        <td>{{ row.milestone }}</td>
+                                        <td class="font-mono text-xs text-slate-600">{{ row.location }}</td>
+                                        <td class="text-slate-600">{{ row.mode }}</td>
+                                        <td class="font-mono text-xs text-slate-600">{{ row.actualDate }}</td>
+                                    </tr>
+                                    <tr v-if="qMilestones.length===0">
+                                        <td colspan="5" class="text-center text-slate-400 py-6">暂无数据</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
         <!-- Add Modal -->
         <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
@@ -1043,7 +1292,55 @@
 
                 // View switch (upload/query)
                 currentView: 'upload',
-                queryUrl: 'https://bdgoodbr.github.io/xuyou/Desktop/HTM/TYVISQ_V0.1.html',
+
+                // Query (native)
+                qActiveTab: 'tracking',
+                qQueryType: 'so',
+                qQueryValue: 'COSU64321333310',
+                // 模拟：运输方式切换（海运/铁运），用于验证“订阅方横条”逻辑
+                qTransportType: 'rail', // 'sea' | 'rail'
+
+                qBasic: {
+                    transport: '铁运',
+                    waybillNo: '1696176(H)',
+                    deliveryNotes: '1696175,1696176',
+                    carrier: 'HGCC (货代)',
+                    pol: 'QINGDAO-CN',
+                    placeOfReceipt: 'QINGDAO-CN',
+                    etdBooking: '2025-10-30',
+                    etdUpdate: '2025-10-30',
+                    bookingOperator: 'A-华鑫',
+
+                    soNo: 'COSU64321333310',
+                    priceTerms: 'DAP',
+                    vesselVoy: '-',
+                    transshipment: '-',
+                    pol2: 'QINGDAO-CN',
+                    etaBooking: '2025-12-24',
+                    etaUpdate: '2025-12-29',
+                    docOperator: 'A-周培',
+
+                    blNo: '',
+                    sizeQty: '40HQ*1',
+                    destination: 'RIJEKA,HR',
+                    placeOfDelivery: 'RIJEKA,HR',
+                    atd: '2025-10-30',
+                    ata: '2025-12-29',
+                    multi: '-',
+                    remark: ''
+                },
+                qUploads: [
+                    { uploadTime: '2026-01-18 09:10:00', kmFromOverseasOrigin: 420, kmToDestinationStation: 980 },
+                    { uploadTime: '2026-01-19 09:18:04', kmFromOverseasOrigin: 410, kmToDestinationStation: 960 }
+                ],
+                qRealtimeNodes: {
+                    depart: { pol: 'QINGDAO-CN', time: '2025-10-30 14:46:00' },
+                    arrive: { station: 'RIJEKA,HR', time: '2025-12-29 21:14:00' }
+                },
+                qMilestones: [
+                    { milestone: '起运港发船 / Departure from Origin', location: 'QINGDAO-CN', mode: 'Rail', actualDate: '2025-10-30 14:46:00' },
+                    { milestone: '目的站到港 / Arrival at Destination', location: 'RIJEKA,HR', mode: 'Rail', actualDate: '2025-12-29 21:14:00' }
+                ],
                     
                     // Modals
                     showAddModal: false,
@@ -1115,6 +1412,36 @@
                     if (!this.sizeSearch) return this.containerSizes;
                     const search = this.sizeSearch.toLowerCase();
                     return this.containerSizes.filter(size => size.toLowerCase().includes(search));
+                },
+
+                // ===== Query (native) =====
+                qLatestUpload() {
+                    if (!this.qUploads || this.qUploads.length === 0) return null;
+                    return [...this.qUploads].sort((a, b) => (a.uploadTime || '').localeCompare(b.uploadTime || '')).slice(-1)[0];
+                },
+                qLatestDistances() {
+                    const u = this.qLatestUpload;
+                    return {
+                        kmFromOverseasOrigin: u?.kmFromOverseasOrigin ?? null,
+                        kmToDestinationStation: u?.kmToDestinationStation ?? null
+                    };
+                },
+                qSubscription() {
+                    const isSea = this.qTransportType === 'sea';
+                    if (isSea) {
+                        return {
+                            from: '船公司/数据源',
+                            status: '订阅成功',
+                            dataStatus: '数据已推送',
+                            updatedAt: '2026-01-19 09:18:04'
+                        };
+                    }
+                    return {
+                        from: this.qBasic?.carrier || '货代',
+                        status: '订阅成功',
+                        dataStatus: '数据已推送',
+                        updatedAt: '2026-01-19 09:18:04'
+                    };
                 }
             },
             mounted() {
@@ -1158,6 +1485,15 @@
                 },
                 switchView(view) {
                     this.currentView = view;
+                },
+                qDoQuery() {
+                    this.showToast('查询功能待接真实数据（原型演示）', 'success');
+                },
+                qOpenBookingInfo() {
+                    this.showToast('订舱信息功能待实现（原型演示）', 'success');
+                },
+                qExportList() {
+                    this.showToast('导出列表功能待实现（原型演示）', 'success');
                 },
                 search() {
                     const lhzList = this.parseList(this.filters.lhzOrder);
