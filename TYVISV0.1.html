@@ -1124,6 +1124,9 @@
         </div>
     </div>
 
+    <!-- Close #app -->
+    </div>
+
     <script>
         const { createApp } = Vue;
 
@@ -1485,6 +1488,14 @@
                 },
                 switchView(view) {
                     this.currentView = view;
+                    // 防止从“上报”宽表横向滚动后，切到“查询”出现左侧大空白（window 横向滚动未复位）
+                    this.$nextTick(() => {
+                        try {
+                            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                            document.documentElement.scrollLeft = 0;
+                            document.body.scrollLeft = 0;
+                        } catch (e) {}
+                    });
                 },
                 qDoQuery() {
                     this.showToast('查询功能待接真实数据（原型演示）', 'success');
