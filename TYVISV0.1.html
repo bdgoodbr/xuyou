@@ -443,7 +443,7 @@
             </div>
 
             <!-- Main Content Area -->
-            <div class="main-content flex flex-col bg-slate-50 overflow-hidden relative overflow-x-hidden">
+            <div ref="mainContent" class="main-content flex flex-col bg-slate-50 overflow-hidden relative overflow-x-hidden">
                 <!-- Header -->
                 <div class="h-14 bg-white border-b border-slate-200 flex justify-between items-center px-6 shrink-0 z-20">
                     <div class="text-compact text-slate-500">
@@ -1510,6 +1510,10 @@
                     // 防止从“上报”宽表横向滚动后，切到“查询”出现左侧大空白（window 横向滚动未复位）
                     this.$nextTick(() => {
                         try {
+                            // reset internal container scrollLeft as well
+                            if (this.$refs.mainContent) {
+                                this.$refs.mainContent.scrollLeft = 0;
+                            }
                             window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
                             document.documentElement.scrollLeft = 0;
                             document.body.scrollLeft = 0;
