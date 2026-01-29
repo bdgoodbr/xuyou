@@ -482,6 +482,15 @@
                             </div>
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1.5">当前状态</label>
+                        <select v-model="filters.currentStatus" class="htm-input">
+                            <option value="">全部</option>
+                            <option v-for="status in statusOptions" :key="status.code" :value="status.code">
+                                {{ status.code }} - {{ status.label }}
+                            </option>
+                        </select>
+                    </div>
                     <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5">上传时间</label>
                         <input v-model="filters.uploadTimeRange" type="text" class="htm-input" placeholder="YYYY-MM-DD - YYYY-MM-DD">
@@ -543,6 +552,7 @@
                                 <th>箱型</th>
                                 <th>起运港</th>
                                 <th>目的港</th>
+                                <th>当前状态</th>
                                 <th>当前位置</th>
                                 <th>实时ETD</th>
                                 <th>ATD</th>
@@ -566,6 +576,7 @@
                                 <td>{{ item.containerSize }}</td>
                                 <td>{{ item.pol }}</td>
                                 <td>{{ item.pod }}</td>
+                                <td>{{ getStatusLabel(item.currentStatus) }}</td>
                                 <td>{{ item.currentLocation }}</td>
                                 <td class="font-mono text-xs">{{ formatDateOnly(item.realETD) }}</td>
                                 <td class="font-mono text-xs">{{ formatDateOnly(item.atd) }}</td>
@@ -647,6 +658,16 @@
                                     <option v-for="size in containerSizes" :key="size" :value="size">{{ size }}</option>
                                 </select>
                                 <span v-if="errors.containerSize" class="error-message">{{ errors.containerSize }}</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5 required">当前状态</label>
+                                <select v-model="form.currentStatus" class="htm-input" :class="{error: errors.currentStatus}" @blur="validateField('currentStatus')">
+                                    <option value="">请选择</option>
+                                    <option v-for="status in statusOptions" :key="status.code" :value="status.code">
+                                        {{ status.code }} - {{ status.label }}
+                                    </option>
+                                </select>
+                                <span v-if="errors.currentStatus" class="error-message">{{ errors.currentStatus }}</span>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1.5 required">当前位置</label>
@@ -878,6 +899,7 @@
                         pol: [],
                         pod: [],
                         containerSize: [],
+                        currentStatus: '',
                         uploadTimeRange: '',
                         carrier: '',
                         uploadUser: ''
@@ -895,6 +917,15 @@
                     containerSizes: ['20GP', '40GP', '40HQ', '40NOR'],
                     // 港口枚举
                     portOptions: ['CNTAO', 'DEHAM', 'CNSHA', 'DEBRV', 'CNDLC'],
+                    // 当前状态枚举（单选）
+                    statusOptions: [
+                        { code: '00', label: '已进站 / 待发运 (Gate In)' },
+                        { code: '10', label: '已发车 / 国内在途 (Departed / Domestic Transit)' },
+                        { code: '20', label: '抵达国内口岸 / 排队 (Arrived Border CN / Queuing)' },
+                        { code: '30', label: '境外换装中 (Overseas Reloading)' },
+                        { code: '40', label: '境外在途 (Overseas Transit)' },
+                        { code: '50', label: '已抵达目的站 (Arrived Destination)' }
+                    ],
                     
                     // Table Data
                     tableData: [
@@ -906,6 +937,7 @@
                             containerSize: '40HQ',
                             pol: 'CNTAO',
                             pod: 'DEHAM',
+                            currentStatus: '10',
                             currentLocation: '阿拉山口',
                             kmToBorder: 120.5,
                             kmToDestination: 3500.0,
@@ -924,6 +956,7 @@
                             containerSize: '20GP',
                             pol: 'CNTAO',
                             pod: 'DEHAM',
+                            currentStatus: '10',
                             currentLocation: '霍尔果斯',
                             kmToBorder: 80.0,
                             kmToDestination: 3800.0,
@@ -942,6 +975,7 @@
                             containerSize: '40GP',
                             pol: 'CNSHA',
                             pod: 'DEBRV',
+                            currentStatus: '20',
                             currentLocation: '满洲里',
                             kmToBorder: 95.3,
                             kmToDestination: 4200.0,
@@ -960,6 +994,7 @@
                             containerSize: '40HQ',
                             pol: 'CNTAO',
                             pod: 'DEHAM',
+                            currentStatus: '20',
                             currentLocation: '二连浩特',
                             kmToBorder: 150.8,
                             kmToDestination: 3900.0,
@@ -978,6 +1013,7 @@
                             containerSize: '20GP',
                             pol: 'CNDLC',
                             pod: 'DEHAM',
+                            currentStatus: '30',
                             currentLocation: '阿拉山口',
                             kmToBorder: 110.2,
                             kmToDestination: 3600.0,
@@ -996,6 +1032,7 @@
                             containerSize: '40HQ',
                             pol: 'CNTAO',
                             pod: 'DEBRV',
+                            currentStatus: '10',
                             currentLocation: '霍尔果斯',
                             kmToBorder: 85.6,
                             kmToDestination: 4100.0,
@@ -1034,6 +1071,7 @@
                         lhzOrder: '',
                         containerNo: '',
                         containerSize: '',
+                        currentStatus: '',
                         currentLocation: '',
                         kmToBorder: null,
                         kmToDestination: null,
@@ -1118,6 +1156,11 @@
                     if (!value) return true;
                     return this.portOptions.includes(value.trim().toUpperCase());
                 },
+                getStatusLabel(code) {
+                    if (!code) return '-';
+                    const found = this.statusOptions.find(s => s.code === code);
+                    return found ? found.label : code;
+                },
                 updateUploadTime() {
                     const now = new Date();
                     this.currentUploadTime = now.toLocaleString('zh-CN', {
@@ -1138,6 +1181,7 @@
                     const polList = Array.isArray(this.filters.pol) ? this.filters.pol : [];
                     const podList = Array.isArray(this.filters.pod) ? this.filters.pod : [];
                     const sizeList = Array.isArray(this.filters.containerSize) ? this.filters.containerSize : [];
+                    const statusCode = this.filters.currentStatus;
                     const carrierVal = this.filters.carrier.trim();
                     const uploadUserVal = this.filters.uploadUser.trim();
                     const uploadTimeRange = this.filters.uploadTimeRange.trim();
@@ -1163,6 +1207,9 @@
                     }
                     if (sizeList.length > 0) {
                         result = result.filter(item => sizeList.includes(item.containerSize));
+                    }
+                    if (statusCode) {
+                        result = result.filter(item => item.currentStatus === statusCode);
                     }
                     if (carrierVal) {
                         // 货代搜索：货代A只能搜索到自己货代的数据
@@ -1207,6 +1254,7 @@
                         pol: [],
                         pod: [],
                         containerSize: [],
+                        currentStatus: '',
                         uploadTimeRange: '',
                         carrier: '',
                         uploadUser: ''
@@ -1287,7 +1335,7 @@
                     }
                 },
                 validateField(field) {
-                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentLocation', 'kmToBorder'];
+                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder'];
                     if (requiredFields.includes(field) && !this.form[field]) {
                         this.$set(this.errors, field, `请填写${this.getFieldLabel(field)}`);
                         return;
@@ -1305,6 +1353,7 @@
                         lhzOrder: '落货纸号',
                         containerNo: '箱号',
                         containerSize: '箱型',
+                        currentStatus: '当前状态',
                         currentLocation: '当前位置',
                         kmToBorder: '距离始发站口岸'
                     };
@@ -1312,7 +1361,7 @@
                 },
                 validateForm() {
                     this.errors = {};
-                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentLocation', 'kmToBorder'];
+                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder'];
                     let hasError = false;
                     
                     requiredFields.forEach(field => {
@@ -1360,6 +1409,7 @@
                         containerSize: this.form.containerSize,
                         pol: this.form.pol,
                         pod: this.form.pod,
+                        currentStatus: this.form.currentStatus,
                         currentLocation: this.form.currentLocation,
                         kmToBorder: this.form.kmToBorder,
                         kmToDestination: this.form.kmToDestination,
@@ -1401,6 +1451,7 @@
                         lhzOrder: '',
                         containerNo: '',
                         containerSize: '',
+                        currentStatus: '',
                         currentLocation: '',
                         kmToBorder: null,
                         kmToDestination: null,
