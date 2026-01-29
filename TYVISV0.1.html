@@ -983,51 +983,142 @@
 
         <!-- Export List Modal (Query) -->
         <div v-if="showExportModal" class="modal-overlay" @click.self="closeExportModal">
-            <div class="modal-content max-w-3xl" @click.stop>
+            <div class="modal-content" style="width: 980px; max-width: calc(100vw - 48px);" @click.stop>
                 <div class="p-6 border-b border-gray-200 flex items-center justify-between">
-                    <h2 class="text-lg font-bold text-slate-900">导出列表信息 Export list information</h2>
-                    <button class="text-slate-400 hover:text-slate-600" @click="closeExportModal">
+                    <h2 class="text-lg font-bold text-slate-900">导出列表信息</h2>
+                    <button class="text-slate-400 hover:text-slate-600" @click="closeExportModal" aria-label="close">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <div class="p-6">
-                    <div class="grid grid-cols-3 gap-6">
-                        <div class="col-span-1">
-                            <label class="block text-xs text-gray-500 mb-1.5">订舱号 Booking No.</label>
-                            <textarea v-model="exportForm.bookingNo" rows="3" class="htm-input" placeholder="如需筛选多个,请用回车分割"></textarea>
+                    <div class="grid grid-cols-2 gap-10">
+                        <!-- Left column: 4 textarea blocks -->
+                        <div class="space-y-6">
+                            <div class="flex gap-4 items-start">
+                                <div class="w-28 shrink-0 pt-2 text-slate-600 text-sm leading-4 text-right">
+                                    <div class="text-sm">订舱号</div>
+                                    <div class="text-xs text-slate-400">delivery<br>note</div>
+                                </div>
+                                <textarea v-model="exportForm.bookingNo" rows="4" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                            </div>
+                            <div class="flex gap-4 items-start">
+                                <div class="w-28 shrink-0 pt-2 text-slate-600 text-sm text-right">SO NO</div>
+                                <textarea v-model="exportForm.soNo" rows="4" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                            </div>
+                            <div class="flex gap-4 items-start">
+                                <div class="w-28 shrink-0 pt-2 text-slate-600 text-sm leading-4 text-right">
+                                    <div class="text-sm">集装箱号</div>
+                                    <div class="text-xs text-slate-400">CTN NO</div>
+                                </div>
+                                <textarea v-model="exportForm.containerNo" rows="4" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                            </div>
+                            <div class="flex gap-4 items-start">
+                                <div class="w-28 shrink-0 pt-2 text-slate-600 text-sm leading-4 text-right">
+                                    <div class="text-sm">船名/航次</div>
+                                    <div class="text-xs text-slate-400">Ocean<br>Vessel/Voy.<br>No.</div>
+                                </div>
+                                <textarea v-model="exportForm.vesselVoy" rows="4" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                            </div>
                         </div>
-                        <div class="col-span-1">
-                            <label class="block text-xs text-gray-500 mb-1.5">SO NO</label>
-                            <textarea v-model="exportForm.soNo" rows="3" class="htm-input" placeholder="如需筛选多个,请用回车分割"></textarea>
-                        </div>
-                        <div class="col-span-1">
-                            <label class="block text-xs text-gray-500 mb-1.5">集装箱号 CTN NO</label>
-                            <textarea v-model="exportForm.containerNo" rows="3" class="htm-input" placeholder="如需筛选多个,请用回车分割"></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1.5">ETD</label>
-                            <input v-model="exportForm.etd" type="date" class="htm-input">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1.5">ETA</label>
-                            <input v-model="exportForm.eta" type="date" class="htm-input">
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-500 mb-1.5">运输方式 Transport mode</label>
-                            <select v-model="exportForm.transportMode" class="htm-input">
-                                <option value="">全部 / 为空</option>
-                                <option value="rail">铁运</option>
-                                <option value="sea">海运</option>
-                            </select>
+
+                        <!-- Right column: dates + selects; transport mode at end -->
+                        <div class="space-y-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-28 shrink-0 text-slate-600 text-sm text-right">ETD</div>
+                                <input v-model="exportForm.etd" type="date" class="htm-input flex-1">
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-28 shrink-0 text-slate-600 text-sm text-right">ATD</div>
+                                <input v-model="exportForm.atd" type="date" class="htm-input flex-1">
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-28 shrink-0 text-slate-600 text-sm text-right">ETA</div>
+                                <input v-model="exportForm.eta" type="date" class="htm-input flex-1">
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-28 shrink-0 text-slate-600 text-sm text-right">ATA</div>
+                                <input v-model="exportForm.ata" type="date" class="htm-input flex-1">
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-28 shrink-0 text-slate-600 text-sm leading-4 text-right">
+                                    <div class="text-sm">出口国家</div>
+                                    <div class="text-xs text-slate-400">destination<br>country</div>
+                                </div>
+                                <select v-model="exportForm.destinationCountry" class="htm-input flex-1">
+                                    <option value="">请选择</option>
+                                    <option value="HR">HR</option>
+                                    <option value="BA">BA</option>
+                                    <option value="RS">RS</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-28 shrink-0 text-slate-600 text-sm leading-4 text-right">
+                                    <div class="text-sm">船公司</div>
+                                    <div class="text-xs text-slate-400">Shipping<br>Carrier</div>
+                                </div>
+                                <select v-model="exportForm.shippingCarrier" class="htm-input flex-1">
+                                    <option value="">请选择</option>
+                                    <option value="MSC">MSC</option>
+                                    <option value="MAERSK">MAERSK</option>
+                                    <option value="COSCO">COSCO</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-28 shrink-0 text-slate-600 text-sm leading-4 text-right">
+                                    <div class="text-sm">销售办公室</div>
+                                    <div class="text-xs text-slate-400">Sales<br>Business<br>Unit</div>
+                                </div>
+                                <select v-model="exportForm.salesBu" class="htm-input flex-1">
+                                    <option value="">请选择</option>
+                                    <option value="EU">EU</option>
+                                    <option value="MEA">MEA</option>
+                                    <option value="APAC">APAC</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-28 shrink-0 text-slate-600 text-sm leading-4 text-right">
+                                    <div class="text-sm">销售大区</div>
+                                    <div class="text-xs text-slate-400">Global<br>Sales<br>Region</div>
+                                </div>
+                                <select v-model="exportForm.salesRegion" class="htm-input flex-1">
+                                    <option value="">请选择</option>
+                                    <option value="EUROPE">EUROPE</option>
+                                    <option value="BALKANS">BALKANS</option>
+                                    <option value="CENTRAL">CENTRAL</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-28 shrink-0 text-slate-600 text-sm leading-4 text-right">
+                                    <div class="text-sm">状态</div>
+                                    <div class="text-xs text-slate-400">Hisense<br>Order<br>Status</div>
+                                </div>
+                                <select v-model="exportForm.orderStatus" class="htm-input flex-1">
+                                    <option value="">请选择</option>
+                                    <option value="IN_TRANSIT">IN_TRANSIT</option>
+                                    <option value="ARRIVED">ARRIVED</option>
+                                    <option value="DELIVERED">DELIVERED</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-28 shrink-0 text-slate-600 text-sm text-right">运输方式</div>
+                                <select v-model="exportForm.transportMode" class="htm-input flex-1">
+                                    <option value="">全部</option>
+                                    <option value="rail">铁运</option>
+                                    <option value="sea">海运</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="flex justify-end space-x-3 px-6 pb-6 border-t border-gray-200 pt-4">
-                    <button @click="resetExportForm" class="bg-white text-gray-600 text-sm px-6 h-9 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
-                        重置 reset
+                    <button @click="closeExportModal" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
+                        取消<br><span class="text-xs text-slate-400 font-normal">cancel</span>
                     </button>
-                    <button @click="confirmExport" class="bg-teal-600 text-white text-sm px-6 h-9 rounded hover:bg-teal-700 font-medium shadow-sm transition-colors">
-                        确定 confirm
+                    <button @click="resetExportForm" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
+                        重置<br><span class="text-xs text-slate-400 font-normal">reset</span>
+                    </button>
+                    <button @click="confirmExport" class="bg-teal-600 text-white text-sm px-6 h-10 rounded hover:bg-teal-700 font-medium shadow-sm transition-colors">
+                        确定<br><span class="text-xs text-teal-50 font-normal">confirm</span>
                     </button>
                 </div>
             </div>
@@ -1593,8 +1684,16 @@
                         bookingNo: '',
                         soNo: '',
                         containerNo: '',
+                        vesselVoy: '',
                         etd: '',
+                        atd: '',
                         eta: '',
+                        ata: '',
+                        destinationCountry: '',
+                        shippingCarrier: '',
+                        salesBu: '',
+                        salesRegion: '',
+                        orderStatus: '',
                         transportMode: ''
                     },
                     
@@ -1728,8 +1827,16 @@
                         bookingNo: '',
                         soNo: '',
                         containerNo: '',
+                        vesselVoy: '',
                         etd: '',
+                        atd: '',
                         eta: '',
+                        ata: '',
+                        destinationCountry: '',
+                        shippingCarrier: '',
+                        salesBu: '',
+                        salesRegion: '',
+                        orderStatus: '',
                         transportMode: ''
                     };
                 },
