@@ -705,7 +705,7 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <button @click="qOpenBookingInfo" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-9 rounded shadow-sm">订舱信息 Booking information</button>
-                                <button @click="qExportList" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-9 rounded shadow-sm">导出列表信息 Export list information</button>
+                                <button @click="qOpenExportModal" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-9 rounded shadow-sm">导出列表信息 Export list information</button>
                             </div>
                         </div>
                     </div>
@@ -980,6 +980,58 @@
                     </div>
                     </div>
                 </div>
+
+        <!-- Export List Modal (Query) -->
+        <div v-if="showExportModal" class="modal-overlay" @click.self="closeExportModal">
+            <div class="modal-content max-w-3xl" @click.stop>
+                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-slate-900">导出列表信息 Export list information</h2>
+                    <button class="text-slate-400 hover:text-slate-600" @click="closeExportModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-3 gap-6">
+                        <div class="col-span-1">
+                            <label class="block text-xs text-gray-500 mb-1.5">订舱号 Booking No.</label>
+                            <textarea v-model="exportForm.bookingNo" rows="3" class="htm-input" placeholder="如需筛选多个,请用回车分割"></textarea>
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-xs text-gray-500 mb-1.5">SO NO</label>
+                            <textarea v-model="exportForm.soNo" rows="3" class="htm-input" placeholder="如需筛选多个,请用回车分割"></textarea>
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-xs text-gray-500 mb-1.5">集装箱号 CTN NO</label>
+                            <textarea v-model="exportForm.containerNo" rows="3" class="htm-input" placeholder="如需筛选多个,请用回车分割"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1.5">ETD</label>
+                            <input v-model="exportForm.etd" type="date" class="htm-input">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1.5">ETA</label>
+                            <input v-model="exportForm.eta" type="date" class="htm-input">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1.5">运输方式 Transport mode</label>
+                            <select v-model="exportForm.transportMode" class="htm-input">
+                                <option value="">全部 / 为空</option>
+                                <option value="rail">铁运</option>
+                                <option value="sea">海运</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 px-6 pb-6 border-t border-gray-200 pt-4">
+                    <button @click="resetExportForm" class="bg-white text-gray-600 text-sm px-6 h-9 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
+                        重置 reset
+                    </button>
+                    <button @click="confirmExport" class="bg-teal-600 text-white text-sm px-6 h-9 rounded hover:bg-teal-700 font-medium shadow-sm transition-colors">
+                        确定 confirm
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- Add Modal -->
         <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
@@ -1507,6 +1559,7 @@
                     showBatchModal: false,
                     showImportResult: false,
                     showDeleteConfirm: false,
+                    showExportModal: false,
                     
                     // Form
                     form: {
@@ -1533,6 +1586,16 @@
                         success: 0,
                         failed: 0,
                         errors: []
+                    },
+                    
+                    // Export (query)
+                    exportForm: {
+                        bookingNo: '',
+                        soNo: '',
+                        containerNo: '',
+                        etd: '',
+                        eta: '',
+                        transportMode: ''
                     },
                     
                     // Toast
@@ -1652,6 +1715,28 @@
                 },
                 navigateToPage() {
                     // 导航到当前页面（已选中状态）
+                },
+                // ===== Query Export Modal =====
+                qOpenExportModal() {
+                    this.showExportModal = true;
+                },
+                closeExportModal() {
+                    this.showExportModal = false;
+                },
+                resetExportForm() {
+                    this.exportForm = {
+                        bookingNo: '',
+                        soNo: '',
+                        containerNo: '',
+                        etd: '',
+                        eta: '',
+                        transportMode: ''
+                    };
+                },
+                confirmExport() {
+                    // 原型阶段仅做提示，实际导出逻辑后续接入
+                    this.showToast('已根据筛选条件导出列表（原型演示，无真实下载）', 'success');
+                    this.closeExportModal();
                 },
                 switchView(view) {
                     this.currentView = view;
