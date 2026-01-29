@@ -265,6 +265,71 @@
             overflow-y: auto;
             animation: slideIn 0.2s ease-out; 
         }
+
+        /* Export Modal (Query) - polish */
+        .export-modal .modal-content{
+            width: 980px;
+            max-width: calc(100vw - 40px);
+            max-height: 88vh;
+            overflow: hidden;
+        }
+        .export-modal .export-modal-header{
+            padding: 18px 20px;
+            border-bottom: 1px solid #E5E7EB;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+        }
+        .export-modal .export-modal-body{
+            padding: 18px 20px;
+            background: #F8FAFC;
+            overflow: auto;
+            max-height: calc(88vh - 140px);
+        }
+        .export-modal .export-grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            align-items:start;
+        }
+        .export-modal .export-col{ display:flex; flex-direction:column; gap: 14px; }
+        .export-modal .export-field{
+            display:flex;
+            gap: 14px;
+        }
+        .export-modal .export-label{
+            width: 128px;
+            text-align: right;
+            color:#334155;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.1;
+            padding-top: 8px;
+            flex: 0 0 128px;
+        }
+        .export-modal .export-label .en{
+            display:block;
+            font-weight: 500;
+            font-size: 12px;
+            color:#94a3b8;
+            margin-top: 4px;
+        }
+        .export-modal textarea.htm-input{
+            height: 78px;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            resize: none;
+        }
+        .export-modal .export-right .export-field{ align-items:center; }
+        .export-modal .export-right .export-label{ padding-top: 0; }
+        .export-modal .export-modal-footer{
+            padding: 14px 20px;
+            border-top: 1px solid #E5E7EB;
+            background: #fff;
+            display:flex;
+            justify-content:flex-end;
+            gap: 10px;
+        }
         @keyframes slideIn { 
             from { opacity: 0; transform: translateY(10px); } 
             to { opacity: 1; transform: translateY(0); } 
@@ -982,67 +1047,69 @@
                 </div>
 
         <!-- Export List Modal (Query) -->
-        <div v-if="showExportModal" class="modal-overlay" @click.self="closeExportModal">
-            <div class="modal-content" style="width: 980px; max-width: calc(100vw - 48px);" @click.stop>
-                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+        <div v-if="showExportModal" class="modal-overlay export-modal" @click.self="closeExportModal">
+            <div class="modal-content" @click.stop>
+                <div class="export-modal-header">
                     <h2 class="text-lg font-bold text-slate-900">导出列表信息</h2>
                     <button class="text-slate-400 hover:text-slate-600" @click="closeExportModal" aria-label="close">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="p-6">
-                    <div class="grid grid-cols-2 gap-10">
+                <div class="export-modal-body custom-scroll">
+                    <div class="export-grid">
                         <!-- Left column: 4 textarea blocks -->
-                        <div class="space-y-6">
-                            <div class="flex gap-4 items-start">
-                                <div class="w-28 shrink-0 pt-2 text-slate-600 text-sm leading-4 text-right">
-                                    <div class="text-sm">订舱号</div>
-                                    <div class="text-xs text-slate-400">delivery<br>note</div>
+                        <div class="export-col export-left">
+                            <div class="export-field items-start">
+                                <div class="export-label">
+                                    订舱号
+                                    <span class="en">delivery note</span>
                                 </div>
-                                <textarea v-model="exportForm.bookingNo" rows="4" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                                <textarea v-model="exportForm.bookingNo" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
                             </div>
-                            <div class="flex gap-4 items-start">
-                                <div class="w-28 shrink-0 pt-2 text-slate-600 text-sm text-right">SO NO</div>
-                                <textarea v-model="exportForm.soNo" rows="4" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
-                            </div>
-                            <div class="flex gap-4 items-start">
-                                <div class="w-28 shrink-0 pt-2 text-slate-600 text-sm leading-4 text-right">
-                                    <div class="text-sm">集装箱号</div>
-                                    <div class="text-xs text-slate-400">CTN NO</div>
+                            <div class="export-field items-start">
+                                <div class="export-label">
+                                    SO NO
                                 </div>
-                                <textarea v-model="exportForm.containerNo" rows="4" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                                <textarea v-model="exportForm.soNo" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
                             </div>
-                            <div class="flex gap-4 items-start">
-                                <div class="w-28 shrink-0 pt-2 text-slate-600 text-sm leading-4 text-right">
-                                    <div class="text-sm">船名/航次</div>
-                                    <div class="text-xs text-slate-400">Ocean<br>Vessel/Voy.<br>No.</div>
+                            <div class="export-field items-start">
+                                <div class="export-label">
+                                    集装箱号
+                                    <span class="en">CTN NO</span>
                                 </div>
-                                <textarea v-model="exportForm.vesselVoy" rows="4" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                                <textarea v-model="exportForm.containerNo" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                            </div>
+                            <div class="export-field items-start">
+                                <div class="export-label">
+                                    船名/航次
+                                    <span class="en">Ocean Vessel/Voy. No.</span>
+                                </div>
+                                <textarea v-model="exportForm.vesselVoy" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
                             </div>
                         </div>
 
                         <!-- Right column: dates + selects; transport mode at end -->
-                        <div class="space-y-6">
-                            <div class="flex items-center gap-4">
-                                <div class="w-28 shrink-0 text-slate-600 text-sm text-right">ETD</div>
+                        <div class="export-col export-right">
+                            <div class="export-field">
+                                <div class="export-label">ETD</div>
                                 <input v-model="exportForm.etd" type="date" class="htm-input flex-1">
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-28 shrink-0 text-slate-600 text-sm text-right">ATD</div>
+                            <div class="export-field">
+                                <div class="export-label">ATD</div>
                                 <input v-model="exportForm.atd" type="date" class="htm-input flex-1">
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-28 shrink-0 text-slate-600 text-sm text-right">ETA</div>
+                            <div class="export-field">
+                                <div class="export-label">ETA</div>
                                 <input v-model="exportForm.eta" type="date" class="htm-input flex-1">
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-28 shrink-0 text-slate-600 text-sm text-right">ATA</div>
+                            <div class="export-field">
+                                <div class="export-label">ATA</div>
                                 <input v-model="exportForm.ata" type="date" class="htm-input flex-1">
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-28 shrink-0 text-slate-600 text-sm leading-4 text-right">
-                                    <div class="text-sm">出口国家</div>
-                                    <div class="text-xs text-slate-400">destination<br>country</div>
+                            <div class="export-field">
+                                <div class="export-label">
+                                    出口国家
+                                    <span class="en">destination country</span>
                                 </div>
                                 <select v-model="exportForm.destinationCountry" class="htm-input flex-1">
                                     <option value="">请选择</option>
@@ -1051,10 +1118,10 @@
                                     <option value="RS">RS</option>
                                 </select>
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-28 shrink-0 text-slate-600 text-sm leading-4 text-right">
-                                    <div class="text-sm">船公司</div>
-                                    <div class="text-xs text-slate-400">Shipping<br>Carrier</div>
+                            <div class="export-field">
+                                <div class="export-label">
+                                    船公司
+                                    <span class="en">Shipping Carrier</span>
                                 </div>
                                 <select v-model="exportForm.shippingCarrier" class="htm-input flex-1">
                                     <option value="">请选择</option>
@@ -1063,10 +1130,10 @@
                                     <option value="COSCO">COSCO</option>
                                 </select>
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-28 shrink-0 text-slate-600 text-sm leading-4 text-right">
-                                    <div class="text-sm">销售办公室</div>
-                                    <div class="text-xs text-slate-400">Sales<br>Business<br>Unit</div>
+                            <div class="export-field">
+                                <div class="export-label">
+                                    销售办公室
+                                    <span class="en">Sales Business Unit</span>
                                 </div>
                                 <select v-model="exportForm.salesBu" class="htm-input flex-1">
                                     <option value="">请选择</option>
@@ -1075,10 +1142,10 @@
                                     <option value="APAC">APAC</option>
                                 </select>
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-28 shrink-0 text-slate-600 text-sm leading-4 text-right">
-                                    <div class="text-sm">销售大区</div>
-                                    <div class="text-xs text-slate-400">Global<br>Sales<br>Region</div>
+                            <div class="export-field">
+                                <div class="export-label">
+                                    销售大区
+                                    <span class="en">Global Sales Region</span>
                                 </div>
                                 <select v-model="exportForm.salesRegion" class="htm-input flex-1">
                                     <option value="">请选择</option>
@@ -1087,10 +1154,10 @@
                                     <option value="CENTRAL">CENTRAL</option>
                                 </select>
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-28 shrink-0 text-slate-600 text-sm leading-4 text-right">
-                                    <div class="text-sm">状态</div>
-                                    <div class="text-xs text-slate-400">Hisense<br>Order<br>Status</div>
+                            <div class="export-field">
+                                <div class="export-label">
+                                    状态
+                                    <span class="en">Hisense Order Status</span>
                                 </div>
                                 <select v-model="exportForm.orderStatus" class="htm-input flex-1">
                                     <option value="">请选择</option>
@@ -1099,8 +1166,8 @@
                                     <option value="DELIVERED">DELIVERED</option>
                                 </select>
                             </div>
-                            <div class="flex items-center gap-4">
-                                <div class="w-28 shrink-0 text-slate-600 text-sm text-right">运输方式</div>
+                            <div class="export-field">
+                                <div class="export-label">运输方式</div>
                                 <select v-model="exportForm.transportMode" class="htm-input flex-1">
                                     <option value="">全部</option>
                                     <option value="rail">铁运</option>
@@ -1110,7 +1177,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex justify-end space-x-3 px-6 pb-6 border-t border-gray-200 pt-4">
+                <div class="export-modal-footer">
                     <button @click="closeExportModal" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
                         取消<br><span class="text-xs text-slate-400 font-normal">cancel</span>
                     </button>
