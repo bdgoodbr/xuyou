@@ -460,7 +460,7 @@
             <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-4">
                 <div class="grid grid-cols-5 gap-4">
                     <div class="col-span-1">
-                        <label class="block text-xs text-gray-500 mb-1.5">落货纸号</label>
+                        <label class="block text-xs text-gray-500 mb-1.5">订舱号</label>
                         <textarea v-model="filters.lhzOrder" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
                     <div class="col-span-1">
@@ -607,7 +607,7 @@
                                 <th class="w-10 text-center">
                                     <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
                                 </th>
-                                <th class="min-w-[120px]">落货纸号</th>
+                                <th class="min-w-[120px]">订舱号</th>
                                 <th class="min-w-[100px]">箱号</th>
                                 <th>箱型</th>
                                 <th>起运港</th>
@@ -695,7 +695,7 @@
                             <div class="flex items-center gap-2">
                                 <select v-model="qQueryType" class="htm-input" style="width: 150px;">
                                     <option value="so">订舱号 SO NO.</option>
-                                    <option value="lhz">落货纸号</option>
+                                    <option value="lhz">订舱号（原落货纸号）</option>
                                     <option value="waybill">物流运单号</option>
                                 </select>
                                 <input v-model="qQueryValue" class="htm-input font-mono" style="width: 220px;" placeholder="请输入...">
@@ -765,7 +765,7 @@
                                     <table class="w-full q-table-compact">
                                         <tbody>
                                             <tr><th class="w-48">物流运单号 Hisense Tracking No.</th><td class="font-mono">{{ qBasic.waybillNo }}</td></tr>
-                                            <tr><th>落货纸号 delivery note.</th><td class="font-mono">{{ qBasic.deliveryNotes }}</td></tr>
+                                            <tr><th>订舱号 Booking No.</th><td class="font-mono">{{ qBasic.deliveryNotes }}</td></tr>
                                             <tr><th>货代 Shipping Carrier</th><td>{{ qBasic.carrier }}</td></tr>
                                             <tr><th>起运港 POL</th><td>{{ qBasic.pol }}</td></tr>
                                             <tr><th>接货地 Place of Receipt</th><td>{{ qBasic.placeOfReceipt }}</td></tr>
@@ -1001,8 +1001,8 @@
                                 <span v-if="errors.pod" class="error-message">{{ errors.pod }}</span>
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5 required">落货纸号</label>
-                                <input v-model="form.lhzOrder" type="text" class="htm-input" :class="{error: errors.lhzOrder}" placeholder="请输入落货纸号" @blur="validateField('lhzOrder')">
+                                <label class="block text-xs text-gray-500 mb-1.5 required">订舱号</label>
+                                <input v-model="form.lhzOrder" type="text" class="htm-input" :class="{error: errors.lhzOrder}" placeholder="请输入订舱号" @blur="validateField('lhzOrder')">
                                 <span v-if="errors.lhzOrder" class="error-message">{{ errors.lhzOrder }}</span>
                             </div>
                             <div>
@@ -1173,7 +1173,7 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="border border-gray-200 px-3 py-2 text-left">行号</th>
-                                        <th class="border border-gray-200 px-3 py-2 text-left">落货纸号</th>
+                                        <th class="border border-gray-200 px-3 py-2 text-left">订舱号</th>
                                         <th class="border border-gray-200 px-3 py-2 text-left">箱号</th>
                                         <th class="border border-gray-200 px-3 py-2 text-left">错误原因</th>
                                     </tr>
@@ -1845,13 +1845,13 @@
                 },
                 getFieldLabel(field) {
                     const labels = {
-                        pol: '起运港',
-                        pod: '目的港',
-                        lhzOrder: '落货纸号',
-                        containerNo: '箱号',
-                        containerSize: '箱型',
-                        currentLocation: '当前位置',
-                        kmToBorder: '距离始发站口岸'
+                    pol: '起运港',
+                    pod: '目的港',
+                    lhzOrder: '订舱号',
+                    containerNo: '箱号',
+                    containerSize: '箱型',
+                    currentLocation: '当前位置',
+                    kmToBorder: '距离始发站口岸'
                     };
                     return labels[field] || field;
                 },
@@ -1870,9 +1870,9 @@
                         }
                     });
                     
-                    // 业务校验：落货纸号校验（模拟）
+                    // 业务校验：订舱号校验（模拟）
                     if (this.form.lhzOrder && !this.validateLhzOrder(this.form.lhzOrder)) {
-                        this.$set(this.errors, 'lhzOrder', '该落货纸不属于当前货代，无法上传');
+                        this.$set(this.errors, 'lhzOrder', '该订舱号不属于当前货代，无法上传');
                         hasError = true;
                     }
                     
@@ -1885,7 +1885,7 @@
                 },
                 validateLhzOrder(lhzOrder) {
                     // 模拟校验逻辑：实际应该调用接口校验
-                    // 这里简单模拟：如果落货纸号包含'INVALID'则校验失败
+                    // 这里简单模拟：如果订舱号包含'INVALID'则校验失败
                     return !lhzOrder.includes('INVALID');
                 },
                 saveItem() {
@@ -1957,7 +1957,7 @@
                     this.errors = {};
                 },
                 deleteItem(item) {
-                    if (confirm(`确定要删除落货纸号 ${item.lhzOrder} 的箱号 ${item.containerNo} 的记录吗？`)) {
+                    if (confirm(`确定要删除订舱号 ${item.lhzOrder} 的箱号 ${item.containerNo} 的记录吗？`)) {
                         const index = this.tableData.findIndex(d => d.id === item.id);
                         if (index > -1) {
                             this.tableData.splice(index, 1);
