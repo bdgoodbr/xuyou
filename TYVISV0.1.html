@@ -1058,9 +1058,9 @@
                                             </div>
                                             <div class="node-label">{{ node.label }}</div>
                                             <div class="node-count">{{ node.count }}/{{ node.total }}</div>
-                                            <div class="node-time" :class="{ 'invisible': !node.time }">
+                                            <div class="node-time" :class="{ 'invisible': !node.timeLabel }">
                                                 <div class="text-xs text-slate-500">{{ node.timeLabel || '' }}</div>
-                                                <div class="text-xs font-semibold text-slate-700">{{ node.time || '&nbsp;' }}</div>
+                                                <div class="text-xs font-semibold text-slate-700">{{ node.time || '-' }}</div>
                                             </div>
                                         </div>
                                         <div v-if="idx < progressNodes.length - 1" class="progress-line" :class="getLineStatusClass(node, progressNodes[idx + 1])"></div>
@@ -2169,6 +2169,13 @@
                         return etdValues.length > 0 ? etdValues[0] : null;
                     };
                     
+                    // 获取国内在途的标签：根据是否有时间数据决定显示"实际发车"还是"预计发车"
+                    // 如果有ATD或实时ETD，显示"实际发车"；如果都没有，显示"预计发车"
+                    const getDomesticTransitTimeLabel = () => {
+                        const time = getDomesticTransitTime();
+                        return time ? '实际发车' : '预计发车';
+                    };
+                    
                     // 获取已抵达的时间：根据节点状态决定显示ATA还是实时ETA
                     const getArrivedTime = () => {
                         // 计算最高状态码
@@ -2222,8 +2229,8 @@
                             icon: 'fas fa-truck',
                             count: summary.byStatus['10'] || 0,
                             total: total,
-                            time: formatDateOnly(getDomesticTransitTime()),
-                            timeLabel: '实际发车'
+                            time: formatDateOnly(getDomesticTransitTime()) || '-',
+                            timeLabel: getDomesticTransitTimeLabel()
                         },
                         {
                             code: '20',
@@ -2255,7 +2262,7 @@
                             icon: 'fas fa-flag-checkered',
                             count: summary.byStatus['50'] || 0,
                             total: total,
-                            time: getArrivedTime(),
+                            time: getArrivedTime() || '-',
                             timeLabel: getArrivedTimeLabel()
                         }
                     ];
