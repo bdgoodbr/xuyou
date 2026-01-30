@@ -342,7 +342,7 @@
                         </div>
                     </div>
 
-                    <div class="flex gap-2 items-center">
+                    <div class="flex gap-2 items-center" style="position: relative; z-index: 10;">
                         <template v-if="['', '待提交', '驳回', '已撤回'].includes(form.status)">
                             <button @click="handleRefCreate('header')" class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-xs hover:bg-slate-50 hover:text-blue-600 transition-colors" title="复制当前数据新建">参考创建</button>
                             <button @click="handleRefCreate('all')" class="bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded text-xs hover:bg-slate-50 hover:text-blue-600 transition-colors" title="复制头信息和批次数据">参考创建全部</button>
@@ -362,7 +362,7 @@
                         </template>
 
                         <div class="h-6 w-px bg-slate-300 mx-2"></div>
-                        <button type="button" @click="showApprovalProcess($event)" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative; pointer-events: auto;"><i class="fas fa-history mr-1"></i>审批过程</button>
+                        <button type="button" @click="showApprovalProcess($event)" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative; pointer-events: auto; min-width: auto;"><i class="fas fa-history mr-1"></i>审批过程</button>
                     </div>
                 </div>
 
