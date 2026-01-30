@@ -682,7 +682,7 @@
                         <textarea v-model="filters.lhzOrder" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
                     <div class="col-span-1">
-                        <label class="block text-xs text-gray-500 mb-1.5">集装箱号</label>
+                        <label class="block text-xs text-gray-500 mb-1.5">箱号</label>
                         <textarea v-model="filters.containerNo" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
                     <div>
@@ -835,7 +835,7 @@
                                     <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
                                 </th>
                                 <th class="min-w-[120px]">订舱号</th>
-                                <th class="min-w-[100px]">集装箱号</th>
+                                <th class="min-w-[100px]">箱号</th>
                                 <th>箱型</th>
                                 <th>起运港</th>
                                 <th>目的港</th>
@@ -1413,8 +1413,8 @@
                                 <span v-if="errors.lhzOrder" class="error-message">{{ errors.lhzOrder }}</span>
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5 required">集装箱号</label>
-                                <input v-model="form.containerNo" type="text" class="htm-input" :class="{error: errors.containerNo}" placeholder="请输入集装箱号" @blur="validateField('containerNo')">
+                                <label class="block text-xs text-gray-500 mb-1.5 required">箱号</label>
+                                <input v-model="form.containerNo" type="text" class="htm-input" :class="{error: errors.containerNo}" placeholder="请输入箱号" @blur="validateField('containerNo')">
                                 <span v-if="errors.containerNo" class="error-message">{{ errors.containerNo }}</span>
                             </div>
                             <div>
@@ -1591,7 +1591,7 @@
                                     <tr>
                                         <th class="border border-gray-200 px-3 py-2 text-left">行号</th>
                                         <th class="border border-gray-200 px-3 py-2 text-left">订舱号</th>
-                                        <th class="border border-gray-200 px-3 py-2 text-left">集装箱号</th>
+                                        <th class="border border-gray-200 px-3 py-2 text-left">箱号</th>
                                         <th class="border border-gray-200 px-3 py-2 text-left">错误原因</th>
                                     </tr>
                                 </thead>
@@ -1686,12 +1686,12 @@
                     containerSizes: ['20GP', '40GP', '40HQ', '40NOR'],
                     // 当前状态枚举（与PRD 2.7.8 状态枚举表保持一致）
                     statusOptions: [
-                        { code: '00', label: '已提柜' },
-                        { code: '10', label: '国内已出发' },
-                        { code: '20', label: '抵达口岸' },
-                        { code: '30', label: '境外换装' },
+                        { code: '00', label: '已进站 / 待发运' },
+                        { code: '10', label: '已发车 / 国内在途' },
+                        { code: '20', label: '抵达国内口岸 / 排队' },
+                        { code: '30', label: '境外换装中' },
                         { code: '40', label: '境外在途' },
-                        { code: '50', label: '已抵达' }
+                        { code: '50', label: '已抵达目的站' }
                     ],
                     // 港口枚举
                     portOptions: ['CNTAO', 'DEHAM', 'CNSHA', 'DEBRV', 'CNDLC'],
@@ -2080,8 +2080,8 @@
                         return null;
                     }
                     
-                    // 1. 按 (订舱号, 集装箱号) 取最新（如果数据源已经是聚合后的，这步可省略）
-                    // 这里假设数据已经是按集装箱号取最新的，直接使用
+                    // 1. 按 (订舱号, 箱号) 取最新（如果数据源已经是聚合后的，这步可省略）
+                    // 这里假设数据已经是按箱号取最新的，直接使用
                     const containers = this.qContainerStatus;
                     
                     // 2. 计算状态分布
@@ -2603,7 +2603,7 @@
                         pol: '起运港',
                         pod: '目的港',
                         lhzOrder: '订舱号',
-                        containerNo: '集装箱号',
+                        containerNo: '箱号',
                         containerSize: '箱型',
                         currentStatus: '当前状态',
                         currentLocation: '当前位置',
@@ -2715,7 +2715,7 @@
                     this.errors = {};
                 },
                 deleteItem(item) {
-                    if (confirm(`确定要删除订舱号 ${item.lhzOrder} 的集装箱号 ${item.containerNo} 的记录吗？`)) {
+                    if (confirm(`确定要删除订舱号 ${item.lhzOrder} 的箱号 ${item.containerNo} 的记录吗？`)) {
                         const index = this.tableData.findIndex(d => d.id === item.id);
                         if (index > -1) {
                             this.tableData.splice(index, 1);
