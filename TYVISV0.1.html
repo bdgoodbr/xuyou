@@ -238,13 +238,30 @@
             flex: 1;
         }
         .node-dot {
-            width: 24px;
-            height: 24px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             border: 3px solid;
             background-color: #fff;
             margin-bottom: 8px;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .node-dot i {
+            font-size: 18px;
+            color: inherit;
+        }
+        .progress-node.status-pending .node-dot i {
+            color: #94a3b8;
+        }
+        .progress-node.status-active .node-dot i {
+            color: #ffffff;
+        }
+        .progress-node.status-completed .node-dot i {
+            color: #ffffff;
         }
         .node-label {
             font-size: 12px;
@@ -286,7 +303,7 @@
             flex: 1;
             height: 3px;
             margin: 0 10px;
-            margin-top: -30px;
+            margin-top: -40px;
             position: relative;
             z-index: 1;
         }
@@ -1023,7 +1040,9 @@
                                         class="progress-node-wrapper"
                                     >
                                         <div class="progress-node" :class="getNodeStatusClass(node)">
-                                            <div class="node-dot"></div>
+                                            <div class="node-dot">
+                                                <i :class="node.icon"></i>
+                                            </div>
                                             <div class="node-label">{{ node.label }}</div>
                                             <div class="node-count">{{ node.count }}/{{ node.total }}</div>
                                         </div>
@@ -2070,36 +2089,42 @@
                         {
                             code: '00',
                             label: '已进站',
+                            icon: 'fas fa-warehouse',
                             count: summary.byStatus['00'] || 0,
                             total: total
                         },
                         {
                             code: '10',
                             label: '国内在途',
+                            icon: 'fas fa-truck',
                             count: summary.byStatus['10'] || 0,
                             total: total
                         },
                         {
                             code: '20',
                             label: '抵达口岸',
+                            icon: 'fas fa-border-all',
                             count: summary.byStatus['20'] || 0,
                             total: total
                         },
                         {
                             code: '30',
                             label: '境外换装',
+                            icon: 'fas fa-exchange-alt',
                             count: summary.byStatus['30'] || 0,
                             total: total
                         },
                         {
                             code: '40',
                             label: '境外在途',
+                            icon: 'fas fa-train',
                             count: summary.byStatus['40'] || 0,
                             total: total
                         },
                         {
                             code: '50',
                             label: '已抵达',
+                            icon: 'fas fa-flag-checkered',
                             count: summary.byStatus['50'] || 0,
                             total: total
                         }
