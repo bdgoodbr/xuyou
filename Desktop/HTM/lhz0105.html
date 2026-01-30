@@ -362,7 +362,7 @@
                         </template>
 
                         <div class="h-6 w-px bg-slate-300 mx-2"></div>
-                        <button class="text-slate-500 hover:text-blue-600 text-xs ml-2"><i class="fas fa-history mr-1"></i>审批过程</button>
+                        <button @click="showApprovalProcess" class="text-slate-500 hover:text-blue-600 text-xs ml-2"><i class="fas fa-history mr-1"></i>审批过程</button>
                     </div>
                 </div>
 
@@ -664,6 +664,52 @@
         </div>
     </div>
 
+    <div v-if="showApprovalModal" class="modal-overlay">
+        <div class="modal-content" style="width: 800px; max-height: 80vh;">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 class="font-bold text-slate-800">审批过程查询</h3>
+                <button @click="showApprovalModal = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto" style="max-height: calc(80vh - 120px);">
+                <div v-if="approvalHistory.length === 0" class="text-center py-8 text-slate-400">
+                    <i class="fas fa-inbox text-4xl mb-2"></i>
+                    <div>暂无审批记录</div>
+                </div>
+                <table v-else class="w-full htm-table approval-table">
+                    <thead>
+                        <tr>
+                            <th>落货纸号</th>
+                            <th class="w-16">序号</th>
+                            <th>审批节点名称</th>
+                            <th>审批人</th>
+                            <th>动作</th>
+                            <th>审批意见</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in approvalHistory" :key="item.id">
+                            <td class="font-mono text-blue-600">{{ form.id || 'LR251230001' }}</td>
+                            <td class="text-center">{{ item.sequenceNo }}</td>
+                            <td>{{ item.nodeName }}</td>
+                            <td>{{ item.approver || '-' }}</td>
+                            <td class="text-center">
+                                <span v-if="item.action === '提交审核'" class="badge badge-draft">{{ item.action }}</span>
+                                <span v-else-if="item.action === '通过'" class="badge badge-executed">{{ item.action }}</span>
+                                <span v-else-if="item.action === '驳回'" class="badge badge-rejected">{{ item.action }}</span>
+                                <span v-else-if="item.action === '转办'" class="badge badge-submitted">{{ item.action }}</span>
+                                <span v-else class="text-slate-400">-</span>
+                            </td>
+                            <td>{{ item.comments || '-' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t bg-slate-50 flex justify-end">
+                <button @click="showApprovalModal = false" class="bg-green-600 px-4 py-2 rounded text-sm text-white hover:bg-green-700 transition-colors">关闭</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -675,8 +721,10 @@
                 page: 'list',
                 pageTitle: '查询列表',
                 showImportModal: false,
+                showApprovalModal: false,
                 showQueryInput: false,
                 queryIdInput: '',
+                approvalHistory: [],
                 
                 transportOptions: ['By Sea', 'By Truck', 'By Rail', 'By Air', 'By Express'],
 
@@ -826,10 +874,72 @@
             const confirmImport = () => { state.showImportModal = false; alert('模拟导入成功'); };
             const exportBatch = () => { if(state.form.products.length === 0) return alert('没有数据可导出'); alert('导出批次明细成功 (Mock Export)'); };
 
+            // 生成审批历史记录
+            const generateApprovalHistory = (form) => {
+                const history = [];
+                
+                // 如果状态是待提交，没有审批记录
+                if (form.status === '待提交' || !form.status) {
+                    return [];
+                }
+                
+                // 节点1：提交审核（如果已提交）
+                if (['提交审核', '执行', '驳回'].includes(form.status)) {
+                    history.push({
+                        id: 1,
+                        sequenceNo: 1,
+                        nodeName: '提交审核',
+                        approver: form.orderPerson || 'Wilson',
+                        action: '提交审核',
+                        comments: '已提交审核',
+                        actionTime: form.lastUpdate || new Date().toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-')
+                    });
+                }
+                
+                // 节点2：区域经理审核
+                if (['提交审核', '执行', '驳回'].includes(form.status)) {
+                    const node2 = {
+                        id: 2,
+                        sequenceNo: 2,
+                        nodeName: '区域经理审核',
+                        approver: form.regionalManager || '区域经理 张三',
+                        action: '',
+                        comments: '-',
+                        actionTime: ''
+                    };
+                    
+                    if (form.status === '执行') {
+                        node2.action = '通过';
+                        node2.comments = '审批通过，同意执行';
+                        node2.approver = form.regionalManager || '区域经理 张三';
+                        node2.actionTime = form.lastUpdate || new Date().toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-');
+                    } else if (form.status === '驳回') {
+                        node2.action = '驳回';
+                        node2.comments = '信息不完整，请补充后再提交';
+                        node2.approver = form.regionalManager || '区域经理 张三';
+                        node2.actionTime = form.lastUpdate || new Date().toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g, '-');
+                    } else {
+                        // 提交审核状态，待处理
+                        node2.approver = '-';
+                        node2.action = '-';
+                    }
+                    
+                    history.push(node2);
+                }
+                
+                return history;
+            };
+
+            // 显示审批过程弹窗
+            const showApprovalProcess = () => {
+                state.approvalHistory = generateApprovalHistory(state.form);
+                state.showApprovalModal = true;
+            };
+
             return {
                 ...Vue.toRefs(state),
                 paginatedData, isReadOnly, isAllSelected, toggleSelectAll, resetFilters, search, switchPage, viewOrder, editOrder, getBadgeClass, save, submit, recall, addProduct, removeProduct, confirmImport, changePage, exportBatch,
-                addContainer, removeContainer, handleContainerTypeChange, toggleQuery, handleRefCreate
+                addContainer, removeContainer, handleContainerTypeChange, toggleQuery, handleRefCreate, showApprovalProcess
             };
         }
     }).mount('#app');
