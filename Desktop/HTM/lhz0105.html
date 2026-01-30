@@ -362,7 +362,7 @@
                         </template>
 
                         <div class="h-6 w-px bg-slate-300 mx-2"></div>
-                        <button type="button" @click.stop.prevent="showApprovalProcess" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer"><i class="fas fa-history mr-1"></i>审批过程</button>
+                        <button type="button" @click="showApprovalProcess" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative;"><i class="fas fa-history mr-1"></i>审批过程</button>
                     </div>
                 </div>
 
@@ -932,20 +932,38 @@
 
             // 显示审批过程弹窗
             const showApprovalProcess = (e) => {
+                console.log('=== showApprovalProcess 开始执行 ===');
+                console.log('事件对象:', e);
+                console.log('当前状态:', { 
+                    page: state.page, 
+                    formStatus: state.form.status,
+                    showApprovalModal: state.showApprovalModal 
+                });
+                
                 if (e) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
-                console.log('showApprovalProcess 被调用', state.form, state.page);
+                
                 try {
                     const history = generateApprovalHistory(state.form);
                     console.log('生成的审批历史:', history);
+                    
+                    // 直接设置状态
                     state.approvalHistory = history;
                     state.showApprovalModal = true;
-                    console.log('showApprovalModal 设置为 true', state.showApprovalModal, state);
+                    
+                    console.log('状态已更新:', {
+                        approvalHistory: state.approvalHistory,
+                        showApprovalModal: state.showApprovalModal
+                    });
+                    
                     // 强制更新视图
                     nextTick(() => {
-                        console.log('nextTick 后 showApprovalModal:', state.showApprovalModal);
+                        console.log('nextTick 执行完成, showApprovalModal:', state.showApprovalModal);
+                        // 检查 DOM 中是否有弹窗元素
+                        const modal = document.querySelector('.modal-overlay');
+                        console.log('弹窗 DOM 元素:', modal);
                     });
                 } catch (error) {
                     console.error('打开审批过程弹窗失败:', error);
