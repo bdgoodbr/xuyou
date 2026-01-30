@@ -1038,8 +1038,10 @@
                             <div class="font-bold text-slate-900">
                                 当前状态可视化 <span class="text-slate-400 text-xs font-normal">Current Status Visualization</span>
                             </div>
-                            <div class="text-xs text-slate-500">
-                                数据来源：按订舱号聚合，每个箱子取最新上传状态
+                            <div class="text-sm text-slate-900 font-semibold border border-red-500 px-3 py-1 rounded">
+                                距离境外始发站：{{ qLatestDistances.kmFromOverseasOrigin ?? '-' }} KM
+                                <span class="mx-2 text-slate-300">|</span>
+                                距离目的站：{{ qLatestDistances.kmToDestinationStation ?? '-' }} KM
                             </div>
                         </div>
                         <div class="p-4">
@@ -1056,17 +1058,6 @@
                                 <div>
                                     <div class="text-xs text-slate-500 mb-1">预计抵达</div>
                                     <div class="font-semibold text-slate-900">{{ aggregatedBookingStatus.statusSummary.latestEta || '-' }}</div>
-                                </div>
-                            </div>
-                            <!-- 距离信息 -->
-                            <div class="mb-4 text-sm">
-                                <div class="text-xs text-slate-500 mb-1">距离信息 <span class="text-slate-400">(KM)</span></div>
-                                <div class="font-semibold text-slate-900">
-                                    距离境外始发站：{{ qLatestDistances.kmFromOverseasOrigin ?? '-' }}
-                                    <span class="mx-2 text-slate-300">|</span>
-                                    距离目的站：{{ qLatestDistances.kmToDestinationStation ?? '-' }}
-                                    <span class="mx-2 text-slate-300">|</span>
-                                    <span class="text-xs text-slate-400 font-normal">取值：最新上传</span>
                                 </div>
                             </div>
                             
