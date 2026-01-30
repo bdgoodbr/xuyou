@@ -42,13 +42,6 @@
             overflow: hidden;
         }
         
-        /* Hard guarantee for layout stretching (avoid any Tailwind/JIT surprises) */
-        .main-content {
-            flex: 1 1 0%;
-            min-width: 0;
-            width: 100%;
-        }
-        
         /* Sidebar */
         .nav-item {
             color: #374151;
@@ -212,155 +205,6 @@
             display: block;
         }
         
-        /* Status Progress Bar */
-        .status-progress-container {
-            padding: 20px 0;
-        }
-        .status-progress-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: relative;
-            padding: 0 20px;
-        }
-        .progress-node-wrapper {
-            display: flex;
-            align-items: flex-start;
-            flex: 1;
-            position: relative;
-        }
-        .progress-node {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            z-index: 2;
-            flex: 1;
-            min-height: 180px; /* 确保所有节点高度一致，包括时间框 */
-        }
-        .node-dot {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 3px solid;
-            background-color: #fff;
-            margin-bottom: 8px;
-            margin-top: 0;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            z-index: 3; /* 确保图标在连接线上方 */
-        }
-        .node-dot i {
-            font-size: 18px;
-            color: inherit;
-        }
-        .progress-node.status-pending .node-dot i {
-            color: #94a3b8;
-        }
-        .progress-node.status-active .node-dot i {
-            color: #ffffff; /* 图标保持白色 */
-        }
-        .progress-node.status-completed .node-dot i {
-            color: #ffffff;
-        }
-        .node-label {
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 4px;
-            text-align: center;
-            white-space: nowrap;
-        }
-        .node-count {
-            font-size: 11px;
-            font-weight: 600;
-            text-align: center;
-        }
-        .node-time {
-            margin-top: 8px;
-            text-align: center;
-            padding: 4px 8px;
-            background-color: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            min-width: 120px;
-            min-height: 50px; /* 确保时间框有固定高度，保持对齐 */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        .node-time.invisible {
-            visibility: hidden; /* 使用visibility而不是display，保持占位 */
-        }
-        .node-time .text-xs {
-            line-height: 1.4;
-        }
-        .progress-node.status-pending .node-dot {
-            border-color: #cbd5e1;
-            background-color: #f1f5f9;
-        }
-        .progress-node.status-pending .node-label,
-        .progress-node.status-pending .node-count {
-            color: #94a3b8;
-        }
-        .progress-node.status-active .node-dot {
-            border-color: #10b981; /* 统一为绿色 */
-            background-color: #10b981; /* 统一为绿色 */
-        }
-        .progress-node.status-active .node-label,
-        .progress-node.status-active .node-count {
-            color: #059669; /* 统一为绿色 */
-        }
-        .progress-node.status-completed .node-dot {
-            border-color: #10b981;
-            background-color: #10b981;
-        }
-        .progress-node.status-completed .node-label,
-        .progress-node.status-completed .node-count {
-            color: #059669;
-        }
-        .progress-line {
-            flex: 1;
-            height: 3px;
-            position: absolute;
-            top: 20px; /* 位于节点图标中心位置（20px是node-dot高度的一半） */
-            left: calc(50% + 20px); /* 从当前节点中心向右延伸（20px是node-dot半径） */
-            right: calc(-50% + 20px); /* 延伸到下一个节点中心 */
-            z-index: 1;
-        }
-        .progress-node-wrapper:last-child .progress-line {
-            display: none; /* 最后一个节点不需要连接线 */
-        }
-        .progress-line.status-pending {
-            background-color: transparent;
-            background-image: repeating-linear-gradient(
-                to right,
-                #cbd5e1 0,
-                #cbd5e1 8px,
-                transparent 8px,
-                transparent 16px
-            );
-            height: 3px;
-        }
-        .progress-line.status-active {
-            background-color: #10b981; /* 统一为绿色 */
-        }
-        .progress-line.status-completed {
-            background-color: #10b981; /* 统一为绿色 */
-        }
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 12px;
-            background-color: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #475569;
-        }
-        
         /* Table Styles */
         .htm-table th { 
             background-color: #F9FAFB; 
@@ -413,75 +257,6 @@
             max-height: 90vh;
             overflow-y: auto;
             animation: slideIn 0.2s ease-out; 
-        }
-
-        /* Export Modal (Query) - polish */
-        .export-modal .modal-content{
-            width: 980px;
-            max-width: calc(100vw - 40px);
-            max-height: 88vh;
-            overflow: hidden;
-        }
-        .export-modal .export-modal-header{
-            padding: 14px 16px;
-            border-bottom: 1px solid #E5E7EB;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-        }
-        .export-modal .export-modal-body{
-            padding: 14px 16px;
-            background: #F8FAFC;
-            overflow: auto;
-            max-height: calc(88vh - 140px);
-        }
-        .export-modal .export-grid{
-            display:grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            align-items:start;
-        }
-        .export-modal .export-col{ display:flex; flex-direction:column; gap: 12px; }
-        .export-modal .export-field{
-            display:flex;
-            gap: 12px;
-        }
-        .export-modal .export-label{
-            width: 112px;
-            text-align: right;
-            color:#334155;
-            font-size: 12.5px;
-            font-weight: 600;
-            line-height: 1.1;
-            padding-top: 6px;
-            flex: 0 0 112px;
-        }
-        .export-modal .export-label .en{
-            display:block;
-            font-weight: 500;
-            font-size: 11.5px;
-            color:#94a3b8;
-            margin-top: 3px;
-        }
-        .export-modal .htm-input{
-            height: 32px;
-            border-radius: 6px;
-        }
-        .export-modal textarea.htm-input{
-            height: 64px;
-            padding-top: 7px;
-            padding-bottom: 7px;
-            resize: none;
-        }
-        .export-modal .export-right .export-field{ align-items:center; }
-        .export-modal .export-right .export-label{ padding-top: 0; }
-        .export-modal .export-modal-footer{
-            padding: 12px 16px;
-            border-top: 1px solid #E5E7EB;
-            background: #fff;
-            display:flex;
-            justify-content:flex-end;
-            gap: 10px;
         }
         @keyframes slideIn { 
             from { opacity: 0; transform: translateY(10px); } 
@@ -562,64 +337,6 @@
             color: #1F2937;
             font-weight: 600;
         }
-
-        /* Query View */
-        .q-tab {
-            padding: 10px 14px;
-            font-size: 13px;
-            color: #64748b;
-            border-bottom: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.15s;
-            user-select: none;
-        }
-        .q-tab.active {
-            color: #2563EB;
-            border-bottom-color: #2563EB;
-            font-weight: 600;
-        }
-        .q-tab:hover { color: #2563EB; }
-
-        .q-status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 9999px;
-            background: #10b981;
-            box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
-        }
-        .q-status-line {
-            height: 2px;
-            background: #e2e8f0;
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-        .q-status-line::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, #34d399, #60a5fa);
-            opacity: 0.7;
-        }
-
-        .q-table-compact th {
-            background: #f8fafc;
-            color: #64748b;
-            font-weight: 600;
-            font-size: 12px;
-            padding: 10px 12px;
-            border-bottom: 1px solid #e2e8f0;
-            white-space: nowrap;
-            text-align: left;
-        }
-        .q-table-compact td {
-            padding: 10px 12px;
-            font-size: 13px;
-            border-bottom: 1px solid #f1f5f9;
-            white-space: nowrap;
-            color: #334155;
-        }
-        .q-table-compact tr:hover { background: #f8fafc; }
     </style>
 </head>
 <body>
@@ -639,13 +356,9 @@
                         <div class="px-6 py-2 text-sm font-semibold text-gray-700 flex items-center bg-gray-200 border-b border-gray-300">
                             <i class="fas fa-folder-open mr-2 text-blue-600"></i> 业务操作模块
                         </div>
-                        <div class="mt-1 space-y-1">
-                            <div @click="switchView('upload')" :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', currentView==='upload' ? 'active' : '']">
+                        <div class="mt-1">
+                            <div @click="navigateToPage" :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', 'active']">
                                 <span>铁运可视化信息上报</span>
-                            </div>
-                            <!-- 铁运可视化查询入口：同页切换（不跳转） -->
-                            <div @click="switchView('query')" :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', currentView==='query' ? 'active' : '']">
-                                <span>铁运可视化查询</span>
                             </div>
                         </div>
                     </div>
@@ -661,11 +374,11 @@
             </div>
 
             <!-- Main Content Area -->
-            <div ref="mainContent" class="main-content flex flex-col bg-slate-50 overflow-hidden relative overflow-x-hidden">
+            <div class="flex-1 flex flex-col bg-slate-50 overflow-hidden relative">
                 <!-- Header -->
                 <div class="h-14 bg-white border-b border-slate-200 flex justify-between items-center px-6 shrink-0 z-20">
                     <div class="text-compact text-slate-500">
-                        HTM / 业务操作模块 / <span class="text-slate-900 font-semibold">{{ currentView === 'upload' ? '铁运可视化信息上报' : '铁运可视化查询' }}</span>
+                        HTM / 业务操作模块 / <span class="text-slate-900 font-semibold">铁运可视化信息上报</span>
                     </div>
                     <div class="flex space-x-4 text-slate-400">
                         <i class="fas fa-bell hover:text-blue-600 cursor-pointer transition-colors"></i>
@@ -673,12 +386,12 @@
                 </div>
 
                 <!-- Main Content -->
-                <div v-if="currentView === 'upload'" class="flex-1 p-6 overflow-y-auto overflow-x-hidden flex flex-col custom-scroll min-w-0 w-full">
+                <div class="flex-1 p-6 overflow-y-auto flex flex-col custom-scroll">
                     <!-- Filter Section -->
             <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-4">
                 <div class="grid grid-cols-5 gap-4">
                     <div class="col-span-1">
-                        <label class="block text-xs text-gray-500 mb-1.5">订舱号</label>
+                        <label class="block text-xs text-gray-500 mb-1.5">落货纸号</label>
                         <textarea v-model="filters.lhzOrder" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
                     <div class="col-span-1">
@@ -769,15 +482,6 @@
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs text-gray-500 mb-1.5">当前状态</label>
-                        <select v-model="filters.currentStatus" class="htm-input">
-                            <option value="">全部</option>
-                            <option v-for="status in statusOptions" :key="status.code" :value="status.code">
-                                {{ status.code }} - {{ status.label }}
-                            </option>
-                        </select>
-                    </div>
                     <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5">上传时间</label>
                         <input v-model="filters.uploadTimeRange" type="text" class="htm-input" placeholder="YYYY-MM-DD - YYYY-MM-DD">
@@ -834,12 +538,11 @@
                                 <th class="w-10 text-center">
                                     <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
                                 </th>
-                                <th class="min-w-[120px]">订舱号</th>
+                                <th class="min-w-[120px]">落货纸号</th>
                                 <th class="min-w-[100px]">箱号</th>
                                 <th>箱型</th>
                                 <th>起运港</th>
                                 <th>目的港</th>
-                                <th>当前状态</th>
                                 <th>当前位置</th>
                                 <th>实时ETD</th>
                                 <th>ATD</th>
@@ -863,7 +566,6 @@
                                 <td>{{ item.containerSize }}</td>
                                 <td>{{ item.pol }}</td>
                                 <td>{{ item.pod }}</td>
-                                <td>{{ getStatusLabel(item.currentStatus) }}</td>
                                 <td>{{ item.currentLocation }}</td>
                                 <td class="font-mono text-xs">{{ formatDateOnly(item.realETD) }}</td>
                                 <td class="font-mono text-xs">{{ formatDateOnly(item.atd) }}</td>
@@ -907,485 +609,6 @@
                 </div>
                     </div>
                 </div>
-
-                <!-- Query Content (Native) -->
-                <div v-if="currentView === 'query'" class="flex-1 p-6 overflow-y-auto overflow-x-hidden custom-scroll min-w-0 w-full self-stretch" style="width:100%;max-width:none;">
-                    <div class="w-full max-w-none">
-                    <!-- Tabs -->
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
-                        <div class="flex items-center gap-2 border-b border-gray-200 px-4">
-                            <div :class="['q-tab', qActiveTab==='tracking'?'active':'']" @click="qActiveTab='tracking'">节点可视 Tracking Status</div>
-                            <div :class="['q-tab', qActiveTab==='map'?'active':'']" @click="qActiveTab='map'">地图可视 Tracking on Map</div>
-                            <div :class="['q-tab', qActiveTab==='congestion'?'active':'']" @click="qActiveTab='congestion'">港口拥堵报告 Port Congestion Report</div>
-                        </div>
-
-                        <!-- Query Bar -->
-                        <div class="p-4 flex items-center justify-between gap-4">
-                            <div class="flex items-center gap-2">
-                                <select v-model="qQueryType" class="htm-input" style="width: 150px;">
-                                    <option value="so">订舱号 SO NO.</option>
-                                    <option value="lhz">订舱号（原落货纸号）</option>
-                                    <option value="waybill">物流运单号</option>
-                                </select>
-                                <input v-model="qQueryValue" class="htm-input font-mono" style="width: 220px;" placeholder="请输入...">
-                                <button @click="qDoQuery" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-4 h-9 rounded shadow-sm transition-colors">
-                                    查询 QUERY
-                                </button>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button @click="qOpenBookingInfo" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-9 rounded shadow-sm">订舱信息 Booking information</button>
-                                <button @click="qOpenExportModal" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-9 rounded shadow-sm">导出列表信息 Export list information</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Subscription / Status strip -->
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 p-4 w-full">
-                        <div class="grid grid-cols-4 gap-6 items-center">
-                            <div class="flex items-center gap-3">
-                                <div class="q-status-dot"></div>
-                                <div>
-                                    <div class="text-xs text-slate-500">订阅方 Date From</div>
-                                    <div class="text-sm font-semibold text-slate-800">{{ qSubscription.from }}</div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <div class="q-status-dot"></div>
-                                <div>
-                                    <div class="text-xs text-slate-500">订阅状态 Subscription Status</div>
-                                    <div class="text-sm font-semibold text-green-700">{{ qSubscription.status }}</div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <div class="q-status-dot"></div>
-                                <div>
-                                    <div class="text-xs text-slate-500">数据状态 Data Status</div>
-                                    <div class="text-sm font-semibold text-slate-800">{{ qSubscription.dataStatus }}</div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3 justify-end">
-                                <div class="text-right">
-                                    <div class="text-xs text-slate-500">更新时间 Update</div>
-                                    <div class="text-sm font-semibold text-slate-800">{{ qSubscription.updatedAt }}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3 mt-3">
-                            <div class="q-status-line"></div>
-                        </div>
-                        <div class="text-xs text-slate-500 mt-2">
-                            - 海运：订阅方显示船公司/数据源，逻辑不变；铁运：订阅方显示具体货代名称，完成订舱后默认订阅成功。
-                        </div>
-                    </div>
-
-                    <!-- Basic Information -->
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
-                        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                            <div class="font-bold text-slate-900">
-                                基本信息 <span class="text-slate-400 text-xs font-normal">Basic information</span>
-                            </div>
-                            <div class="text-xs text-slate-500">
-                                运输方式：<span class="font-semibold text-slate-800">{{ qBasic.transport }}</span>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <div class="grid grid-cols-3 gap-0 border border-gray-200 rounded overflow-hidden">
-                                <div class="border-r border-gray-200">
-                                    <table class="w-full q-table-compact">
-                                        <tbody>
-                                            <tr><th class="w-48">物流运单号 Hisense Tracking No.</th><td class="font-mono">{{ qBasic.waybillNo }}</td></tr>
-                                            <tr><th>订舱号 Booking No.</th><td class="font-mono">{{ qBasic.deliveryNotes }}</td></tr>
-                                            <tr><th>货代 Shipping Carrier</th><td>{{ qBasic.carrier }}</td></tr>
-                                            <tr><th>起运港 POL</th><td>{{ qBasic.pol }}</td></tr>
-                                            <tr><th>接货地 Place of Receipt</th><td>{{ qBasic.placeOfReceipt }}</td></tr>
-                                            <tr><th>订舱ETD ETD (Booking)</th><td>{{ qBasic.etdBooking }}</td></tr>
-                                            <tr><th>实时ETD ETD (Update)</th><td>{{ qBasic.etdUpdate }}</td></tr>
-                                            <tr><th>物流岗 Booking Operator</th><td>{{ qBasic.bookingOperator }}</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="border-r border-gray-200">
-                                    <table class="w-full q-table-compact">
-                                        <tbody>
-                                            <tr><th class="w-48">SO NO.</th><td class="font-mono">{{ qBasic.soNo }}</td></tr>
-                                            <tr><th>价格条款 Price Terms</th><td>{{ qBasic.priceTerms }}</td></tr>
-                                            <tr><th>船名/航次 Ocean Vessel/Voy. No.</th><td>{{ qBasic.vesselVoy || '-' }}</td></tr>
-                                            <tr><th>中转港 Port of Transshipment</th><td>{{ qBasic.transshipment || '-' }}</td></tr>
-                                            <tr><th>装货港 POL</th><td>{{ qBasic.pol2 }}</td></tr>
-                                            <tr><th>订舱ETA ETA (Booking)</th><td>{{ qBasic.etaBooking }}</td></tr>
-                                            <tr><th>实时ETA ETA (Update)</th><td>{{ qBasic.etaUpdate }}</td></tr>
-                                            <tr><th>单证人员 Document Operator</th><td>{{ qBasic.docOperator }}</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div>
-                                    <table class="w-full q-table-compact">
-                                        <tbody>
-                                            <tr><th class="w-48">提单号 B/L No.</th><td>{{ qBasic.blNo || '-' }}</td></tr>
-                                            <tr><th>箱型箱量 Size and Qty. of</th><td>{{ qBasic.sizeQty }}</td></tr>
-                                            <tr><th>目的站 Port of Delivery</th><td>{{ qBasic.destination }}</td></tr>
-                                            <tr><th>卸货地 Place of Delivery</th><td>{{ qBasic.placeOfDelivery }}</td></tr>
-                                            <tr><th>ATD</th><td>{{ qBasic.atd }}</td></tr>
-                                            <tr><th>ATA</th><td>{{ qBasic.ata }}</td></tr>
-                                            <tr><th>多式联运 Multi-transportation</th><td>{{ qBasic.multi || '-' }}</td></tr>
-                                            <tr><th>备注</th><td>{{ qBasic.remark || '-' }}</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Current Status Visualization -->
-                    <div v-if="aggregatedBookingStatus" class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
-                        <div class="px-4 py-3 border-b border-gray-200">
-                            <div class="font-bold text-slate-900">
-                                当前状态可视化 <span class="text-slate-400 text-xs font-normal">Current Status Visualization</span>
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <!-- 进度条 -->
-                            <div class="status-progress-container mb-4">
-                                <div class="status-progress-bar">
-                                    <div 
-                                        v-for="(node, idx) in progressNodes" 
-                                        :key="node.code"
-                                        class="progress-node-wrapper"
-                                    >
-                                        <div class="progress-node" :class="getNodeStatusClass(node)">
-                                            <div class="node-dot">
-                                                <i :class="node.icon"></i>
-                                            </div>
-                                            <div class="node-label">{{ node.label }}</div>
-                                            <div class="node-count">{{ node.count }}/{{ node.total }}</div>
-                                            <div class="node-time" :class="{ 'invisible': !node.timeLabel }">
-                                                <div class="text-xs text-slate-500">{{ node.timeLabel || '' }}</div>
-                                                <div class="text-xs font-semibold text-slate-700">{{ node.time || '-' }}</div>
-                                            </div>
-                                        </div>
-                                        <div v-if="idx < progressNodes.length - 1" class="progress-line" :class="getLineStatusClass(node, progressNodes[idx + 1])"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- 状态分布 -->
-                            <div class="border-t border-gray-200 pt-4">
-                                <div class="text-xs text-slate-500 mb-2">状态分布</div>
-                                <div class="flex flex-wrap gap-2">
-                                    <div 
-                                        v-for="(node, idx) in progressNodes.filter(n => n.count > 0)" 
-                                        :key="node.code"
-                                        class="status-badge"
-                                    >
-                                        <span class="font-semibold">{{ node.code }}-{{ node.label }}:</span>
-                                        <span class="ml-1">{{ node.count }}箱</span>
-                                    </div>
-                                    <div v-if="progressNodes.filter(n => n.count > 0).length === 0" class="text-slate-400 text-xs">
-                                        暂无状态数据
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- 颜色说明和业务逻辑说明 -->
-                            <div class="border-t border-gray-200 pt-4 mt-4">
-                                <div class="bg-slate-50 rounded-lg p-4">
-                                    <div class="text-xs font-semibold text-slate-700 mb-3">颜色说明 Color Legend</div>
-                                    <div class="grid grid-cols-2 gap-4 mb-4">
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-4 h-4 rounded-full bg-green-500 border-2 border-green-500"></div>
-                                            <span class="text-xs text-slate-600">绿色：已完成/当前激活节点</span>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-4 h-4 rounded-full bg-gray-300 border-2 border-gray-300"></div>
-                                            <span class="text-xs text-slate-600">灰色：未到达节点（虚线连接）</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-xs font-semibold text-slate-700 mb-2">业务逻辑说明 Business Logic</div>
-                                    <div class="text-xs text-slate-600 space-y-1">
-                                        <p><strong>状态推断规则：</strong>如果某个订舱号有箱子传了某个状态，系统认为前面的所有节点也已经完成。</p>
-                                        <p><strong>多箱子规则：</strong>只要有一个箱子到达了某个节点，所有前面的节点都应该显示为已完成（绿色），当前最高节点也显示为绿色。</p>
-                                        <p><strong>示例：</strong>如果6个箱子中，有1个箱子在"境外换装"（30），则00、10、20、30节点都显示为已完成/激活（绿色），40、50节点显示为未到达（灰色，虚线连接）。</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Detail table -->
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm w-full">
-                        <div class="px-4 py-3 border-b border-gray-200 font-bold text-slate-900">
-                            实时船期明细 <span class="text-slate-400 text-xs font-normal">Tracking Status</span>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full q-table-compact">
-                                <thead>
-                                    <tr>
-                                        <th class="w-12">NO.</th>
-                                        <th>Milestones</th>
-                                        <th class="w-56">Location</th>
-                                        <th class="w-56">Transport Mode</th>
-                                        <th class="w-56">Actual Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="(row, idx) in qMilestones" :key="idx">
-                                        <td class="text-slate-500">{{ idx + 1 }}</td>
-                                        <td>{{ row.milestone }}</td>
-                                        <td class="font-mono text-xs text-slate-600">{{ row.location }}</td>
-                                        <td class="text-slate-600">{{ row.mode }}</td>
-                                        <td class="font-mono text-xs text-slate-600">{{ row.actualDate }}</td>
-                                    </tr>
-                                    <tr v-if="qMilestones.length===0">
-                                        <td colspan="5" class="text-center text-slate-400 py-6">暂无数据</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Container latest status -->
-                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm w-full mt-4">
-                        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                            <div class="font-bold text-slate-900">
-                                集装箱最新动态 <span class="text-slate-400 text-xs font-normal">Tracking status by container</span>
-                            </div>
-                            <div class="text-xs text-slate-500">
-                                最新动态：按集装箱维度展示最新节点
-                            </div>
-                        </div>
-                        <div class="p-4 border-b border-gray-200">
-                            <div class="grid grid-cols-4 gap-4">
-                                <div class="border border-slate-200 rounded-lg px-4 py-3 flex items-center justify-between">
-                                    <div>
-                                        <div class="text-xs text-slate-500">起运港发船</div>
-                                        <div class="text-xs text-slate-400">First Vessel Departure</div>
-                                    </div>
-                                    <div class="text-base font-semibold text-slate-900">
-                                        {{ qContainerSummary.firstDeparture.completed }}/{{ qContainerSummary.firstDeparture.total }}
-                                    </div>
-                                </div>
-                                <div class="border border-slate-200 rounded-lg px-4 py-3 flex items-center justify-between">
-                                    <div>
-                                        <div class="text-xs text-slate-500">到达目的港</div>
-                                        <div class="text-xs text-slate-400">Last Vessel Arrival</div>
-                                    </div>
-                                    <div class="text-base font-semibold text-slate-900">
-                                        {{ qContainerSummary.lastArrival.completed }}/{{ qContainerSummary.lastArrival.total }}
-                                    </div>
-                                </div>
-                                <div class="border border-slate-200 rounded-lg px-4 py-3 flex items-center justify-between">
-                                    <div>
-                                        <div class="text-xs text-slate-500">集装箱发往目的地</div>
-                                        <div class="text-xs text-slate-400">Picked up at Final Destination for Delivery</div>
-                                    </div>
-                                    <div class="text-base font-semibold text-slate-900">
-                                        {{ qContainerSummary.pickup.completed }}/{{ qContainerSummary.pickup.total }}
-                                    </div>
-                                </div>
-                                <div class="border border-slate-200 rounded-lg px-4 py-3 flex items-center justify-between">
-                                    <div>
-                                        <div class="text-xs text-slate-500">空箱返回目的港</div>
-                                        <div class="text-xs text-slate-400">Empty Container Returned to Carrier at Destination</div>
-                                    </div>
-                                    <div class="text-base font-semibold text-slate-900">
-                                        {{ qContainerSummary.emptyReturn.completed }}/{{ qContainerSummary.emptyReturn.total }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="p-4 pt-3">
-                            <div class="text-xs text-slate-500 flex items-center justify-between mb-2">
-                                <div>集装箱维度最新动态明细</div>
-                                <div class="flex items-center gap-2">
-                                    <span>最新动态</span>
-                                    <input class="htm-input h-7 w-40 text-xs" placeholder="请输入集装箱号">
-                                    <button class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-7 rounded shadow-sm">查询 QUERY</button>
-                                </div>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full q-table-compact">
-                                    <thead>
-                                        <tr>
-                                            <th class="w-12">序号<br>NO.</th>
-                                            <th class="w-32">集装箱号<br>Container No.</th>
-                                            <th class="w-40">实时ETD<br>ETD Pol Updates</th>
-                                            <th class="w-40">实时ETA<br>Last Pod Updates</th>
-                                            <th class="w-48">最新节点<br>Current Status</th>
-                                            <th class="w-40">更新时间<br>Update time of Current Time</th>
-                                            <th class="w-40">最新地点<br>Current Location</th>
-                                            <th class="w-16">操作</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr v-for="(row, idx) in qContainerStatus" :key="row.containerNo">
-                                            <td class="text-slate-500">{{ idx + 1 }}</td>
-                                            <td class="font-mono text-xs text-slate-700">{{ row.containerNo }}</td>
-                                            <td class="font-mono text-xs text-slate-700">{{ row.realEtd }}</td>
-                                            <td class="font-mono text-xs text-slate-700">{{ row.realEta }}</td>
-                                            <td class="text-slate-700">{{ row.currentStatus }}</td>
-                                            <td class="font-mono text-xs text-slate-700">{{ row.updateTime }}</td>
-                                            <td class="font-mono text-xs text-slate-700">{{ row.currentLocation }}</td>
-                                            <td class="text-teal-600 text-xs cursor-pointer">查看</td>
-                                        </tr>
-                                        <tr v-if="qContainerStatus.length === 0">
-                                            <td colspan="8" class="text-center text-slate-400 py-6">暂无数据</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                </div>
-
-        <!-- Export List Modal (Query) -->
-        <div v-if="showExportModal" class="modal-overlay export-modal" @click.self="closeExportModal">
-            <div class="modal-content" @click.stop>
-                <div class="export-modal-header">
-                    <h2 class="text-lg font-bold text-slate-900">导出列表信息</h2>
-                    <button class="text-slate-400 hover:text-slate-600" @click="closeExportModal" aria-label="close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="export-modal-body custom-scroll">
-                    <div class="export-grid">
-                        <!-- Left column: 4 textarea blocks -->
-                        <div class="export-col export-left">
-                            <div class="export-field items-start">
-                                <div class="export-label">
-                                    订舱号
-                                    <span class="en">delivery note</span>
-                                </div>
-                                <textarea v-model="exportForm.bookingNo" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
-                            </div>
-                            <div class="export-field items-start">
-                                <div class="export-label">
-                                    SO NO
-                                </div>
-                                <textarea v-model="exportForm.soNo" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
-                            </div>
-                            <div class="export-field items-start">
-                                <div class="export-label">
-                                    集装箱号
-                                    <span class="en">CTN NO</span>
-                                </div>
-                                <textarea v-model="exportForm.containerNo" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
-                            </div>
-                            <div class="export-field items-start">
-                                <div class="export-label">
-                                    船名/航次
-                                    <span class="en">Ocean Vessel/Voy. No.</span>
-                                </div>
-                                <textarea v-model="exportForm.vesselVoy" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
-                            </div>
-                            <div class="export-field">
-                                <div class="export-label">
-                                    运输方式
-                                    <span class="en">Transport mode</span>
-                                </div>
-                                <select v-model="exportForm.transportMode" class="htm-input flex-1">
-                                    <option value="">全部</option>
-                                    <option value="rail">铁运</option>
-                                    <option value="sea">海运</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Right column: dates + selects; transport mode at end -->
-                        <div class="export-col export-right">
-                            <div class="export-field">
-                                <div class="export-label">ETD</div>
-                                <input v-model="exportForm.etd" type="date" class="htm-input flex-1">
-                            </div>
-                            <div class="export-field">
-                                <div class="export-label">ATD</div>
-                                <input v-model="exportForm.atd" type="date" class="htm-input flex-1">
-                            </div>
-                            <div class="export-field">
-                                <div class="export-label">ETA</div>
-                                <input v-model="exportForm.eta" type="date" class="htm-input flex-1">
-                            </div>
-                            <div class="export-field">
-                                <div class="export-label">ATA</div>
-                                <input v-model="exportForm.ata" type="date" class="htm-input flex-1">
-                            </div>
-                            <div class="export-field">
-                                <div class="export-label">
-                                    出口国家
-                                    <span class="en">destination country</span>
-                                </div>
-                                <select v-model="exportForm.destinationCountry" class="htm-input flex-1">
-                                    <option value="">请选择</option>
-                                    <option value="HR">HR</option>
-                                    <option value="BA">BA</option>
-                                    <option value="RS">RS</option>
-                                </select>
-                            </div>
-                            <div class="export-field">
-                                <div class="export-label">
-                                    船公司
-                                    <span class="en">Shipping Carrier</span>
-                                </div>
-                                <select v-model="exportForm.shippingCarrier" class="htm-input flex-1">
-                                    <option value="">请选择</option>
-                                    <option value="MSC">MSC</option>
-                                    <option value="MAERSK">MAERSK</option>
-                                    <option value="COSCO">COSCO</option>
-                                </select>
-                            </div>
-                            <div class="export-field">
-                                <div class="export-label">
-                                    销售办公室
-                                    <span class="en">Sales Business Unit</span>
-                                </div>
-                                <select v-model="exportForm.salesBu" class="htm-input flex-1">
-                                    <option value="">请选择</option>
-                                    <option value="EU">EU</option>
-                                    <option value="MEA">MEA</option>
-                                    <option value="APAC">APAC</option>
-                                </select>
-                            </div>
-                            <div class="export-field">
-                                <div class="export-label">
-                                    销售大区
-                                    <span class="en">Global Sales Region</span>
-                                </div>
-                                <select v-model="exportForm.salesRegion" class="htm-input flex-1">
-                                    <option value="">请选择</option>
-                                    <option value="EUROPE">EUROPE</option>
-                                    <option value="BALKANS">BALKANS</option>
-                                    <option value="CENTRAL">CENTRAL</option>
-                                </select>
-                            </div>
-                            <div class="export-field">
-                                <div class="export-label">
-                                    状态
-                                    <span class="en">Hisense Order Status</span>
-                                </div>
-                                <select v-model="exportForm.orderStatus" class="htm-input flex-1">
-                                    <option value="">请选择</option>
-                                    <option value="IN_TRANSIT">IN_TRANSIT</option>
-                                    <option value="ARRIVED">ARRIVED</option>
-                                    <option value="DELIVERED">DELIVERED</option>
-                                </select>
-                            </div>
-                            <div class="export-field">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="export-modal-footer">
-                    <button @click="closeExportModal" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
-                        取消<br><span class="text-xs text-slate-400 font-normal">cancel</span>
-                    </button>
-                    <button @click="resetExportForm" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
-                        重置<br><span class="text-xs text-slate-400 font-normal">reset</span>
-                    </button>
-                    <button @click="confirmExport" class="bg-teal-600 text-white text-sm px-6 h-10 rounded hover:bg-teal-700 font-medium shadow-sm transition-colors">
-                        确定<br><span class="text-xs text-teal-50 font-normal">confirm</span>
-                    </button>
-                </div>
-            </div>
             </div>
 
         <!-- Add Modal -->
@@ -1408,8 +631,8 @@
                                 <span v-if="errors.pod" class="error-message">{{ errors.pod }}</span>
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5 required">订舱号</label>
-                                <input v-model="form.lhzOrder" type="text" class="htm-input" :class="{error: errors.lhzOrder}" placeholder="请输入订舱号" @blur="validateField('lhzOrder')">
+                                <label class="block text-xs text-gray-500 mb-1.5 required">落货纸号</label>
+                                <input v-model="form.lhzOrder" type="text" class="htm-input" :class="{error: errors.lhzOrder}" placeholder="请输入落货纸号" @blur="validateField('lhzOrder')">
                                 <span v-if="errors.lhzOrder" class="error-message">{{ errors.lhzOrder }}</span>
                             </div>
                             <div>
@@ -1424,16 +647,6 @@
                                     <option v-for="size in containerSizes" :key="size" :value="size">{{ size }}</option>
                                 </select>
                                 <span v-if="errors.containerSize" class="error-message">{{ errors.containerSize }}</span>
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1.5 required">当前状态</label>
-                                <select v-model="form.currentStatus" class="htm-input" :class="{error: errors.currentStatus}" @blur="validateField('currentStatus')">
-                                    <option value="">请选择</option>
-                                    <option v-for="status in statusOptions" :key="status.code" :value="status.code">
-                                        {{ status.code }} - {{ status.label }}
-                                    </option>
-                                </select>
-                                <span v-if="errors.currentStatus" class="error-message">{{ errors.currentStatus }}</span>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1.5 required">当前位置</label>
@@ -1590,7 +803,7 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="border border-gray-200 px-3 py-2 text-left">行号</th>
-                                        <th class="border border-gray-200 px-3 py-2 text-left">订舱号</th>
+                                        <th class="border border-gray-200 px-3 py-2 text-left">落货纸号</th>
                                         <th class="border border-gray-200 px-3 py-2 text-left">箱号</th>
                                         <th class="border border-gray-200 px-3 py-2 text-left">错误原因</th>
                                     </tr>
@@ -1642,9 +855,6 @@
         </div>
     </div>
 
-    <!-- Close #app -->
-    </div>
-
     <script>
         const { createApp } = Vue;
 
@@ -1657,7 +867,7 @@
                     // Current User Info
                     currentUser: {
                         name: '用户A',
-                    carrier: '青岛经汉物流服务有限公司'
+                        carrier: '货代A'
                     },
                     currentUploadTime: '',
                     
@@ -1668,7 +878,6 @@
                         pol: [],
                         pod: [],
                         containerSize: [],
-                        currentStatus: '',
                         uploadTimeRange: '',
                         carrier: '',
                         uploadUser: ''
@@ -1684,15 +893,6 @@
                     
                     // Container Sizes (HTM标准箱型)
                     containerSizes: ['20GP', '40GP', '40HQ', '40NOR'],
-                    // 当前状态枚举（与PRD 2.7.8 状态枚举表保持一致）
-                    statusOptions: [
-                        { code: '00', label: '已进站 / 待发运' },
-                        { code: '10', label: '已发车 / 国内在途' },
-                        { code: '20', label: '抵达国内口岸 / 排队' },
-                        { code: '30', label: '境外换装中' },
-                        { code: '40', label: '境外在途' },
-                        { code: '50', label: '已抵达目的站' }
-                    ],
                     // 港口枚举
                     portOptions: ['CNTAO', 'DEHAM', 'CNSHA', 'DEBRV', 'CNDLC'],
                     
@@ -1706,7 +906,6 @@
                             containerSize: '40HQ',
                             pol: 'CNTAO',
                             pod: 'DEHAM',
-                            currentStatus: '20',
                             currentLocation: '阿拉山口',
                             kmToBorder: 120.5,
                             kmToDestination: 3500.0,
@@ -1725,7 +924,6 @@
                             containerSize: '20GP',
                             pol: 'CNTAO',
                             pod: 'DEHAM',
-                            currentStatus: '10',
                             currentLocation: '霍尔果斯',
                             kmToBorder: 80.0,
                             kmToDestination: 3800.0,
@@ -1744,7 +942,6 @@
                             containerSize: '40GP',
                             pol: 'CNSHA',
                             pod: 'DEBRV',
-                            currentStatus: '30',
                             currentLocation: '满洲里',
                             kmToBorder: 95.3,
                             kmToDestination: 4200.0,
@@ -1758,12 +955,11 @@
                         {
                             id: 4,
                             lhzOrder: 'LHZ20250126004',
-                            carrier: '青岛经汉物流服务有限公司',
+                            carrier: '货代B',
                             containerNo: 'CONT004',
                             containerSize: '40HQ',
                             pol: 'CNTAO',
                             pod: 'DEHAM',
-                            currentStatus: '40',
                             currentLocation: '二连浩特',
                             kmToBorder: 150.8,
                             kmToDestination: 3900.0,
@@ -1777,12 +973,11 @@
                         {
                             id: 5,
                             lhzOrder: 'LHZ20250126005',
-                            carrier: '青岛经汉物流服务有限公司',
+                            carrier: '货代C',
                             containerNo: 'CONT005',
                             containerSize: '20GP',
                             pol: 'CNDLC',
                             pod: 'DEHAM',
-                            currentStatus: '20',
                             currentLocation: '阿拉山口',
                             kmToBorder: 110.2,
                             kmToDestination: 3600.0,
@@ -1796,12 +991,11 @@
                         {
                             id: 6,
                             lhzOrder: 'LHZ20250127001',
-                            carrier: '青岛经汉物流服务有限公司',
+                            carrier: '货代A',
                             containerNo: 'CONT006',
                             containerSize: '40HQ',
                             pol: 'CNTAO',
                             pod: 'DEBRV',
-                            currentStatus: '10',
                             currentLocation: '霍尔果斯',
                             kmToBorder: 85.6,
                             kmToDestination: 4100.0,
@@ -1826,139 +1020,12 @@
                         pages: 0
                     },
                     jumpPage: 1,
-
-                // View switch (upload/query)
-                currentView: 'upload',
-
-                // Query (native)
-                qActiveTab: 'tracking',
-                qQueryType: 'so',
-                qQueryValue: 'COSU64321333310',
-                // 模拟：运输方式切换（海运/铁运），用于验证“订阅方横条”逻辑
-                qTransportType: 'rail', // 'sea' | 'rail'
-
-                qBasic: {
-                    transport: '铁运',
-                    waybillNo: '1696176(H)',
-                    deliveryNotes: '1696175,1696176',
-                    carrier: '青岛经汉物流服务有限公司',
-                    pol: 'QINGDAO-CN',
-                    placeOfReceipt: 'QINGDAO-CN',
-                    etdBooking: '2025-10-30',
-                    etdUpdate: '2025-10-30',
-                    bookingOperator: 'A-华鑫',
-
-                    soNo: 'COSU64321333310',
-                    priceTerms: 'DAP',
-                    vesselVoy: '-',
-                    transshipment: '-',
-                    pol2: 'QINGDAO-CN',
-                    etaBooking: '2025-12-24',
-                    etaUpdate: '2025-12-29',
-                    docOperator: 'A-周培',
-
-                    blNo: '',
-                    sizeQty: '40HQ*1',
-                    destination: 'RIJEKA,HR',
-                    placeOfDelivery: 'RIJEKA,HR',
-                    atd: '2025-10-30',
-                    ata: '2025-12-29',
-                    multi: '-',
-                    remark: ''
-                },
-                qUploads: [
-                    { uploadTime: '2026-01-18 09:10:00', kmFromOverseasOrigin: 420, kmToDestinationStation: 980 },
-                    { uploadTime: '2026-01-19 09:18:04', kmFromOverseasOrigin: 410, kmToDestinationStation: 960 }
-                ],
-                qRealtimeNodes: {
-                    depart: { pol: 'QINGDAO-CN', time: '2025-10-30 14:46:00' },
-                    arrive: { station: 'RIJEKA,HR', time: '2025-12-29 21:14:00' }
-                },
-                qMilestones: [
-                    { milestone: '起运港发船 / Departure from Origin', location: 'QINGDAO-CN', mode: 'Rail', actualDate: '2025-10-30 14:46:00' },
-                    { milestone: '目的站到港 / Arrival at Destination', location: 'RIJEKA,HR', mode: 'Rail', actualDate: '2025-12-29 21:14:00' }
-                ],
-                qContainerSummary: {
-                    firstDeparture: { completed: 6, total: 6 },
-                    lastArrival: { completed: 6, total: 6 },
-                    pickup: { completed: 5, total: 6 },
-                    emptyReturn: { completed: 4, total: 6 }
-                },
-                qContainerStatus: [
-                    {
-                        containerNo: 'OCUU8688267',
-                        realEtd: '2025-10-30 15:30:00',
-                        realEta: '2026-01-05 12:00:00',
-                        atd: '2025-10-30 14:46:00',
-                        ata: null,
-                        currentStatus: 'Arrived at Port',
-                        statusCode: '20', // 状态代码
-                        updateTime: '2026-01-17 10:00:00',
-                        currentLocation: '二连浩特'
-                    },
-                    {
-                        containerNo: 'OCUU8688268',
-                        realEtd: '2025-10-31 09:20:00',
-                        realEta: '2026-01-05 12:00:00',
-                        atd: '2025-10-31 08:15:00',
-                        ata: null,
-                        currentStatus: 'In Transit Domestically',
-                        statusCode: '10', // 状态代码
-                        updateTime: '2026-01-18 08:45:00',
-                        currentLocation: '霍尔果斯'
-                    },
-                    {
-                        containerNo: 'OCUU8688269',
-                        realEtd: '2025-11-01 16:10:00',
-                        realEta: '2026-01-05 12:00:00',
-                        atd: '2025-11-01 15:30:00',
-                        ata: null,
-                        currentStatus: 'Overseas Transfer',
-                        statusCode: '30', // 状态代码 - 最新节点
-                        updateTime: '2026-01-19 19:20:00',
-                        currentLocation: '阿拉山口'
-                    },
-                    {
-                        containerNo: 'OCUU8688270',
-                        realEtd: '2025-11-02 14:00:00',
-                        realEta: '2026-01-05 12:00:00',
-                        atd: '2025-11-02 13:20:00',
-                        ata: null,
-                        currentStatus: 'Arrived at Port',
-                        statusCode: '20', // 状态代码
-                        updateTime: '2025-11-02 14:05:00',
-                        currentLocation: '二连浩特'
-                    },
-                    {
-                        containerNo: 'OCUU8688271',
-                        realEtd: '2025-11-03 08:30:00',
-                        realEta: '2026-01-05 12:00:00',
-                        atd: '2025-11-03 07:45:00',
-                        ata: null,
-                        currentStatus: 'Overseas Transfer',
-                        statusCode: '30', // 状态代码
-                        updateTime: '2026-01-19 09:10:00',
-                        currentLocation: '阿拉山口'
-                    },
-                    {
-                        containerNo: 'OCUU8688272',
-                        realEtd: '2025-11-04 13:15:00',
-                        realEta: '2026-01-05 12:00:00',
-                        atd: '2025-11-04 12:30:00',
-                        ata: null,
-                        currentStatus: 'Overseas Transfer',
-                        statusCode: '30', // 状态代码
-                        updateTime: '2026-01-20 11:00:00',
-                        currentLocation: '阿拉山口'
-                    }
-                ],
                     
                     // Modals
                     showAddModal: false,
                     showBatchModal: false,
                     showImportResult: false,
                     showDeleteConfirm: false,
-                    showExportModal: false,
                     
                     // Form
                     form: {
@@ -1967,7 +1034,6 @@
                         lhzOrder: '',
                         containerNo: '',
                         containerSize: '',
-                        currentStatus: '',
                         currentLocation: '',
                         kmToBorder: null,
                         kmToDestination: null,
@@ -1986,24 +1052,6 @@
                         success: 0,
                         failed: 0,
                         errors: []
-                    },
-                    
-                    // Export (query)
-                    exportForm: {
-                        bookingNo: '',
-                        soNo: '',
-                        containerNo: '',
-                        vesselVoy: '',
-                        etd: '',
-                        atd: '',
-                        eta: '',
-                        ata: '',
-                        destinationCountry: '',
-                        shippingCarrier: '',
-                        salesBu: '',
-                        salesRegion: '',
-                        orderStatus: '',
-                        transportMode: ''
                     },
                     
                     // Toast
@@ -2043,242 +1091,9 @@
                     if (!this.sizeSearch) return this.containerSizes;
                     const search = this.sizeSearch.toLowerCase();
                     return this.containerSizes.filter(size => size.toLowerCase().includes(search));
-                },
-
-                // ===== Query (native) =====
-                qLatestUpload() {
-                    if (!this.qUploads || this.qUploads.length === 0) return null;
-                    return [...this.qUploads].sort((a, b) => (a.uploadTime || '').localeCompare(b.uploadTime || '')).slice(-1)[0];
-                },
-                qLatestDistances() {
-                    const u = this.qLatestUpload;
-                    return {
-                        kmFromOverseasOrigin: u?.kmFromOverseasOrigin ?? null,
-                        kmToDestinationStation: u?.kmToDestinationStation ?? null
-                    };
-                },
-                qSubscription() {
-                    const isSea = this.qTransportType === 'sea';
-                    if (isSea) {
-                        return {
-                            from: '船公司/数据源',
-                            status: '订阅成功',
-                            dataStatus: '数据已推送',
-                            updatedAt: '2026-01-19 09:18:04'
-                        };
-                    }
-                    return {
-                        from: this.qBasic?.carrier || '货代',
-                        status: '订阅成功',
-                        dataStatus: '数据已推送',
-                        updatedAt: '2026-01-19 09:18:04'
-                    };
-                },
-                // 按订舱号聚合状态数据
-                aggregatedBookingStatus() {
-                    if (!this.qContainerStatus || this.qContainerStatus.length === 0) {
-                        return null;
-                    }
-                    
-                    // 1. 按 (订舱号, 箱号) 取最新（如果数据源已经是聚合后的，这步可省略）
-                    // 这里假设数据已经是按箱号取最新的，直接使用
-                    const containers = this.qContainerStatus;
-                    
-                    // 2. 计算状态分布
-                    const total = containers.length;
-                    const byStatus = {
-                        '00': 0,
-                        '10': 0,
-                        '20': 0,
-                        '30': 0,
-                        '40': 0,
-                        '50': 0
-                    };
-                    
-                    containers.forEach(container => {
-                        const statusCode = container.statusCode || '00';
-                        if (byStatus.hasOwnProperty(statusCode)) {
-                            byStatus[statusCode]++;
-                        }
-                    });
-                    
-                    // 3. 计算最晚的预计抵达时间
-                    const latestEta = containers
-                        .map(c => c.realEta)
-                        .filter(eta => eta)
-                        .sort()
-                        .pop() || null;
-                    
-                    // 4. 按状态分组箱子信息
-                    const containersByStatus = {};
-                    containers.forEach(container => {
-                        const statusCode = container.statusCode || '00';
-                        if (!containersByStatus[statusCode]) {
-                            containersByStatus[statusCode] = [];
-                        }
-                        containersByStatus[statusCode].push(container);
-                    });
-                    
-                    return {
-                        bookingNo: this.qQueryValue || this.qBasic?.deliveryNotes || '',
-                        containers: containers,
-                        statusSummary: {
-                            total: total,
-                            byStatus: byStatus,
-                            latestEta: latestEta
-                        },
-                        containersByStatus: containersByStatus
-                    };
-                },
-                // 进度条节点数据
-                progressNodes() {
-                    if (!this.aggregatedBookingStatus) return [];
-                    
-                    const summary = this.aggregatedBookingStatus.statusSummary;
-                    const total = summary.total;
-                    const containers = this.aggregatedBookingStatus.containers || [];
-                    
-                    // 格式化时间：只显示年月日，去掉时分秒
-                    const formatDateOnly = (dateTimeStr) => {
-                        if (!dateTimeStr) return null;
-                        // 如果包含空格，取空格前的部分（年月日）
-                        if (dateTimeStr.includes(' ')) {
-                            return dateTimeStr.split(' ')[0];
-                        }
-                        // 如果已经是日期格式，直接返回
-                        return dateTimeStr;
-                    };
-                    
-                    // 获取国内在途的时间：优先取ATD，没有则取实时ETD
-                    const getDomesticTransitTime = () => {
-                        // 优先从qBasic.atd获取（如果有完整时间格式）
-                        if (this.qBasic?.atd && this.qBasic.atd.includes(' ')) {
-                            return this.qBasic.atd;
-                        }
-                        // 从容器数据中查找ATD（优先找状态为10的，如果没有则找>=10的）
-                        const containerWithAtd = containers.find(c => c.atd && c.statusCode === '10') 
-                            || containers.find(c => c.atd && parseInt(c.statusCode) >= 10);
-                        if (containerWithAtd?.atd) {
-                            return containerWithAtd.atd;
-                        }
-                        // 如果没有ATD，取实时ETD（取最早的一个）
-                        const etdValues = containers
-                            .map(c => c.realEtd)
-                            .filter(etd => etd)
-                            .sort();
-                        return etdValues.length > 0 ? etdValues[0] : null;
-                    };
-                    
-                    // 获取国内在途的标签：根据是否有时间数据决定显示"实际发车"还是"预计发车"
-                    // 如果有ATD或实时ETD，显示"实际发车"；如果都没有，显示"预计发车"
-                    const getDomesticTransitTimeLabel = () => {
-                        const time = getDomesticTransitTime();
-                        return time ? '实际发车' : '预计发车';
-                    };
-                    
-                    // 获取已抵达的时间：根据节点状态决定显示ATA还是实时ETA
-                    const getArrivedTime = () => {
-                        // 计算最高状态码
-                        const statusCodes = containers
-                            .map(c => parseInt(c.statusCode || '00', 10))
-                            .filter(code => !isNaN(code));
-                        const maxStatusCode = statusCodes.length > 0 ? Math.max(...statusCodes) : 0;
-                        
-                        // 如果最高状态是50（已抵达），显示ATA（实际到站）
-                        if (maxStatusCode >= 50) {
-                            // 优先从qBasic.ata获取（如果有完整时间格式）
-                            if (this.qBasic?.ata && this.qBasic.ata.includes(' ')) {
-                                return formatDateOnly(this.qBasic.ata);
-                            }
-                            // 从容器数据中查找ATA（状态为50的）
-                            const containerWithAta = containers.find(c => c.ata && c.statusCode === '50');
-                            if (containerWithAta?.ata) {
-                                return formatDateOnly(containerWithAta.ata);
-                            }
-                        }
-                        
-                        // 如果最高状态不是50（未抵达），显示实时ETA（预计到站）
-                        const etaValues = containers
-                            .map(c => c.realEta)
-                            .filter(eta => eta)
-                            .sort();
-                        return etaValues.length > 0 ? formatDateOnly(etaValues[etaValues.length - 1]) : null;
-                    };
-                    
-                    // 获取已抵达的标签：根据节点状态决定显示"实际到站"还是"预计到站"
-                    const getArrivedTimeLabel = () => {
-                        const statusCodes = containers
-                            .map(c => parseInt(c.statusCode || '00', 10))
-                            .filter(code => !isNaN(code));
-                        const maxStatusCode = statusCodes.length > 0 ? Math.max(...statusCodes) : 0;
-                        return maxStatusCode >= 50 ? '实际到站' : '预计到站';
-                    };
-                    
-                    return [
-                        {
-                            code: '00',
-                            label: '已提柜',
-                            icon: 'fas fa-warehouse',
-                            count: summary.byStatus['00'] || 0,
-                            total: total,
-                            time: null
-                        },
-                        {
-                            code: '10',
-                            label: '国内已出发',
-                            icon: 'fas fa-truck',
-                            count: summary.byStatus['10'] || 0,
-                            total: total,
-                            time: formatDateOnly(getDomesticTransitTime()) || '-',
-                            timeLabel: getDomesticTransitTimeLabel()
-                        },
-                        {
-                            code: '20',
-                            label: '抵达口岸',
-                            icon: 'fas fa-border-all',
-                            count: summary.byStatus['20'] || 0,
-                            total: total,
-                            time: null
-                        },
-                        {
-                            code: '30',
-                            label: '境外换装',
-                            icon: 'fas fa-exchange-alt',
-                            count: summary.byStatus['30'] || 0,
-                            total: total,
-                            time: null
-                        },
-                        {
-                            code: '40',
-                            label: '境外在途',
-                            icon: 'fas fa-train',
-                            count: summary.byStatus['40'] || 0,
-                            total: total,
-                            time: null
-                        },
-                        {
-                            code: '50',
-                            label: '已抵达',
-                            icon: 'fas fa-flag-checkered',
-                            count: summary.byStatus['50'] || 0,
-                            total: total,
-                            time: getArrivedTime() || '-',
-                            timeLabel: getArrivedTimeLabel()
-                        }
-                    ];
                 }
             },
             mounted() {
-                // Allow deep-linking: ?view=query or ?view=upload
-                try {
-                    const params = new URLSearchParams(window.location.search || '');
-                    const view = params.get('view');
-                    if (view === 'query' || view === 'upload') {
-                        this.currentView = view;
-                    }
-                } catch (e) {
-                    // ignore
-                }
                 this.updateUploadTime();
                 this.filteredData = this.tableData;
                 this.search();
@@ -2317,67 +1132,12 @@
                 navigateToPage() {
                     // 导航到当前页面（已选中状态）
                 },
-                // ===== Query Export Modal =====
-                qOpenExportModal() {
-                    this.showExportModal = true;
-                },
-                closeExportModal() {
-                    this.showExportModal = false;
-                },
-                resetExportForm() {
-                    this.exportForm = {
-                        bookingNo: '',
-                        soNo: '',
-                        containerNo: '',
-                        vesselVoy: '',
-                        etd: '',
-                        atd: '',
-                        eta: '',
-                        ata: '',
-                        destinationCountry: '',
-                        shippingCarrier: '',
-                        salesBu: '',
-                        salesRegion: '',
-                        orderStatus: '',
-                        transportMode: ''
-                    };
-                },
-                confirmExport() {
-                    // 原型阶段仅做提示，实际导出逻辑后续接入
-                    this.showToast('已根据筛选条件导出列表（原型演示，无真实下载）', 'success');
-                    this.closeExportModal();
-                },
-                switchView(view) {
-                    this.currentView = view;
-                    // 防止从“上报”宽表横向滚动后，切到“查询”出现左侧大空白（window 横向滚动未复位）
-                    this.$nextTick(() => {
-                        try {
-                            // reset internal container scrollLeft as well
-                            if (this.$refs.mainContent) {
-                                this.$refs.mainContent.scrollLeft = 0;
-                            }
-                            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-                            document.documentElement.scrollLeft = 0;
-                            document.body.scrollLeft = 0;
-                        } catch (e) {}
-                    });
-                },
-                qDoQuery() {
-                    this.showToast('查询功能待接真实数据（原型演示）', 'success');
-                },
-                qOpenBookingInfo() {
-                    this.showToast('订舱信息功能待实现（原型演示）', 'success');
-                },
-                qExportList() {
-                    this.showToast('导出列表功能待实现（原型演示）', 'success');
-                },
                 search() {
                     const lhzList = this.parseList(this.filters.lhzOrder);
                     const ctnList = this.parseList(this.filters.containerNo);
                     const polList = Array.isArray(this.filters.pol) ? this.filters.pol : [];
                     const podList = Array.isArray(this.filters.pod) ? this.filters.pod : [];
                     const sizeList = Array.isArray(this.filters.containerSize) ? this.filters.containerSize : [];
-                    const statusVal = (this.filters.currentStatus || '').trim();
                     const carrierVal = this.filters.carrier.trim();
                     const uploadUserVal = this.filters.uploadUser.trim();
                     const uploadTimeRange = this.filters.uploadTimeRange.trim();
@@ -2403,9 +1163,6 @@
                     }
                     if (sizeList.length > 0) {
                         result = result.filter(item => sizeList.includes(item.containerSize));
-                    }
-                    if (statusVal) {
-                        result = result.filter(item => (item.currentStatus || '') === statusVal);
                     }
                     if (carrierVal) {
                         // 货代搜索：货代A只能搜索到自己货代的数据
@@ -2450,7 +1207,6 @@
                         pol: [],
                         pod: [],
                         containerSize: [],
-                        currentStatus: '',
                         uploadTimeRange: '',
                         carrier: '',
                         uploadUser: ''
@@ -2530,64 +1286,8 @@
                         this.selectedIds = this.paginatedData.map(item => item.id);
                     }
                 },
-                getStatusLabel(code) {
-                    if (!code) return '-';
-                    const matched = this.statusOptions.find(s => s.code === code);
-                    return matched ? `${matched.code}-${matched.label}` : code;
-                },
-                // 获取节点状态样式类
-                getNodeStatusClass(node) {
-                    if (!this.aggregatedBookingStatus || !this.aggregatedBookingStatus.containers || this.aggregatedBookingStatus.containers.length === 0) {
-                        return 'status-pending';
-                    }
-                    
-                    // 找到所有箱子中的最高状态（最大状态码）
-                    const statusCodes = this.aggregatedBookingStatus.containers
-                        .map(c => parseInt(c.statusCode || '00', 10))
-                        .filter(code => !isNaN(code));
-                    
-                    if (statusCodes.length === 0) {
-                        return 'status-pending';
-                    }
-                    
-                    const maxStatusCode = Math.max(...statusCodes);
-                    const currentNodeCode = parseInt(node.code, 10);
-                    
-                    // 如果当前节点代码小于最高状态，说明已完成（绿色）
-                    if (currentNodeCode < maxStatusCode) {
-                        return 'status-completed';
-                    }
-                    // 如果当前节点代码等于最高状态，说明是激活状态（蓝色）
-                    if (currentNodeCode === maxStatusCode) {
-                        return 'status-active';
-                    }
-                    // 如果当前节点代码大于最高状态，说明未到达（灰色）
-                    return 'status-pending';
-                },
-                // 获取连接线状态样式类
-                getLineStatusClass(currentNode, nextNode) {
-                    // 连接线的状态取决于下一个节点的状态
-                    // 如果下一个节点已完成或激活，连接线应该显示为已完成或激活
-                    const nextClass = this.getNodeStatusClass(nextNode);
-                    if (nextClass === 'status-completed') {
-                        return 'status-completed';
-                    }
-                    if (nextClass === 'status-active') {
-                        return 'status-active';
-                    }
-                    // 如果当前节点已完成，连接线为绿色
-                    const currentClass = this.getNodeStatusClass(currentNode);
-                    if (currentClass === 'status-completed') {
-                        return 'status-completed';
-                    }
-                    // 如果当前节点激活，连接线为蓝色
-                    if (currentClass === 'status-active') {
-                        return 'status-active';
-                    }
-                    return 'status-pending';
-                },
                 validateField(field) {
-                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder'];
+                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentLocation', 'kmToBorder'];
                     if (requiredFields.includes(field) && !this.form[field]) {
                         this.$set(this.errors, field, `请填写${this.getFieldLabel(field)}`);
                         return;
@@ -2602,10 +1302,9 @@
                     const labels = {
                         pol: '起运港',
                         pod: '目的港',
-                        lhzOrder: '订舱号',
+                        lhzOrder: '落货纸号',
                         containerNo: '箱号',
                         containerSize: '箱型',
-                        currentStatus: '当前状态',
                         currentLocation: '当前位置',
                         kmToBorder: '距离始发站口岸'
                     };
@@ -2613,7 +1312,7 @@
                 },
                 validateForm() {
                     this.errors = {};
-                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder'];
+                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentLocation', 'kmToBorder'];
                     let hasError = false;
                     
                     requiredFields.forEach(field => {
@@ -2626,9 +1325,9 @@
                         }
                     });
                     
-                    // 业务校验：订舱号校验（模拟）
+                    // 业务校验：落货纸号校验（模拟）
                     if (this.form.lhzOrder && !this.validateLhzOrder(this.form.lhzOrder)) {
-                        this.$set(this.errors, 'lhzOrder', '该订舱号不属于当前货代，无法上传');
+                        this.$set(this.errors, 'lhzOrder', '该落货纸不属于当前货代，无法上传');
                         hasError = true;
                     }
                     
@@ -2641,7 +1340,7 @@
                 },
                 validateLhzOrder(lhzOrder) {
                     // 模拟校验逻辑：实际应该调用接口校验
-                    // 这里简单模拟：如果订舱号包含'INVALID'则校验失败
+                    // 这里简单模拟：如果落货纸号包含'INVALID'则校验失败
                     return !lhzOrder.includes('INVALID');
                 },
                 saveItem() {
@@ -2661,7 +1360,6 @@
                         containerSize: this.form.containerSize,
                         pol: this.form.pol,
                         pod: this.form.pod,
-                        currentStatus: this.form.currentStatus,
                         currentLocation: this.form.currentLocation,
                         kmToBorder: this.form.kmToBorder,
                         kmToDestination: this.form.kmToDestination,
@@ -2703,7 +1401,6 @@
                         lhzOrder: '',
                         containerNo: '',
                         containerSize: '',
-                        currentStatus: '',
                         currentLocation: '',
                         kmToBorder: null,
                         kmToDestination: null,
@@ -2715,7 +1412,7 @@
                     this.errors = {};
                 },
                 deleteItem(item) {
-                    if (confirm(`确定要删除订舱号 ${item.lhzOrder} 的箱号 ${item.containerNo} 的记录吗？`)) {
+                    if (confirm(`确定要删除落货纸号 ${item.lhzOrder} 的箱号 ${item.containerNo} 的记录吗？`)) {
                         const index = this.tableData.findIndex(d => d.id === item.id);
                         if (index > -1) {
                             this.tableData.splice(index, 1);
