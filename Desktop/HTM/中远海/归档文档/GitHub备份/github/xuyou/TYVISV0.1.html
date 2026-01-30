@@ -395,7 +395,7 @@
                         <textarea v-model="filters.lhzOrder" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
                     <div class="col-span-1">
-                        <label class="block text-xs text-gray-500 mb-1.5">箱号</label>
+                        <label class="block text-xs text-gray-500 mb-1.5">集装箱号</label>
                         <textarea v-model="filters.containerNo" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
                     <div>
@@ -539,7 +539,7 @@
                                     <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
                                 </th>
                                 <th class="min-w-[120px]">落货纸号</th>
-                                <th class="min-w-[100px]">箱号</th>
+                                <th class="min-w-[100px]">集装箱号</th>
                                 <th>箱型</th>
                                 <th>起运港</th>
                                 <th>目的港</th>
@@ -636,8 +636,8 @@
                                 <span v-if="errors.lhzOrder" class="error-message">{{ errors.lhzOrder }}</span>
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5 required">箱号</label>
-                                <input v-model="form.containerNo" type="text" class="htm-input" :class="{error: errors.containerNo}" placeholder="请输入箱号" @blur="validateField('containerNo')">
+                                <label class="block text-xs text-gray-500 mb-1.5 required">集装箱号</label>
+                                <input v-model="form.containerNo" type="text" class="htm-input" :class="{error: errors.containerNo}" placeholder="请输入集装箱号" @blur="validateField('containerNo')">
                                 <span v-if="errors.containerNo" class="error-message">{{ errors.containerNo }}</span>
                             </div>
                             <div>
@@ -804,7 +804,7 @@
                                     <tr>
                                         <th class="border border-gray-200 px-3 py-2 text-left">行号</th>
                                         <th class="border border-gray-200 px-3 py-2 text-left">落货纸号</th>
-                                        <th class="border border-gray-200 px-3 py-2 text-left">箱号</th>
+                                        <th class="border border-gray-200 px-3 py-2 text-left">集装箱号</th>
                                         <th class="border border-gray-200 px-3 py-2 text-left">错误原因</th>
                                     </tr>
                                 </thead>
@@ -1303,7 +1303,7 @@
                         pol: '起运港',
                         pod: '目的港',
                         lhzOrder: '落货纸号',
-                        containerNo: '箱号',
+                        containerNo: '集装箱号',
                         containerSize: '箱型',
                         currentLocation: '当前位置',
                         kmToBorder: '距离始发站口岸'
@@ -1412,7 +1412,7 @@
                     this.errors = {};
                 },
                 deleteItem(item) {
-                    if (confirm(`确定要删除落货纸号 ${item.lhzOrder} 的箱号 ${item.containerNo} 的记录吗？`)) {
+                    if (confirm(`确定要删除落货纸号 ${item.lhzOrder} 的集装箱号 ${item.containerNo} 的记录吗？`)) {
                         const index = this.tableData.findIndex(d => d.id === item.id);
                         if (index > -1) {
                             this.tableData.splice(index, 1);
