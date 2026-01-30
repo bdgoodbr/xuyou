@@ -971,11 +971,20 @@
                 }
             };
 
-            return {
+            const appContext = {
                 ...Vue.toRefs(state),
                 paginatedData, isReadOnly, isAllSelected, toggleSelectAll, resetFilters, search, switchPage, viewOrder, editOrder, getBadgeClass, save, submit, recall, addProduct, removeProduct, confirmImport, changePage, exportBatch,
                 addContainer, removeContainer, handleContainerTypeChange, toggleQuery, handleRefCreate, showApprovalProcess
             };
+            
+            // 将方法暴露到全局，方便调试
+            window.testApprovalProcess = () => {
+                console.log('=== 手动测试审批过程 ===');
+                console.log('当前状态:', { page: state.page, formStatus: state.form.status });
+                showApprovalProcess();
+            };
+            
+            return appContext;
         }
     }).mount('#app');
 </script>
