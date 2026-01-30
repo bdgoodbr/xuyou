@@ -225,7 +225,7 @@
         }
         .progress-node-wrapper {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             flex: 1;
             position: relative;
         }
@@ -245,11 +245,13 @@
             border: 3px solid;
             background-color: #fff;
             margin-bottom: 8px;
+            margin-top: 0;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
+            z-index: 3; /* 确保图标在连接线上方 */
         }
         .node-dot i {
             font-size: 18px;
@@ -322,10 +324,14 @@
         .progress-line {
             flex: 1;
             height: 3px;
-            margin: 0 10px;
-            margin-top: -40px;
-            position: relative;
+            position: absolute;
+            top: 0; /* 位于节点图标中心位置（20px是node-dot高度的一半） */
+            left: calc(50% + 20px); /* 从当前节点中心向右延伸（20px是node-dot半径） */
+            right: calc(-50% + 20px); /* 延伸到下一个节点中心 */
             z-index: 1;
+        }
+        .progress-node-wrapper:last-child .progress-line {
+            display: none; /* 最后一个节点不需要连接线 */
         }
         .progress-line.status-pending {
             background-color: #e2e8f0;
