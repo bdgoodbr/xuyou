@@ -1068,6 +1068,33 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- 颜色说明和业务逻辑说明 -->
+                            <div class="border-t border-gray-200 pt-4 mt-4">
+                                <div class="bg-slate-50 rounded-lg p-4">
+                                    <div class="text-xs font-semibold text-slate-700 mb-3">颜色说明 Color Legend</div>
+                                    <div class="grid grid-cols-3 gap-4 mb-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-4 h-4 rounded-full bg-green-500 border-2 border-green-500"></div>
+                                            <span class="text-xs text-slate-600">绿色：已完成节点</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-4 h-4 rounded-full bg-blue-500 border-2 border-blue-500"></div>
+                                            <span class="text-xs text-slate-600">蓝色：当前激活节点</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-4 h-4 rounded-full bg-gray-300 border-2 border-gray-300"></div>
+                                            <span class="text-xs text-slate-600">灰色：未到达节点</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs font-semibold text-slate-700 mb-2">业务逻辑说明 Business Logic</div>
+                                    <div class="text-xs text-slate-600 space-y-1">
+                                        <p><strong>状态推断规则：</strong>如果某个订舱号有箱子传了某个状态，系统认为前面的所有节点也已经完成。</p>
+                                        <p><strong>多箱子规则：</strong>只要有一个箱子到达了某个节点，所有前面的节点都应该显示为已完成（绿色），当前最高节点显示为激活（蓝色）。</p>
+                                        <p><strong>示例：</strong>如果6个箱子中，有1个箱子在"境外换装"（30），则00、10、20节点显示为已完成（绿色），30节点显示为激活（蓝色），40、50节点显示为未到达（灰色）。</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1849,55 +1876,55 @@
                         containerNo: 'OCUU8688267',
                         realEtd: '2025-10-30 15:30:00',
                         realEta: '2025-12-29 13:00:00',
-                        currentStatus: 'Empty Container Returned to Carrier at Destination',
-                        statusCode: '50', // 状态代码
+                        currentStatus: 'Arrived at Port',
+                        statusCode: '20', // 状态代码
                         updateTime: '2026-01-17 10:00:00',
-                        currentLocation: 'BABKO BRCKO,BA'
+                        currentLocation: '二连浩特'
                     },
                     {
                         containerNo: 'OCUU8688268',
                         realEtd: '2025-10-31 09:20:00',
                         realEta: '2025-12-30 11:30:00',
-                        currentStatus: 'Picked up at Final Destination for Delivery',
-                        statusCode: '50', // 状态代码
+                        currentStatus: 'In Transit Domestically',
+                        statusCode: '10', // 状态代码
                         updateTime: '2026-01-18 08:45:00',
-                        currentLocation: 'RIJEKA TERMINAL,HR'
+                        currentLocation: '霍尔果斯'
                     },
                     {
                         containerNo: 'OCUU8688269',
                         realEtd: '2025-11-01 16:10:00',
                         realEta: '2026-01-02 18:00:00',
-                        currentStatus: 'Last Vessel Arrival',
-                        statusCode: '50', // 状态代码
-                        updateTime: '2026-01-15 19:20:00',
-                        currentLocation: 'RIJEKA,HR'
+                        currentStatus: 'Overseas Transfer',
+                        statusCode: '30', // 状态代码 - 最新节点
+                        updateTime: '2026-01-19 19:20:00',
+                        currentLocation: '阿拉山口'
                     },
                     {
                         containerNo: 'OCUU8688270',
                         realEtd: '2025-11-02 14:00:00',
                         realEta: '2026-01-03 10:30:00',
-                        currentStatus: 'First Vessel Departure',
-                        statusCode: '10', // 状态代码
+                        currentStatus: 'Arrived at Port',
+                        statusCode: '20', // 状态代码
                         updateTime: '2025-11-02 14:05:00',
-                        currentLocation: 'QINGDAO-CN'
+                        currentLocation: '二连浩特'
                     },
                     {
                         containerNo: 'OCUU8688271',
                         realEtd: '2025-11-03 08:30:00',
                         realEta: '2026-01-04 16:45:00',
-                        currentStatus: 'Picked up at Final Destination for Delivery',
-                        statusCode: '50', // 状态代码
+                        currentStatus: 'Overseas Transfer',
+                        statusCode: '30', // 状态代码
                         updateTime: '2026-01-19 09:10:00',
-                        currentLocation: 'ZAGREB,HR'
+                        currentLocation: '阿拉山口'
                     },
                     {
                         containerNo: 'OCUU8688272',
                         realEtd: '2025-11-04 13:15:00',
                         realEta: '2026-01-05 12:00:00',
-                        currentStatus: 'Empty Container Returned to Carrier at Destination',
-                        statusCode: '50', // 状态代码
+                        currentStatus: 'In Transit Domestically',
+                        statusCode: '10', // 状态代码
                         updateTime: '2026-01-20 11:00:00',
-                        currentLocation: 'BABKO BRCKO,BA'
+                        currentLocation: '霍尔果斯'
                     }
                 ],
                     
