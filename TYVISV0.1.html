@@ -1044,7 +1044,7 @@
                         </div>
                         <div class="p-4">
                             <!-- 基本信息 -->
-                            <div class="mb-4 grid grid-cols-5 gap-4 text-sm">
+                            <div class="mb-4 grid grid-cols-3 gap-4 text-sm">
                                 <div>
                                     <div class="text-xs text-slate-500 mb-1">订舱号</div>
                                     <div class="font-semibold text-slate-900">{{ aggregatedBookingStatus.bookingNo }}</div>
@@ -1057,13 +1057,16 @@
                                     <div class="text-xs text-slate-500 mb-1">预计抵达</div>
                                     <div class="font-semibold text-slate-900">{{ aggregatedBookingStatus.statusSummary.latestEta || '-' }}</div>
                                 </div>
-                                <div>
-                                    <div class="text-xs text-slate-500 mb-1">距离境外始发站 <span class="text-slate-400">(KM)</span></div>
-                                    <div class="font-semibold text-slate-900">{{ qLatestDistances.kmFromOverseasOrigin ?? '-' }}</div>
-                                </div>
-                                <div>
-                                    <div class="text-xs text-slate-500 mb-1">距离目的站 <span class="text-slate-400">(KM)</span></div>
-                                    <div class="font-semibold text-slate-900">{{ qLatestDistances.kmToDestinationStation ?? '-' }}</div>
+                            </div>
+                            <!-- 距离信息 -->
+                            <div class="mb-4 text-sm">
+                                <div class="text-xs text-slate-500 mb-1">距离信息 <span class="text-slate-400">(KM)</span></div>
+                                <div class="font-semibold text-slate-900">
+                                    距离境外始发站：{{ qLatestDistances.kmFromOverseasOrigin ?? '-' }}
+                                    <span class="mx-2 text-slate-300">|</span>
+                                    距离目的站：{{ qLatestDistances.kmToDestinationStation ?? '-' }}
+                                    <span class="mx-2 text-slate-300">|</span>
+                                    <span class="text-xs text-slate-400 font-normal">取值：最新上传</span>
                                 </div>
                             </div>
                             
