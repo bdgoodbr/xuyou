@@ -275,6 +275,18 @@
             font-weight: 600;
             text-align: center;
         }
+        .node-time {
+            margin-top: 8px;
+            text-align: center;
+            padding: 4px 8px;
+            background-color: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            min-width: 120px;
+        }
+        .node-time .text-xs {
+            line-height: 1.4;
+        }
         .progress-node.status-pending .node-dot {
             border-color: #cbd5e1;
             background-color: #f1f5f9;
@@ -1045,6 +1057,10 @@
                                             </div>
                                             <div class="node-label">{{ node.label }}</div>
                                             <div class="node-count">{{ node.count }}/{{ node.total }}</div>
+                                            <div v-if="node.time" class="node-time">
+                                                <div class="text-xs text-slate-500">{{ node.timeLabel || '' }}</div>
+                                                <div class="text-xs font-semibold text-slate-700">{{ node.time }}</div>
+                                            </div>
                                         </div>
                                         <div v-if="idx < progressNodes.length - 1" class="progress-line" :class="getLineStatusClass(node, progressNodes[idx + 1])"></div>
                                     </div>
@@ -1876,6 +1892,8 @@
                         containerNo: 'OCUU8688267',
                         realEtd: '2025-10-30 15:30:00',
                         realEta: '2025-12-29 13:00:00',
+                        atd: '2025-10-30 14:46:00',
+                        ata: null,
                         currentStatus: 'Arrived at Port',
                         statusCode: '20', // 状态代码
                         updateTime: '2026-01-17 10:00:00',
@@ -1885,6 +1903,8 @@
                         containerNo: 'OCUU8688268',
                         realEtd: '2025-10-31 09:20:00',
                         realEta: '2025-12-30 11:30:00',
+                        atd: '2025-10-31 08:15:00',
+                        ata: null,
                         currentStatus: 'In Transit Domestically',
                         statusCode: '10', // 状态代码
                         updateTime: '2026-01-18 08:45:00',
@@ -1894,6 +1914,8 @@
                         containerNo: 'OCUU8688269',
                         realEtd: '2025-11-01 16:10:00',
                         realEta: '2026-01-02 18:00:00',
+                        atd: '2025-11-01 15:30:00',
+                        ata: null,
                         currentStatus: 'Overseas Transfer',
                         statusCode: '30', // 状态代码 - 最新节点
                         updateTime: '2026-01-19 19:20:00',
@@ -1903,6 +1925,8 @@
                         containerNo: 'OCUU8688270',
                         realEtd: '2025-11-02 14:00:00',
                         realEta: '2026-01-03 10:30:00',
+                        atd: '2025-11-02 13:20:00',
+                        ata: null,
                         currentStatus: 'Arrived at Port',
                         statusCode: '20', // 状态代码
                         updateTime: '2025-11-02 14:05:00',
@@ -1912,6 +1936,8 @@
                         containerNo: 'OCUU8688271',
                         realEtd: '2025-11-03 08:30:00',
                         realEta: '2026-01-04 16:45:00',
+                        atd: '2025-11-03 07:45:00',
+                        ata: null,
                         currentStatus: 'Overseas Transfer',
                         statusCode: '30', // 状态代码
                         updateTime: '2026-01-19 09:10:00',
@@ -1921,10 +1947,12 @@
                         containerNo: 'OCUU8688272',
                         realEtd: '2025-11-04 13:15:00',
                         realEta: '2026-01-05 12:00:00',
-                        currentStatus: 'In Transit Domestically',
-                        statusCode: '10', // 状态代码
+                        atd: null, // 没有ATD，将使用realEtd
+                        ata: '2026-01-05 11:30:00',
+                        currentStatus: 'Arrived',
+                        statusCode: '50', // 状态代码
                         updateTime: '2026-01-20 11:00:00',
-                        currentLocation: '霍尔果斯'
+                        currentLocation: '目的站'
                     }
                 ],
                     
@@ -2111,6 +2139,46 @@
                     
                     const summary = this.aggregatedBookingStatus.statusSummary;
                     const total = summary.total;
+                    const containers = this.aggregatedBookingStatus.containers || [];
+                    
+                    // 获取国内在途的时间：优先取ATD，没有则取实时ETD
+                    const getDomesticTransitTime = () => {
+                        // 优先从qBasic.atd获取（如果有完整时间格式）
+                        if (this.qBasic?.atd && this.qBasic.atd.includes(' ')) {
+                            return this.qBasic.atd;
+                        }
+                        // 从容器数据中查找ATD（优先找状态为10的，如果没有则找>=10的）
+                        const containerWithAtd = containers.find(c => c.atd && c.statusCode === '10') 
+                            || containers.find(c => c.atd && parseInt(c.statusCode) >= 10);
+                        if (containerWithAtd?.atd) {
+                            return containerWithAtd.atd;
+                        }
+                        // 如果没有ATD，取实时ETD（取最早的一个）
+                        const etdValues = containers
+                            .map(c => c.realEtd)
+                            .filter(etd => etd)
+                            .sort();
+                        return etdValues.length > 0 ? etdValues[0] : null;
+                    };
+                    
+                    // 获取已抵达的时间：优先取ATA，没有则取实时ETA
+                    const getArrivedTime = () => {
+                        // 优先从qBasic.ata获取（如果有完整时间格式）
+                        if (this.qBasic?.ata && this.qBasic.ata.includes(' ')) {
+                            return this.qBasic.ata;
+                        }
+                        // 从容器数据中查找ATA（状态为50的）
+                        const containerWithAta = containers.find(c => c.ata && c.statusCode === '50');
+                        if (containerWithAta?.ata) {
+                            return containerWithAta.ata;
+                        }
+                        // 如果没有ATA，取实时ETA（取最晚的一个）
+                        const etaValues = containers
+                            .map(c => c.realEta)
+                            .filter(eta => eta)
+                            .sort();
+                        return etaValues.length > 0 ? etaValues[etaValues.length - 1] : null;
+                    };
                     
                     return [
                         {
@@ -2118,42 +2186,50 @@
                             label: '已进站',
                             icon: 'fas fa-warehouse',
                             count: summary.byStatus['00'] || 0,
-                            total: total
+                            total: total,
+                            time: null
                         },
                         {
                             code: '10',
                             label: '国内在途',
                             icon: 'fas fa-truck',
                             count: summary.byStatus['10'] || 0,
-                            total: total
+                            total: total,
+                            time: getDomesticTransitTime(),
+                            timeLabel: '实际发车'
                         },
                         {
                             code: '20',
                             label: '抵达口岸',
                             icon: 'fas fa-border-all',
                             count: summary.byStatus['20'] || 0,
-                            total: total
+                            total: total,
+                            time: null
                         },
                         {
                             code: '30',
                             label: '境外换装',
                             icon: 'fas fa-exchange-alt',
                             count: summary.byStatus['30'] || 0,
-                            total: total
+                            total: total,
+                            time: null
                         },
                         {
                             code: '40',
                             label: '境外在途',
                             icon: 'fas fa-train',
                             count: summary.byStatus['40'] || 0,
-                            total: total
+                            total: total,
+                            time: null
                         },
                         {
                             code: '50',
                             label: '已抵达',
                             icon: 'fas fa-flag-checkered',
                             count: summary.byStatus['50'] || 0,
-                            total: total
+                            total: total,
+                            time: getArrivedTime(),
+                            timeLabel: '实际到站'
                         }
                     ];
                 }
