@@ -362,7 +362,7 @@
                         </template>
 
                         <div class="h-6 w-px bg-slate-300 mx-2"></div>
-                        <button type="button" @click="showApprovalProcess" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative;"><i class="fas fa-history mr-1"></i>审批过程</button>
+                        <button type="button" @click="showApprovalProcess($event)" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative; pointer-events: auto;"><i class="fas fa-history mr-1"></i>审批过程</button>
                     </div>
                 </div>
 
@@ -932,6 +932,9 @@
 
             // 显示审批过程弹窗
             const showApprovalProcess = (e) => {
+                // 先显示一个 alert 确认方法被调用
+                alert('审批过程按钮被点击！');
+                
                 console.log('=== showApprovalProcess 开始执行 ===');
                 console.log('事件对象:', e);
                 console.log('当前状态:', { 
@@ -940,7 +943,7 @@
                     showApprovalModal: state.showApprovalModal 
                 });
                 
-                if (e) {
+                if (e && e.preventDefault) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
@@ -964,6 +967,9 @@
                         // 检查 DOM 中是否有弹窗元素
                         const modal = document.querySelector('.modal-overlay');
                         console.log('弹窗 DOM 元素:', modal);
+                        if (!modal) {
+                            console.error('弹窗元素未找到！');
+                        }
                     });
                 } catch (error) {
                     console.error('打开审批过程弹窗失败:', error);
