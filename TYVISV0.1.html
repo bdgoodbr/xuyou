@@ -2400,29 +2400,51 @@
                 },
                 // 获取节点状态样式类
                 getNodeStatusClass(node) {
-                    if (node.count === 0) {
+                    if (!this.aggregatedBookingStatus || !this.aggregatedBookingStatus.containers || this.aggregatedBookingStatus.containers.length === 0) {
                         return 'status-pending';
                     }
-                    // 如果该节点及之前所有节点的箱数总和等于总箱数，说明全部完成
-                    const nodeIndex = this.progressNodes.findIndex(n => n.code === node.code);
-                    let completedCount = 0;
-                    for (let i = 0; i <= nodeIndex; i++) {
-                        completedCount += this.progressNodes[i].count;
+                    
+                    // 找到所有箱子中的最高状态（最大状态码）
+                    const statusCodes = this.aggregatedBookingStatus.containers
+                        .map(c => parseInt(c.statusCode || '00', 10))
+                        .filter(code => !isNaN(code));
+                    
+                    if (statusCodes.length === 0) {
+                        return 'status-pending';
                     }
-                    if (completedCount === node.total) {
+                    
+                    const maxStatusCode = Math.max(...statusCodes);
+                    const currentNodeCode = parseInt(node.code, 10);
+                    
+                    // 如果当前节点代码小于最高状态，说明已完成（绿色）
+                    if (currentNodeCode < maxStatusCode) {
                         return 'status-completed';
                     }
-                    return 'status-active';
+                    // 如果当前节点代码等于最高状态，说明是激活状态（蓝色）
+                    if (currentNodeCode === maxStatusCode) {
+                        return 'status-active';
+                    }
+                    // 如果当前节点代码大于最高状态，说明未到达（灰色）
+                    return 'status-pending';
                 },
                 // 获取连接线状态样式类
                 getLineStatusClass(currentNode, nextNode) {
+                    // 连接线的状态取决于下一个节点的状态
+                    // 如果下一个节点已完成或激活，连接线应该显示为已完成或激活
+                    const nextClass = this.getNodeStatusClass(nextNode);
+                    if (nextClass === 'status-completed') {
+                        return 'status-completed';
+                    }
+                    if (nextClass === 'status-active') {
+                        return 'status-active';
+                    }
                     // 如果当前节点已完成，连接线为绿色
                     const currentClass = this.getNodeStatusClass(currentNode);
                     if (currentClass === 'status-completed') {
                         return 'status-completed';
                     }
-                    // 如果当前节点有箱子，连接线为蓝色
-                    if (currentNode.count > 0) {
+                    // 如果当前节点激活，连接线为蓝色
+                    if (currentClass === 'status-active') {
                         return 'status-active';
                     }
                     return 'status-pending';
