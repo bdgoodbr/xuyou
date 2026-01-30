@@ -212,6 +212,104 @@
             display: block;
         }
         
+        /* Status Progress Bar */
+        .status-progress-container {
+            padding: 20px 0;
+        }
+        .status-progress-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            padding: 0 20px;
+        }
+        .progress-node-wrapper {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+        .progress-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+        .node-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid;
+            background-color: #fff;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+        .node-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 4px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .node-count {
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .progress-node.status-pending .node-dot {
+            border-color: #cbd5e1;
+            background-color: #f1f5f9;
+        }
+        .progress-node.status-pending .node-label,
+        .progress-node.status-pending .node-count {
+            color: #94a3b8;
+        }
+        .progress-node.status-active .node-dot {
+            border-color: #3b82f6;
+            background-color: #3b82f6;
+        }
+        .progress-node.status-active .node-label,
+        .progress-node.status-active .node-count {
+            color: #1e40af;
+        }
+        .progress-node.status-completed .node-dot {
+            border-color: #10b981;
+            background-color: #10b981;
+        }
+        .progress-node.status-completed .node-label,
+        .progress-node.status-completed .node-count {
+            color: #059669;
+        }
+        .progress-line {
+            flex: 1;
+            height: 3px;
+            margin: 0 10px;
+            margin-top: -30px;
+            position: relative;
+            z-index: 1;
+        }
+        .progress-line.status-pending {
+            background-color: #e2e8f0;
+        }
+        .progress-line.status-active {
+            background: linear-gradient(to right, #3b82f6, #60a5fa);
+        }
+        .progress-line.status-completed {
+            background-color: #10b981;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #475569;
+        }
+        
         /* Table Styles */
         .htm-table th { 
             background-color: #F9FAFB; 
@@ -934,6 +1032,74 @@
                         </div>
                     </div>
 
+                    <!-- Current Status Visualization -->
+                    <div v-if="aggregatedBookingStatus" class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
+                        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                            <div class="font-bold text-slate-900">
+                                当前状态可视化 <span class="text-slate-400 text-xs font-normal">Current Status Visualization</span>
+                            </div>
+                            <div class="text-xs text-slate-500">
+                                数据来源：按订舱号聚合，每个箱子取最新上传状态
+                            </div>
+                        </div>
+                        <div class="p-4">
+                            <!-- 基本信息 -->
+                            <div class="mb-4 grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <div class="text-xs text-slate-500 mb-1">订舱号</div>
+                                    <div class="font-semibold text-slate-900">{{ aggregatedBookingStatus.bookingNo }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500 mb-1">总箱数</div>
+                                    <div class="font-semibold text-slate-900">{{ aggregatedBookingStatus.statusSummary.total }} 箱</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-slate-500 mb-1">预计抵达</div>
+                                    <div class="font-semibold text-slate-900">{{ aggregatedBookingStatus.statusSummary.latestEta || '-' }}</div>
+                                </div>
+                            </div>
+                            
+                            <!-- 进度条 -->
+                            <div class="status-progress-container mb-4">
+                                <div class="status-progress-bar">
+                                    <div 
+                                        v-for="(node, idx) in progressNodes" 
+                                        :key="node.code"
+                                        class="progress-node-wrapper"
+                                    >
+                                        <div class="progress-node" :class="getNodeStatusClass(node)">
+                                            <div class="node-dot"></div>
+                                            <div class="node-label">{{ node.label }}</div>
+                                            <div class="node-count">{{ node.count }}/{{ node.total }}</div>
+                                        </div>
+                                        <div v-if="idx < progressNodes.length - 1" class="progress-line" :class="getLineStatusClass(node, progressNodes[idx + 1])"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 状态分布 -->
+                            <div class="border-t border-gray-200 pt-4">
+                                <div class="text-xs text-slate-500 mb-2">状态分布</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <div 
+                                        v-for="(node, idx) in progressNodes.filter(n => n.count > 0)" 
+                                        :key="node.code"
+                                        class="status-badge"
+                                    >
+                                        <span class="font-semibold">{{ node.code }}-{{ node.label }}:</span>
+                                        <span class="ml-1">{{ node.count }}箱</span>
+                                        <span v-if="aggregatedBookingStatus.containersByStatus[node.code]" class="ml-2 text-xs text-slate-500">
+                                            ({{ aggregatedBookingStatus.containersByStatus[node.code].map(c => c.currentLocation).join('、') }})
+                                        </span>
+                                    </div>
+                                    <div v-if="progressNodes.filter(n => n.count > 0).length === 0" class="text-slate-400 text-xs">
+                                        暂无状态数据
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Detail table -->
                     <div class="bg-white border border-gray-200 rounded-lg shadow-sm w-full">
                         <div class="px-4 py-3 border-b border-gray-200 font-bold text-slate-900">
@@ -1511,9 +1677,9 @@
                     statusOptions: [
                         { code: '00', label: '已进站 / 待发运' },
                         { code: '10', label: '已发车 / 国内在途' },
-                        { code: '20', label: '抵达国内口岸' },
-                        { code: '30', label: '境外段在途' },
-                        { code: '40', label: '抵达境外口岸' },
+                        { code: '20', label: '抵达国内口岸 / 排队' },
+                        { code: '30', label: '境外换装中' },
+                        { code: '40', label: '境外在途' },
                         { code: '50', label: '已抵达目的站' }
                     ],
                     // 港口枚举
@@ -1713,6 +1879,7 @@
                         realEtd: '2025-10-30 15:30:00',
                         realEta: '2025-12-29 13:00:00',
                         currentStatus: 'Empty Container Returned to Carrier at Destination',
+                        statusCode: '50', // 状态代码
                         updateTime: '2026-01-17 10:00:00',
                         currentLocation: 'BABKO BRCKO,BA'
                     },
@@ -1721,6 +1888,7 @@
                         realEtd: '2025-10-31 09:20:00',
                         realEta: '2025-12-30 11:30:00',
                         currentStatus: 'Picked up at Final Destination for Delivery',
+                        statusCode: '50', // 状态代码
                         updateTime: '2026-01-18 08:45:00',
                         currentLocation: 'RIJEKA TERMINAL,HR'
                     },
@@ -1729,6 +1897,7 @@
                         realEtd: '2025-11-01 16:10:00',
                         realEta: '2026-01-02 18:00:00',
                         currentStatus: 'Last Vessel Arrival',
+                        statusCode: '50', // 状态代码
                         updateTime: '2026-01-15 19:20:00',
                         currentLocation: 'RIJEKA,HR'
                     },
@@ -1737,6 +1906,7 @@
                         realEtd: '2025-11-02 14:00:00',
                         realEta: '2026-01-03 10:30:00',
                         currentStatus: 'First Vessel Departure',
+                        statusCode: '10', // 状态代码
                         updateTime: '2025-11-02 14:05:00',
                         currentLocation: 'QINGDAO-CN'
                     },
@@ -1745,6 +1915,7 @@
                         realEtd: '2025-11-03 08:30:00',
                         realEta: '2026-01-04 16:45:00',
                         currentStatus: 'Picked up at Final Destination for Delivery',
+                        statusCode: '50', // 状态代码
                         updateTime: '2026-01-19 09:10:00',
                         currentLocation: 'ZAGREB,HR'
                     },
@@ -1753,6 +1924,7 @@
                         realEtd: '2025-11-04 13:15:00',
                         realEta: '2026-01-05 12:00:00',
                         currentStatus: 'Empty Container Returned to Carrier at Destination',
+                        statusCode: '50', // 状态代码
                         updateTime: '2026-01-20 11:00:00',
                         currentLocation: 'BABKO BRCKO,BA'
                     }
@@ -1878,6 +2050,108 @@
                         dataStatus: '数据已推送',
                         updatedAt: '2026-01-19 09:18:04'
                     };
+                },
+                // 按订舱号聚合状态数据
+                aggregatedBookingStatus() {
+                    if (!this.qContainerStatus || this.qContainerStatus.length === 0) {
+                        return null;
+                    }
+                    
+                    // 1. 按 (订舱号, 箱号) 取最新（如果数据源已经是聚合后的，这步可省略）
+                    // 这里假设数据已经是按箱号取最新的，直接使用
+                    const containers = this.qContainerStatus;
+                    
+                    // 2. 计算状态分布
+                    const total = containers.length;
+                    const byStatus = {
+                        '00': 0,
+                        '10': 0,
+                        '20': 0,
+                        '30': 0,
+                        '40': 0,
+                        '50': 0
+                    };
+                    
+                    containers.forEach(container => {
+                        const statusCode = container.statusCode || '00';
+                        if (byStatus.hasOwnProperty(statusCode)) {
+                            byStatus[statusCode]++;
+                        }
+                    });
+                    
+                    // 3. 计算最晚的预计抵达时间
+                    const latestEta = containers
+                        .map(c => c.realEta)
+                        .filter(eta => eta)
+                        .sort()
+                        .pop() || null;
+                    
+                    // 4. 按状态分组箱子信息
+                    const containersByStatus = {};
+                    containers.forEach(container => {
+                        const statusCode = container.statusCode || '00';
+                        if (!containersByStatus[statusCode]) {
+                            containersByStatus[statusCode] = [];
+                        }
+                        containersByStatus[statusCode].push(container);
+                    });
+                    
+                    return {
+                        bookingNo: this.qQueryValue || this.qBasic?.deliveryNotes || '',
+                        containers: containers,
+                        statusSummary: {
+                            total: total,
+                            byStatus: byStatus,
+                            latestEta: latestEta
+                        },
+                        containersByStatus: containersByStatus
+                    };
+                },
+                // 进度条节点数据
+                progressNodes() {
+                    if (!this.aggregatedBookingStatus) return [];
+                    
+                    const summary = this.aggregatedBookingStatus.statusSummary;
+                    const total = summary.total;
+                    
+                    return [
+                        {
+                            code: '00',
+                            label: '已进站',
+                            count: summary.byStatus['00'] || 0,
+                            total: total
+                        },
+                        {
+                            code: '10',
+                            label: '国内在途',
+                            count: summary.byStatus['10'] || 0,
+                            total: total
+                        },
+                        {
+                            code: '20',
+                            label: '抵达口岸',
+                            count: summary.byStatus['20'] || 0,
+                            total: total
+                        },
+                        {
+                            code: '30',
+                            label: '境外换装',
+                            count: summary.byStatus['30'] || 0,
+                            total: total
+                        },
+                        {
+                            code: '40',
+                            label: '境外在途',
+                            count: summary.byStatus['40'] || 0,
+                            total: total
+                        },
+                        {
+                            code: '50',
+                            label: '已抵达',
+                            count: summary.byStatus['50'] || 0,
+                            total: total
+                        }
+                    ];
                 }
             },
             mounted() {
@@ -2146,6 +2420,35 @@
                     if (!code) return '-';
                     const matched = this.statusOptions.find(s => s.code === code);
                     return matched ? `${matched.code}-${matched.label}` : code;
+                },
+                // 获取节点状态样式类
+                getNodeStatusClass(node) {
+                    if (node.count === 0) {
+                        return 'status-pending';
+                    }
+                    // 如果该节点及之前所有节点的箱数总和等于总箱数，说明全部完成
+                    const nodeIndex = this.progressNodes.findIndex(n => n.code === node.code);
+                    let completedCount = 0;
+                    for (let i = 0; i <= nodeIndex; i++) {
+                        completedCount += this.progressNodes[i].count;
+                    }
+                    if (completedCount === node.total) {
+                        return 'status-completed';
+                    }
+                    return 'status-active';
+                },
+                // 获取连接线状态样式类
+                getLineStatusClass(currentNode, nextNode) {
+                    // 如果当前节点已完成，连接线为绿色
+                    const currentClass = this.getNodeStatusClass(currentNode);
+                    if (currentClass === 'status-completed') {
+                        return 'status-completed';
+                    }
+                    // 如果当前节点有箱子，连接线为蓝色
+                    if (currentNode.count > 0) {
+                        return 'status-active';
+                    }
+                    return 'status-pending';
                 },
                 validateField(field) {
                     const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder'];
