@@ -932,8 +932,14 @@
 
             // 显示审批过程弹窗
             const showApprovalProcess = () => {
-                state.approvalHistory = generateApprovalHistory(state.form);
-                state.showApprovalModal = true;
+                try {
+                    state.approvalHistory = generateApprovalHistory(state.form);
+                    state.showApprovalModal = true;
+                    console.log('审批过程弹窗已打开', state.approvalHistory);
+                } catch (error) {
+                    console.error('打开审批过程弹窗失败:', error);
+                    alert('打开审批过程失败，请稍后重试');
+                }
             };
 
             return {
