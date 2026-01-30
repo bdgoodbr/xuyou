@@ -362,7 +362,7 @@
                         </template>
 
                         <div class="h-6 w-px bg-slate-300 mx-2"></div>
-                        <button @click.stop="showApprovalProcess" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer"><i class="fas fa-history mr-1"></i>审批过程</button>
+                        <button type="button" @click.stop.prevent="showApprovalProcess" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer"><i class="fas fa-history mr-1"></i>审批过程</button>
                     </div>
                 </div>
 
@@ -713,7 +713,7 @@
 </div>
 
 <script>
-    const { createApp, reactive, computed } = Vue;
+    const { createApp, reactive, computed, nextTick } = Vue;
 
     createApp({
         setup() {
@@ -931,14 +931,22 @@
             };
 
             // 显示审批过程弹窗
-            const showApprovalProcess = () => {
-                console.log('showApprovalProcess 被调用', state.form);
+            const showApprovalProcess = (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                console.log('showApprovalProcess 被调用', state.form, state.page);
                 try {
                     const history = generateApprovalHistory(state.form);
                     console.log('生成的审批历史:', history);
                     state.approvalHistory = history;
                     state.showApprovalModal = true;
-                    console.log('showApprovalModal 设置为 true', state.showApprovalModal);
+                    console.log('showApprovalModal 设置为 true', state.showApprovalModal, state);
+                    // 强制更新视图
+                    nextTick(() => {
+                        console.log('nextTick 后 showApprovalModal:', state.showApprovalModal);
+                    });
                 } catch (error) {
                     console.error('打开审批过程弹窗失败:', error);
                     alert('打开审批过程失败: ' + error.message);
