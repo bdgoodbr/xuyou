@@ -1891,7 +1891,7 @@
                     {
                         containerNo: 'OCUU8688267',
                         realEtd: '2025-10-30 15:30:00',
-                        realEta: '2025-12-29 13:00:00',
+                        realEta: '2026-01-05 12:00:00',
                         atd: '2025-10-30 14:46:00',
                         ata: null,
                         currentStatus: 'Arrived at Port',
@@ -1902,7 +1902,7 @@
                     {
                         containerNo: 'OCUU8688268',
                         realEtd: '2025-10-31 09:20:00',
-                        realEta: '2025-12-30 11:30:00',
+                        realEta: '2026-01-05 12:00:00',
                         atd: '2025-10-31 08:15:00',
                         ata: null,
                         currentStatus: 'In Transit Domestically',
@@ -1913,7 +1913,7 @@
                     {
                         containerNo: 'OCUU8688269',
                         realEtd: '2025-11-01 16:10:00',
-                        realEta: '2026-01-02 18:00:00',
+                        realEta: '2026-01-05 12:00:00',
                         atd: '2025-11-01 15:30:00',
                         ata: null,
                         currentStatus: 'Overseas Transfer',
@@ -1924,7 +1924,7 @@
                     {
                         containerNo: 'OCUU8688270',
                         realEtd: '2025-11-02 14:00:00',
-                        realEta: '2026-01-03 10:30:00',
+                        realEta: '2026-01-05 12:00:00',
                         atd: '2025-11-02 13:20:00',
                         ata: null,
                         currentStatus: 'Arrived at Port',
@@ -1935,7 +1935,7 @@
                     {
                         containerNo: 'OCUU8688271',
                         realEtd: '2025-11-03 08:30:00',
-                        realEta: '2026-01-04 16:45:00',
+                        realEta: '2026-01-05 12:00:00',
                         atd: '2025-11-03 07:45:00',
                         ata: null,
                         currentStatus: 'Overseas Transfer',
@@ -1947,12 +1947,12 @@
                         containerNo: 'OCUU8688272',
                         realEtd: '2025-11-04 13:15:00',
                         realEta: '2026-01-05 12:00:00',
-                        atd: null, // 没有ATD，将使用realEtd
-                        ata: '2026-01-05 11:30:00',
-                        currentStatus: 'Arrived',
-                        statusCode: '50', // 状态代码
+                        atd: '2025-11-04 12:30:00',
+                        ata: null,
+                        currentStatus: 'Overseas Transfer',
+                        statusCode: '30', // 状态代码
                         updateTime: '2026-01-20 11:00:00',
-                        currentLocation: '目的站'
+                        currentLocation: '阿拉山口'
                     }
                 ],
                     
@@ -2141,6 +2141,17 @@
                     const total = summary.total;
                     const containers = this.aggregatedBookingStatus.containers || [];
                     
+                    // 格式化时间：只显示年月日，去掉时分秒
+                    const formatDateOnly = (dateTimeStr) => {
+                        if (!dateTimeStr) return null;
+                        // 如果包含空格，取空格前的部分（年月日）
+                        if (dateTimeStr.includes(' ')) {
+                            return dateTimeStr.split(' ')[0];
+                        }
+                        // 如果已经是日期格式，直接返回
+                        return dateTimeStr;
+                    };
+                    
                     // 获取国内在途的时间：优先取ATD，没有则取实时ETD
                     const getDomesticTransitTime = () => {
                         // 优先从qBasic.atd获取（如果有完整时间格式）
@@ -2161,23 +2172,42 @@
                         return etdValues.length > 0 ? etdValues[0] : null;
                     };
                     
-                    // 获取已抵达的时间：优先取ATA，没有则取实时ETA
+                    // 获取已抵达的时间：根据节点状态决定显示ATA还是实时ETA
                     const getArrivedTime = () => {
-                        // 优先从qBasic.ata获取（如果有完整时间格式）
-                        if (this.qBasic?.ata && this.qBasic.ata.includes(' ')) {
-                            return this.qBasic.ata;
+                        // 计算最高状态码
+                        const statusCodes = containers
+                            .map(c => parseInt(c.statusCode || '00', 10))
+                            .filter(code => !isNaN(code));
+                        const maxStatusCode = statusCodes.length > 0 ? Math.max(...statusCodes) : 0;
+                        
+                        // 如果最高状态是50（已抵达），显示ATA（实际到站）
+                        if (maxStatusCode >= 50) {
+                            // 优先从qBasic.ata获取（如果有完整时间格式）
+                            if (this.qBasic?.ata && this.qBasic.ata.includes(' ')) {
+                                return formatDateOnly(this.qBasic.ata);
+                            }
+                            // 从容器数据中查找ATA（状态为50的）
+                            const containerWithAta = containers.find(c => c.ata && c.statusCode === '50');
+                            if (containerWithAta?.ata) {
+                                return formatDateOnly(containerWithAta.ata);
+                            }
                         }
-                        // 从容器数据中查找ATA（状态为50的）
-                        const containerWithAta = containers.find(c => c.ata && c.statusCode === '50');
-                        if (containerWithAta?.ata) {
-                            return containerWithAta.ata;
-                        }
-                        // 如果没有ATA，取实时ETA（取最晚的一个）
+                        
+                        // 如果最高状态不是50（未抵达），显示实时ETA（预计到站）
                         const etaValues = containers
                             .map(c => c.realEta)
                             .filter(eta => eta)
                             .sort();
-                        return etaValues.length > 0 ? etaValues[etaValues.length - 1] : null;
+                        return etaValues.length > 0 ? formatDateOnly(etaValues[etaValues.length - 1]) : null;
+                    };
+                    
+                    // 获取已抵达的标签：根据节点状态决定显示"实际到站"还是"预计到站"
+                    const getArrivedTimeLabel = () => {
+                        const statusCodes = containers
+                            .map(c => parseInt(c.statusCode || '00', 10))
+                            .filter(code => !isNaN(code));
+                        const maxStatusCode = statusCodes.length > 0 ? Math.max(...statusCodes) : 0;
+                        return maxStatusCode >= 50 ? '实际到站' : '预计到站';
                     };
                     
                     return [
@@ -2195,7 +2225,7 @@
                             icon: 'fas fa-truck',
                             count: summary.byStatus['10'] || 0,
                             total: total,
-                            time: getDomesticTransitTime(),
+                            time: formatDateOnly(getDomesticTransitTime()),
                             timeLabel: '实际发车'
                         },
                         {
@@ -2229,7 +2259,7 @@
                             count: summary.byStatus['50'] || 0,
                             total: total,
                             time: getArrivedTime(),
-                            timeLabel: '实际到站'
+                            timeLabel: getArrivedTimeLabel()
                         }
                     ];
                 }
