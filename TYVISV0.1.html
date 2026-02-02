@@ -835,7 +835,6 @@
                                     <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
                                 </th>
                                 <th class="min-w-[120px]">订舱号</th>
-                                <th class="min-w-[120px]">订舱人</th>
                                 <th class="min-w-[100px]">集装箱号</th>
                                 <th>箱型</th>
                                 <th>起运港</th>
@@ -851,6 +850,7 @@
                                 <th>上传时间</th>
                                 <th>上传人</th>
                                 <th class="min-w-[100px]">所属货代</th>
+                                <th class="min-w-[120px]">订舱人</th>
                                 <th class="text-center w-32 sticky right-0 bg-gray-50 z-10">操作</th>
                             </tr>
                         </thead>
@@ -860,7 +860,6 @@
                                     <input type="checkbox" :value="item.id" v-model="selectedIds">
                                 </td>
                                 <td class="font-mono text-blue-600 font-medium min-w-[120px]">{{ item.lhzOrder }}</td>
-                                <td class="min-w-[120px]">{{ item.bookingOperator || '-' }}</td>
                                 <td class="font-mono min-w-[100px]">{{ item.containerNo }}</td>
                                 <td>{{ item.containerSize }}</td>
                                 <td>{{ item.pol }}</td>
@@ -876,6 +875,7 @@
                                 <td class="font-mono text-xs text-gray-500">{{ item.uploadTime }}</td>
                                 <td>{{ item.uploadUser || '-' }}</td>
                                 <td class="text-gray-700 min-w-[100px]">{{ item.carrier || '-' }}</td>
+                                <td class="min-w-[120px]">{{ item.bookingOperator || '-' }}</td>
                                 <td class="text-center w-32 sticky right-0 bg-white z-10">
                                     <button v-if="canDelete" @click="deleteItem(item)" class="text-red-600 hover:text-red-800 text-xs font-medium transition-colors">删除</button>
                                 </td>
@@ -1467,18 +1467,7 @@
                                 <label class="block text-xs text-gray-500 mb-1.5">ATA</label>
                                 <input v-model="form.ata" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
                             </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1.5">货代</label>
-                                <input :value="currentUser.carrier" type="text" class="htm-input" readonly>
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1.5">上传人</label>
-                                <input :value="currentUser.name" type="text" class="htm-input" readonly>
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1.5">上传时间</label>
-                                <input :value="currentUploadTime" type="text" class="htm-input" readonly>
-                            </div>
+                            <!-- 货代 / 上传人 / 上传时间：仅系统自动带入，不在新增弹窗中单独展示 -->
                         </div>
                         <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
                             <button type="button" @click="closeAddModal" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
