@@ -928,12 +928,12 @@
                     }).replace(/\//g, '-');
                 };
                 
-                // 节点1：提交审核（所有已提交的状态都有这个节点）
+                // 序号1：订单人员提交审核节点（所有已提交的状态都有这个节点）
                 if (['提交审核', '执行', '驳回', '转办'].includes(currentStatus)) {
                     history.push({
                         id: 1,
                         sequenceNo: 1,
-                        nodeName: '提交审核',
+                        nodeName: '订单人员提交',
                         approver: form.orderPerson || 'Wilson',
                         action: '提交审核',
                         comments: form.submitComments || '', // 审批意见默认为空，只有审批人填写了才有
@@ -941,7 +941,7 @@
                     });
                 }
                 
-                // 节点2：区域经理审核（所有已提交的状态都有这个节点）
+                // 序号2：区域经理审核节点（所有已提交的状态都有这个节点）
                 const node2 = {
                     id: 2,
                     sequenceNo: 2,
