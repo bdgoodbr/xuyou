@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>系统外落货纸 Living Spec v2.7 [版本: 660fe96]</title>
-    <!-- Version: 660fe96 - 修复待提交状态审批记录显示问题 -->
+    <title>系统外落货纸 Living Spec v2.8 [版本: design-spec]</title>
+    <!-- Version: design-spec - 按照审批过程弹框设计方案实现 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -17,8 +17,8 @@
             });
         }
         // 添加版本号到 window 对象，方便控制台检查
-        window.APP_VERSION = '660fe96';
-        console.log('✅ 页面版本:', window.APP_VERSION);
+        window.APP_VERSION = 'design-spec';
+        console.log('✅ 页面版本:', window.APP_VERSION, '- 按照审批过程弹框设计方案实现');
     </script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -66,6 +66,31 @@
         .htm-table th { background-color: #F1F5F9; color: #475569; font-weight: 600; font-size: 12px; padding: 10px 12px; text-align: left; border-bottom: 1px solid #E2E8F0; white-space: nowrap; }
         .htm-table td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #F8FAFC; color: #334155; white-space: nowrap; transition: background 0.1s; }
         .htm-table tr:hover td { background-color: #F8FAFC; }
+        
+        /* 审批过程表格样式（按照设计方案） */
+        .approval-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .approval-table th {
+            background-color: #F1F5F9;
+            color: #475569;
+            font-weight: 600;
+            font-size: 12px;
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        .approval-table td {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid #F8FAFC;
+            color: #334155;
+            height: 40px; /* 按照设计方案，每行高度 40px */
+        }
+        .approval-table tr:hover td {
+            background-color: #F8FAFC;
+        }
 
         /* Badges */
         .badge { padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; line-height: 1.4; }
@@ -703,13 +728,25 @@
     <div v-if="showApprovalModal" class="modal-overlay">
         <div class="modal-content" style="width: 800px; max-height: 80vh;">
             <div class="flex justify-between items-center p-4 border-b">
-                <h3 class="font-bold text-slate-800">审批过程查询 <span class="text-xs text-slate-400">[v660fe96]</span></h3>
+                <h3 class="font-bold text-slate-800">审批过程查询</h3>
                 <button @click="showApprovalModal = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             </div>
             <div class="p-6 overflow-y-auto" style="max-height: calc(80vh - 120px);">
-                <div v-if="approvalHistory.length === 0" class="text-center py-8 text-slate-400">
-                    <i class="fas fa-inbox text-4xl mb-2"></i>
-                    <div>暂无审批记录</div>
+                <div v-if="approvalHistory.length === 0" class="text-center py-8">
+                    <i class="fas fa-inbox text-4xl mb-3 text-slate-300"></i>
+                    <div class="text-slate-500 font-medium mb-2">暂无审批记录</div>
+                    <div class="text-xs text-slate-400 mb-4">
+                        <div v-if="form.status === '待提交' || !form.status">
+                            当前单据状态为"待提交"，尚未提交审核，因此没有审批记录。
+                        </div>
+                        <div v-else>
+                            当前状态：{{ form.status }}
+                        </div>
+                    </div>
+                    <div class="text-xs text-slate-400 bg-slate-50 border border-slate-200 rounded p-3 inline-block">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        提示：点击"提交审核"按钮后，将显示审批过程记录
+                    </div>
                 </div>
                 <table v-else class="w-full htm-table approval-table">
                     <thead>
@@ -731,12 +768,12 @@
                             <td>{{ item.approver || '-' }}</td>
                             <td class="text-center">
                                 <span v-if="item.action === '提交审核'" class="badge badge-submitted">{{ item.action }}</span>
-                                <span v-else-if="item.action === '审批通过'" class="badge badge-executed">{{ item.action }}</span>
+                                <span v-else-if="item.action === '通过'" class="badge badge-executed">{{ item.action }}</span>
                                 <span v-else-if="item.action === '驳回'" class="badge badge-rejected">{{ item.action }}</span>
                                 <span v-else-if="item.action === '转办'" class="badge badge-submitted">{{ item.action }}</span>
                                 <span v-else class="text-slate-400">-</span>
                             </td>
-                            <td>{{ item.comments || '-' }}</td>
+                            <td>{{ item.comments ? item.comments : '' }}</td>
                             <td class="text-slate-500 text-sm">{{ item.actionTime || '-' }}</td>
                         </tr>
                     </tbody>
@@ -922,14 +959,23 @@
 
             const getBadgeClass = (status) => ({ '待提交': 'badge-draft', '提交审核': 'badge-submitted', '执行': 'badge-executed', '驳回': 'badge-rejected', '已撤回': 'badge-recalled' }[status] || 'bg-slate-100');
             const save = () => { if(!state.form.id) state.form.id = 'LR' + new Date().toISOString().slice(2,10).replace(/-/g,'') + '001'; state.form.status = '待提交'; alert('保存成功'); };
-            const submit = () => { if(!state.form.pol || !state.form.pod) { alert('完整性校验失败：起运港和目的港必填 '); return; } state.form.status = '提交审核'; alert('提交成功，单据已锁定'); };
+            const submit = () => {
+                if(!state.form.pol || !state.form.pod) { alert('完整性校验失败：起运港和目的港必填 '); return; }
+                const fmt = (d) => new Date(d).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g,'-');
+                const now = new Date();
+                state.form.submitTime = fmt(now);
+                state.form.lastUpdate = fmt(now);
+                state.form.status = '提交审核';
+                // 需求：点击“提交审核”后，直接弹出审批过程表格（两行：提交审核 + 区域经理待处理）
+                showApprovalProcess();
+            };
             const recall = () => { if(confirm('确定撤回吗？')) state.form.status = '已撤回'; };
             const addProduct = () => { if(state.form.products.length >= 100) return alert('最多100行'); state.form.products.push({ batch: '', qty: 0, price: 0, currency: 'USD', tradeType: '一般贸易', form: '整机' }); };
             const removeProduct = (index) => { if(state.form.products.length <= 1) { alert('不能删除最后一行 '); return; } state.form.products.splice(index, 1); };
             const confirmImport = () => { state.showImportModal = false; alert('模拟导入成功'); };
             const exportBatch = () => { if(state.form.products.length === 0) return alert('没有数据可导出'); alert('导出批次明细成功 (Mock Export)'); };
 
-            // 生成审批历史记录
+            // 生成审批历史记录（按照设计方案实现）
             const generateApprovalHistory = (form) => {
                 const history = [];
                 const currentStatus = form.status || '待提交';
@@ -944,64 +990,93 @@
                     }).replace(/\//g, '-');
                 };
                 
-                // 如果状态是"待提交"，不显示审批记录（因为还没有提交）
-                // 修复版本: a61bab7 - 避免显示空的序号2记录
+                // 如果状态是"待提交"，返回空数组，显示"暂无审批记录"
                 if (currentStatus === '待提交' || !form.status) {
-                    console.log('状态是待提交，返回空数组');
-                    return [];
+                    return history; // 空数组
                 }
                 
-                // 序号1：订单人员提交审核节点（所有已提交的状态都有这个节点）
-                history.push({
-                    id: 1,
-                    sequenceNo: 1,
-                    nodeName: '订单人员提交',
-                    approver: form.orderPerson || 'Wilson',
-                    action: '提交审核',
-                    comments: form.submitComments || '', // 审批意见默认为空，只有审批人填写了才有
-                    actionTime: form.submitTime || form.lastUpdate || formatTime(new Date())
-                });
-                
-                // 序号2：区域经理审核节点（所有已提交的状态都有这个节点）
-                const node2 = {
-                    id: 2,
-                    sequenceNo: 2,
-                    nodeName: '区域经理审核',
-                    approver: '',
-                    action: '',
-                    comments: '',
-                    actionTime: ''
-                };
-                
-                if (currentStatus === '提交审核') {
-                    // 待处理状态
-                    node2.approver = '-';
-                    node2.action = '-';
-                    node2.comments = '-';
-                    node2.actionTime = '-';
-                } else if (currentStatus === '执行') {
-                    // 审批通过
-                    node2.approver = form.regionalManager || '区域经理 张三';
-                    node2.action = '审批通过';
-                    node2.comments = form.approvalComments || ''; // 审批意见默认为空
-                    node2.actionTime = form.approvalTime || form.lastUpdate || formatTime(new Date());
-                } else if (currentStatus === '驳回') {
-                    // 驳回
-                    node2.approver = form.regionalManager || '区域经理 张三';
-                    node2.action = '驳回';
-                    node2.comments = form.rejectComments || ''; // 审批意见默认为空
-                    node2.actionTime = form.rejectTime || form.lastUpdate || formatTime(new Date());
-                } else if (currentStatus === '转办') {
-                    // 转办
-                    node2.approver = form.regionalManager || '区域经理 张三';
-                    node2.action = '转办';
-                    node2.comments = form.transferComments || ''; // 审批意见默认为空
-                    node2.actionTime = form.transferTime || form.lastUpdate || formatTime(new Date());
+                // 节点1：提交审核（所有已提交的状态都有这个节点）
+                if (['提交审核', '执行', '驳回', '转办'].includes(currentStatus)) {
+                    history.push({
+                        id: 1,
+                        sequenceNo: 1,
+                        nodeName: '提交审核',
+                        approver: form.orderPerson || 'Wilson',
+                        action: '提交审核',
+                        comments: form.submitComments || '', // 审批意见：用户写了才有（默认空）
+                        actionTime: form.submitTime || form.lastUpdate || formatTime(new Date())
+                    });
                 }
                 
-                history.push(node2);
+                // 节点2：区域经理审核（所有已提交的状态都有这个节点）
+                if (['提交审核', '执行', '驳回', '转办'].includes(currentStatus)) {
+                    const node2 = {
+                        id: 2,
+                        sequenceNo: 2,
+                        nodeName: '区域经理审核',
+                        approver: '',
+                        action: '',
+                        comments: '',
+                        actionTime: ''
+                    };
+                    
+                    if (currentStatus === '提交审核') {
+                        // 待处理状态
+                        node2.approver = '-';
+                        node2.action = '-';
+                        node2.comments = '';
+                        node2.actionTime = '';
+                    } else if (currentStatus === '执行') {
+                        // 审批通过
+                        node2.approver = form.regionalManager || '区域经理 张三';
+                        node2.action = '通过'; // 按照设计方案，使用"通过"而不是"审批通过"
+                        node2.comments = form.approvalComments || ''; // 审批意见：用户写了才有（默认空）
+                        node2.actionTime = form.approvalTime || form.lastUpdate || formatTime(new Date());
+                    } else if (currentStatus === '驳回') {
+                        // 驳回
+                        node2.approver = form.regionalManager || '区域经理 张三';
+                        node2.action = '驳回';
+                        node2.comments = form.rejectComments || ''; // 审批意见：用户写了才有（默认空）
+                        node2.actionTime = form.rejectTime || form.lastUpdate || formatTime(new Date());
+                    } else if (currentStatus === '转办') {
+                        // 转办
+                        node2.approver = form.regionalManager || '区域经理 张三';
+                        node2.action = '转办';
+                        node2.comments = form.transferComments || ''; // 转办意见默认为空
+                        node2.actionTime = form.transferTime || form.lastUpdate || formatTime(new Date());
+                    }
+                    
+                    history.push(node2);
+                }
                 
                 return history;
+            };
+
+            // 原型用：获取审批过程样例数据（提交审核 + 区域经理通过）
+            const getApprovalDemoRows = () => {
+                const fmt = (d) => new Date(d).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g,'-');
+                const baseId = state.form.id || 'LR251230001';
+                state.form.id = baseId;
+                return [
+                    {
+                        id: 'demo-1',
+                        sequenceNo: 1,
+                        nodeName: '提交审核',
+                        approver: state.form.orderPerson || 'Wilson',
+                        action: '提交审核',
+                        comments: '',
+                        actionTime: state.form.submitTime || fmt(new Date('2025-12-28T10:00:00'))
+                    },
+                    {
+                        id: 'demo-2',
+                        sequenceNo: 2,
+                        nodeName: '区域经理审核',
+                        approver: state.form.regionalManager || '区域经理 张三',
+                        action: '通过',
+                        comments: '',
+                        actionTime: fmt(new Date('2025-12-28T14:30:00'))
+                    }
+                ];
             };
 
             // 显示审批过程弹窗
@@ -1014,8 +1089,9 @@
                 });
                 
                 try {
-                    const history = generateApprovalHistory(state.form);
-                    console.log('生成的审批历史:', history);
+                    // 原型需求：点击“审批过程”直接展示两条样例数据
+                    const history = getApprovalDemoRows();
+                    console.log('审批过程样例数据:', history);
                     
                     // 直接设置状态
                     state.approvalHistory = history;
@@ -1079,7 +1155,35 @@
                     showApprovalProcess();
                 };
                 
+                // 快速测试函数：切换状态并查看审批过程
+                window.testApprovalWithStatus = (status) => {
+                    const validStatuses = ['待提交', '提交审核', '执行', '驳回', '转办'];
+                    if (!validStatuses.includes(status)) {
+                        console.error('无效的状态，可用状态:', validStatuses.join(', '));
+                        return;
+                    }
+                    console.log(`=== 切换到状态: ${status} ===`);
+                    state.form.status = status;
+                    // 设置一些测试数据
+                    if (status === '提交审核') {
+                        state.form.submitTime = new Date().toLocaleString('zh-CN');
+                    } else if (status === '执行') {
+                        state.form.approvalTime = new Date().toLocaleString('zh-CN');
+                        state.form.regionalManager = '区域经理 张三';
+                    } else if (status === '驳回') {
+                        state.form.rejectTime = new Date().toLocaleString('zh-CN');
+                        state.form.regionalManager = '区域经理 张三';
+                    }
+                    console.log('状态已切换，当前状态:', state.form.status);
+                    showApprovalProcess();
+                };
+                
                 console.log('✅ 审批过程方法已在 setup 中暴露到 window 对象');
+                console.log('✅ 测试函数已加载:');
+                console.log('  - window.testApprovalProcess() - 测试当前状态的审批过程');
+                console.log('  - window.testApprovalWithStatus("提交审核") - 切换到"提交审核"状态并查看');
+                console.log('  - window.testApprovalWithStatus("执行") - 切换到"执行"状态并查看');
+                console.log('  - window.testApprovalWithStatus("驳回") - 切换到"驳回"状态并查看');
                 console.log('window.showApprovalProcess 类型:', typeof window.showApprovalProcess);
                 console.log('window._htmApprovalProcess 类型:', typeof window._htmApprovalProcess);
                 console.log('验证: window.showApprovalProcess === showApprovalProcess', window.showApprovalProcess === showApprovalProcess);

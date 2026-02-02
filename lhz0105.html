@@ -773,7 +773,7 @@
                                 <span v-else-if="item.action === '转办'" class="badge badge-submitted">{{ item.action }}</span>
                                 <span v-else class="text-slate-400">-</span>
                             </td>
-                            <td>{{ item.comments || '-' }}</td>
+                            <td>{{ item.comments ? item.comments : '' }}</td>
                             <td class="text-slate-500 text-sm">{{ item.actionTime || '-' }}</td>
                         </tr>
                     </tbody>
@@ -1003,7 +1003,7 @@
                         nodeName: '提交审核',
                         approver: form.orderPerson || 'Wilson',
                         action: '提交审核',
-                        comments: '已提交审核', // 按照设计方案，节点1显示"已提交审核"
+                        comments: form.submitComments || '', // 审批意见：用户写了才有（默认空）
                         actionTime: form.submitTime || form.lastUpdate || formatTime(new Date())
                     });
                 }
@@ -1024,19 +1024,19 @@
                         // 待处理状态
                         node2.approver = '-';
                         node2.action = '-';
-                        node2.comments = '-';
+                        node2.comments = '';
                         node2.actionTime = '';
                     } else if (currentStatus === '执行') {
                         // 审批通过
                         node2.approver = form.regionalManager || '区域经理 张三';
                         node2.action = '通过'; // 按照设计方案，使用"通过"而不是"审批通过"
-                        node2.comments = form.approvalComments || '审批通过，同意执行'; // 按照设计方案，有默认值
+                        node2.comments = form.approvalComments || ''; // 审批意见：用户写了才有（默认空）
                         node2.actionTime = form.approvalTime || form.lastUpdate || formatTime(new Date());
                     } else if (currentStatus === '驳回') {
                         // 驳回
                         node2.approver = form.regionalManager || '区域经理 张三';
                         node2.action = '驳回';
-                        node2.comments = form.rejectComments || '审批驳回'; // 按照设计方案，有默认值
+                        node2.comments = form.rejectComments || ''; // 审批意见：用户写了才有（默认空）
                         node2.actionTime = form.rejectTime || form.lastUpdate || formatTime(new Date());
                     } else if (currentStatus === '转办') {
                         // 转办
@@ -1064,7 +1064,7 @@
                         nodeName: '提交审核',
                         approver: state.form.orderPerson || 'Wilson',
                         action: '提交审核',
-                        comments: '已提交审核',
+                        comments: '',
                         actionTime: state.form.submitTime || fmt(new Date('2025-12-28T10:00:00'))
                     },
                     {
@@ -1073,7 +1073,7 @@
                         nodeName: '区域经理审核',
                         approver: state.form.regionalManager || '区域经理 张三',
                         action: '通过',
-                        comments: '审批通过，同意执行',
+                        comments: '',
                         actionTime: fmt(new Date('2025-12-28T14:30:00'))
                     }
                 ];
