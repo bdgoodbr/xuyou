@@ -977,6 +977,19 @@
                 addContainer, removeContainer, handleContainerTypeChange, toggleQuery, handleRefCreate, showApprovalProcess
             };
             
+            // 直接在 setup 函数内部暴露方法到 window（不依赖 Vue 实例挂载）
+            window.showApprovalProcess = showApprovalProcess;
+            window.testApprovalProcess = () => {
+                console.log('=== 手动测试审批过程 ===');
+                console.log('当前状态:', { 
+                    page: state.page, 
+                    formStatus: state.form.status,
+                    showApprovalModal: state.showApprovalModal 
+                });
+                showApprovalProcess();
+            };
+            console.log('✅ 审批过程方法已在 setup 中暴露到 window 对象');
+            
             return appContext;
         }
     });
@@ -985,29 +998,22 @@
     const app = vueApp.mount('#app');
     window.app = app;
     
-    // 在 Vue 应用挂载后，将方法暴露到全局（确保方法可用）
+    // 验证方法是否已暴露（作为备用检查）
     nextTick(() => {
-        if (app && app.showApprovalProcess) {
-            // 将 showApprovalProcess 方法直接暴露到全局
-            window.showApprovalProcess = () => {
-                console.log('=== 调用 showApprovalProcess ===');
-                app.showApprovalProcess();
-            };
-            
-            // 将测试方法暴露到全局
-            window.testApprovalProcess = () => {
-                console.log('=== 手动测试审批过程 ===');
-                console.log('当前状态:', { 
-                    page: app.page, 
-                    formStatus: app.form?.status,
-                    showApprovalModal: app.showApprovalModal 
-                });
-                app.showApprovalProcess();
-            };
-            
-            console.log('✅ 审批过程方法已成功暴露到 window 对象');
+        if (typeof window.showApprovalProcess === 'function') {
+            console.log('✅ 审批过程方法已成功暴露（在 setup 中）');
         } else {
-            console.error('❌ Vue 应用或 showApprovalProcess 方法未找到');
+            console.warn('⚠️ 审批过程方法未找到，尝试从 app 实例获取');
+            if (app && typeof app.showApprovalProcess === 'function') {
+                window.showApprovalProcess = app.showApprovalProcess;
+                window.testApprovalProcess = () => {
+                    console.log('=== 手动测试审批过程 ===');
+                    app.showApprovalProcess();
+                };
+                console.log('✅ 审批过程方法已从 app 实例暴露');
+            } else {
+                console.error('❌ 无法找到 showApprovalProcess 方法');
+            }
         }
     });
 </script>
