@@ -3,11 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>系统外落货纸 Living Spec v2.7</title>
-    <!-- Version: a61bab7 - 修复待提交状态审批记录显示问题 -->
+    <title>系统外落货纸 Living Spec v2.7 [版本: 660fe96]</title>
+    <!-- Version: 660fe96 - 修复待提交状态审批记录显示问题 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <script>
+        // 强制清除缓存并重新加载
+        if (performance.navigation.type === 1) {
+            // 页面刷新，清除所有缓存
+            caches.keys().then(function(names) {
+                for (let name of names) caches.delete(name);
+            });
+        }
+        // 添加版本号到 window 对象，方便控制台检查
+        window.APP_VERSION = '660fe96';
+        console.log('✅ 页面版本:', window.APP_VERSION);
+    </script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -691,7 +703,7 @@
     <div v-if="showApprovalModal" class="modal-overlay">
         <div class="modal-content" style="width: 800px; max-height: 80vh;">
             <div class="flex justify-between items-center p-4 border-b">
-                <h3 class="font-bold text-slate-800">审批过程查询</h3>
+                <h3 class="font-bold text-slate-800">审批过程查询 <span class="text-xs text-slate-400">[v660fe96]</span></h3>
                 <button @click="showApprovalModal = false" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             </div>
             <div class="p-6 overflow-y-auto" style="max-height: calc(80vh - 120px);">
