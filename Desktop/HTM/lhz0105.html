@@ -118,23 +118,22 @@
     
     <!-- 在 Vue 加载之前就定义占位函数，确保始终可用 -->
     <script>
-        // 立即定义占位函数，不依赖任何其他库
-        (function() {
-            window.showApprovalProcess = function() {
-                console.warn('⚠️ showApprovalProcess 方法尚未初始化，请等待页面加载完成');
-                if (window._htmApprovalProcess && typeof window._htmApprovalProcess === 'function') {
-                    console.log('从 _htmApprovalProcess 调用');
-                    return window._htmApprovalProcess();
-                }
-                if (window.app && typeof window.app.showApprovalProcess === 'function') {
-                    console.log('从 app.showApprovalProcess 调用');
-                    return window.app.showApprovalProcess();
-                }
-                alert('审批过程功能正在初始化，请稍候再试');
-            };
-            window._htmApprovalProcess = null;
-            console.log('✅ 占位函数已定义，window.showApprovalProcess 类型:', typeof window.showApprovalProcess);
-        })();
+        // 立即定义占位函数，不依赖任何其他库，不使用 IIFE，直接执行
+        window.showApprovalProcess = function() {
+            console.warn('⚠️ showApprovalProcess 方法尚未初始化，请等待页面加载完成');
+            if (window._htmApprovalProcess && typeof window._htmApprovalProcess === 'function') {
+                console.log('从 _htmApprovalProcess 调用');
+                return window._htmApprovalProcess();
+            }
+            if (window.app && typeof window.app.showApprovalProcess === 'function') {
+                console.log('从 app.showApprovalProcess 调用');
+                return window.app.showApprovalProcess();
+            }
+            alert('审批过程功能正在初始化，请稍候再试');
+        };
+        window._htmApprovalProcess = null;
+        console.log('✅ 占位函数已定义，window.showApprovalProcess 类型:', typeof window.showApprovalProcess);
+        console.log('验证 window.showApprovalProcess:', window.showApprovalProcess);
     </script>
 </head>
 <body>
@@ -734,9 +733,15 @@
 </div>
 
 <script>
+    // 立即验证占位函数是否存在
+    console.log('=== 主 script 开始执行 ===');
+    console.log('window.showApprovalProcess 类型:', typeof window.showApprovalProcess);
+    
     // 等待 Vue 加载完成
     if (typeof Vue === 'undefined') {
         console.error('❌ Vue 未加载，请检查网络连接');
+    } else {
+        console.log('✅ Vue 已加载');
     }
     
     const { createApp, reactive, computed, nextTick } = Vue;
