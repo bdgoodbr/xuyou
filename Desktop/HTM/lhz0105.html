@@ -714,6 +714,9 @@
 
 <script>
     const { createApp, reactive, computed, nextTick } = Vue;
+    
+    // 创建一个全局对象来存储方法引用（在 Vue 初始化之前）
+    window._htmApprovalProcess = null;
 
     const vueApp = createApp({
         setup() {
@@ -979,7 +982,10 @@
             
             // 在 setup 函数内部直接暴露方法到 window（使用闭包访问 state）
             // 这样不依赖 Vue 实例挂载，确保方法立即可用
-            window.showApprovalProcess = showApprovalProcess;
+            const exposedMethod = showApprovalProcess;
+            window.showApprovalProcess = exposedMethod;
+            window._htmApprovalProcess = exposedMethod; // 也存储到全局变量中
+            
             window.testApprovalProcess = () => {
                 console.log('=== 手动测试审批过程 ===');
                 console.log('当前状态:', { 
@@ -1000,25 +1006,52 @@
     const app = vueApp.mount('#app');
     window.app = app;
     
-    // 验证方法是否已暴露（方法应该在 setup 中已经暴露）
-    nextTick(() => {
+    // 确保方法暴露的多种方式（多重保障）
+    const ensureMethodExposed = () => {
+        // 方式1：检查是否已在 setup 中暴露
         if (typeof window.showApprovalProcess === 'function') {
-            console.log('✅ 审批过程方法验证成功（已在 setup 中暴露）');
-        } else {
-            console.warn('⚠️ 审批过程方法未找到，尝试从 app 实例获取');
-            // 备用方案：从 app 实例获取
-            if (app && typeof app.showApprovalProcess === 'function') {
-                window.showApprovalProcess = app.showApprovalProcess;
-                window.testApprovalProcess = () => {
-                    console.log('=== 手动测试审批过程 ===');
-                    app.showApprovalProcess();
-                };
-                console.log('✅ 审批过程方法已从 app 实例暴露（备用方案）');
-            } else {
-                console.error('❌ 无法找到 showApprovalProcess 方法');
-            }
+            console.log('✅ 审批过程方法已暴露（方式1：setup 中）');
+            return true;
         }
-    });
+        
+        // 方式1.5：从全局变量获取
+        if (window._htmApprovalProcess && typeof window._htmApprovalProcess === 'function') {
+            window.showApprovalProcess = window._htmApprovalProcess;
+            console.log('✅ 审批过程方法已暴露（方式1.5：全局变量）');
+            return true;
+        }
+        
+        // 方式2：从 app 实例获取
+        if (app && typeof app.showApprovalProcess === 'function') {
+            window.showApprovalProcess = app.showApprovalProcess;
+            window.testApprovalProcess = () => {
+                console.log('=== 手动测试审批过程 ===');
+                app.showApprovalProcess();
+            };
+            console.log('✅ 审批过程方法已暴露（方式2：app 实例）');
+            return true;
+        }
+        
+        return false;
+    };
+    
+    // 立即尝试
+    if (!ensureMethodExposed()) {
+        // 如果立即失败，使用 nextTick 延迟尝试
+        nextTick(() => {
+            if (!ensureMethodExposed()) {
+                // 如果还是失败，再延迟一点
+                setTimeout(() => {
+                    if (!ensureMethodExposed()) {
+                        console.error('❌ 所有方式都失败，无法暴露 showApprovalProcess 方法');
+                        console.error('app 对象:', app);
+                        console.error('app.showApprovalProcess:', app?.showApprovalProcess);
+                        console.error('window._htmApprovalProcess:', window._htmApprovalProcess);
+                    }
+                }, 100);
+            }
+        });
+    }
 </script>
 </body>
 </html>
