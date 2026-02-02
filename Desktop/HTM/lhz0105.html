@@ -362,7 +362,7 @@
                         </template>
 
                         <div class="h-6 w-px bg-slate-300 mx-2"></div>
-                        <button type="button" @click="showApprovalProcess" onclick="console.log('onclick triggered'); if(window.app && window.app.showApprovalProcess) window.app.showApprovalProcess();" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative; pointer-events: auto; min-width: auto;"><i class="fas fa-history mr-1"></i>审批过程</button>
+                        <button type="button" @click.stop="showApprovalProcess" onclick="if(typeof window.showApprovalProcess === 'function') { window.showApprovalProcess(); } else { console.error('showApprovalProcess 方法未找到'); }" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative; pointer-events: auto; min-width: auto;"><i class="fas fa-history mr-1"></i>审批过程</button>
                     </div>
                 </div>
 
