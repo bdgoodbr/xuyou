@@ -835,6 +835,7 @@
                                     <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
                                 </th>
                                 <th class="min-w-[120px]">订舱号</th>
+                                <th class="min-w-[120px]">订舱人</th>
                                 <th class="min-w-[100px]">集装箱号</th>
                                 <th>箱型</th>
                                 <th>起运港</th>
@@ -859,6 +860,7 @@
                                     <input type="checkbox" :value="item.id" v-model="selectedIds">
                                 </td>
                                 <td class="font-mono text-blue-600 font-medium min-w-[120px]">{{ item.lhzOrder }}</td>
+                                <td class="min-w-[120px]">{{ item.bookingOperator || '-' }}</td>
                                 <td class="font-mono min-w-[100px]">{{ item.containerNo }}</td>
                                 <td>{{ item.containerSize }}</td>
                                 <td>{{ item.pol }}</td>
@@ -1701,6 +1703,7 @@
                         {
                             id: 1,
                             lhzOrder: 'LHZ20250126001',
+                            bookingOperator: '物流岗A（示例）', // 实际由后台根据订舱号自动带出
                             carrier: '货代A',
                             containerNo: 'CONT001',
                             containerSize: '40HQ',
@@ -1720,6 +1723,7 @@
                         {
                             id: 2,
                             lhzOrder: 'LHZ20250126002',
+                            bookingOperator: '物流岗A（示例）',
                             carrier: '货代A',
                             containerNo: 'CONT002',
                             containerSize: '20GP',
@@ -1739,6 +1743,7 @@
                         {
                             id: 3,
                             lhzOrder: 'LHZ20250126003',
+                            bookingOperator: '物流岗B（示例）',
                             carrier: '货代B',
                             containerNo: 'CONT003',
                             containerSize: '40GP',
@@ -1758,6 +1763,7 @@
                         {
                             id: 4,
                             lhzOrder: 'LHZ20250126004',
+                            bookingOperator: '物流岗B（示例）',
                             carrier: '青岛经汉物流服务有限公司',
                             containerNo: 'CONT004',
                             containerSize: '40HQ',
@@ -1777,6 +1783,7 @@
                         {
                             id: 5,
                             lhzOrder: 'LHZ20250126005',
+                            bookingOperator: '物流岗C（示例）',
                             carrier: '青岛经汉物流服务有限公司',
                             containerNo: 'CONT005',
                             containerSize: '20GP',
@@ -1796,6 +1803,7 @@
                         {
                             id: 6,
                             lhzOrder: 'LHZ20250127001',
+                            bookingOperator: '物流岗A（示例）',
                             carrier: '青岛经汉物流服务有限公司',
                             containerNo: 'CONT006',
                             containerSize: '40HQ',
@@ -2670,7 +2678,9 @@
                         realETA: this.formatDateOnly(this.formatDateTime(this.form.realETA)),
                         ata: this.formatDateOnly(this.formatDateTime(this.form.ata)),
                         uploadTime: this.currentUploadTime,
-                        uploadUser: this.currentUser.name
+                        uploadUser: this.currentUser.name,
+                        // 订舱人：实际系统应根据订舱号从订舱信息中自动带出，这里仅做占位展示
+                        bookingOperator: '系统根据订舱号自动带出'
                     };
                     
                     this.tableData.unshift(newItem);
