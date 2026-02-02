@@ -928,18 +928,21 @@
                     }).replace(/\//g, '-');
                 };
                 
-                // 序号1：订单人员提交审核节点（所有已提交的状态都有这个节点）
-                if (['提交审核', '执行', '驳回', '转办'].includes(currentStatus)) {
-                    history.push({
-                        id: 1,
-                        sequenceNo: 1,
-                        nodeName: '订单人员提交',
-                        approver: form.orderPerson || 'Wilson',
-                        action: '提交审核',
-                        comments: form.submitComments || '', // 审批意见默认为空，只有审批人填写了才有
-                        actionTime: form.submitTime || form.lastUpdate || formatTime(new Date())
-                    });
+                // 如果状态是"待提交"，不显示审批记录（因为还没有提交）
+                if (currentStatus === '待提交' || !form.status) {
+                    return [];
                 }
+                
+                // 序号1：订单人员提交审核节点（所有已提交的状态都有这个节点）
+                history.push({
+                    id: 1,
+                    sequenceNo: 1,
+                    nodeName: '订单人员提交',
+                    approver: form.orderPerson || 'Wilson',
+                    action: '提交审核',
+                    comments: form.submitComments || '', // 审批意见默认为空，只有审批人填写了才有
+                    actionTime: form.submitTime || form.lastUpdate || formatTime(new Date())
+                });
                 
                 // 序号2：区域经理审核节点（所有已提交的状态都有这个节点）
                 const node2 = {
