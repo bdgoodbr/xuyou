@@ -1005,8 +1005,9 @@
             };
 
             // 显示审批过程弹窗
+            // 版本: 2e1c6ae - 最终修复版本
             const showApprovalProcess = () => {
-                console.log('=== showApprovalProcess 开始执行 ===');
+                console.log('=== showApprovalProcess 开始执行 [版本: 2e1c6ae] ===');
                 console.log('当前状态:', { 
                     page: state.page, 
                     formStatus: state.form.status,
@@ -1016,28 +1017,31 @@
                 try {
                     const history = generateApprovalHistory(state.form);
                     console.log('生成的审批历史:', history);
+                    console.log('历史记录数量:', history.length);
                     
                     // 直接设置状态
                     state.approvalHistory = history;
                     state.showApprovalModal = true;
                     
-                    console.log('状态已更新:', {
+                    console.log('✅ 状态已更新:', {
                         approvalHistory: state.approvalHistory,
                         showApprovalModal: state.showApprovalModal
                     });
                     
                     // 强制更新视图
                     nextTick(() => {
-                        console.log('nextTick 执行完成, showApprovalModal:', state.showApprovalModal);
+                        console.log('✅ nextTick 执行完成, showApprovalModal:', state.showApprovalModal);
                         // 检查 DOM 中是否有弹窗元素
                         const modal = document.querySelector('.modal-overlay');
                         console.log('弹窗 DOM 元素:', modal);
                         if (!modal) {
-                            console.error('弹窗元素未找到！');
+                            console.error('❌ 弹窗元素未找到！');
+                        } else {
+                            console.log('✅ 弹窗已成功显示');
                         }
                     });
                 } catch (error) {
-                    console.error('打开审批过程弹窗失败:', error);
+                    console.error('❌ 打开审批过程弹窗失败:', error);
                     alert('打开审批过程失败: ' + error.message);
                 }
             };
