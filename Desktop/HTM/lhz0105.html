@@ -717,6 +717,20 @@
     
     // 创建一个全局对象来存储方法引用（在 Vue 初始化之前）
     window._htmApprovalProcess = null;
+    
+    // 创建一个全局包装函数，在 setup 中会被更新
+    window.showApprovalProcess = function() {
+        console.warn('⚠️ showApprovalProcess 方法尚未初始化，请等待页面加载完成');
+        if (window._htmApprovalProcess && typeof window._htmApprovalProcess === 'function') {
+            console.log('从 _htmApprovalProcess 调用');
+            return window._htmApprovalProcess();
+        }
+        if (window.app && typeof window.app.showApprovalProcess === 'function') {
+            console.log('从 app.showApprovalProcess 调用');
+            return window.app.showApprovalProcess();
+        }
+        alert('审批过程功能正在初始化，请稍候再试');
+    };
 
     const vueApp = createApp({
         setup() {
@@ -993,8 +1007,17 @@
             
             // 立即暴露到 window
             try {
+                // 直接替换 window.showApprovalProcess
                 window.showApprovalProcess = exposedMethod;
-                window._htmApprovalProcess = exposedMethod; // 也存储到全局变量中
+                // 也存储到全局变量中作为备用
+                window._htmApprovalProcess = exposedMethod;
+                
+                // 验证是否成功
+                if (window.showApprovalProcess === exposedMethod) {
+                    console.log('✅ window.showApprovalProcess 已成功设置');
+                } else {
+                    console.error('❌ window.showApprovalProcess 设置失败');
+                }
                 
                 window.testApprovalProcess = () => {
                     console.log('=== 手动测试审批过程 ===');
