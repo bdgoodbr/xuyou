@@ -362,7 +362,7 @@
                         </template>
 
                         <div class="h-6 w-px bg-slate-300 mx-2"></div>
-                        <button type="button" @click.stop="showApprovalProcess" onclick="if(typeof window.showApprovalProcess === 'function') { window.showApprovalProcess(); } else { console.error('showApprovalProcess 方法未找到'); }" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative; pointer-events: auto; min-width: auto;"><i class="fas fa-history mr-1"></i>审批过程</button>
+                        <button type="button" @click.stop="showApprovalProcess" onclick="if(window.app && typeof window.app.showApprovalProcess === 'function') { window.app.showApprovalProcess(); } else if(typeof window.showApprovalProcess === 'function') { window.showApprovalProcess(); } else { console.error('showApprovalProcess 方法未找到，请刷新页面重试'); alert('审批过程功能暂时不可用，请刷新页面后重试'); }" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative; pointer-events: auto; min-width: auto;"><i class="fas fa-history mr-1"></i>审批过程</button>
                     </div>
                 </div>
 
@@ -977,16 +977,6 @@
                 addContainer, removeContainer, handleContainerTypeChange, toggleQuery, handleRefCreate, showApprovalProcess
             };
             
-            // 将方法暴露到全局，方便调试
-            window.testApprovalProcess = () => {
-                console.log('=== 手动测试审批过程 ===');
-                console.log('当前状态:', { page: state.page, formStatus: state.form.status });
-                showApprovalProcess();
-            };
-            
-            // 将 showApprovalProcess 方法直接暴露到全局
-            window.showApprovalProcess = showApprovalProcess;
-            
             return appContext;
         }
     });
@@ -994,6 +984,32 @@
     // 将 Vue 实例暴露到全局
     const app = vueApp.mount('#app');
     window.app = app;
+    
+    // 在 Vue 应用挂载后，将方法暴露到全局（确保方法可用）
+    nextTick(() => {
+        if (app && app.showApprovalProcess) {
+            // 将 showApprovalProcess 方法直接暴露到全局
+            window.showApprovalProcess = () => {
+                console.log('=== 调用 showApprovalProcess ===');
+                app.showApprovalProcess();
+            };
+            
+            // 将测试方法暴露到全局
+            window.testApprovalProcess = () => {
+                console.log('=== 手动测试审批过程 ===');
+                console.log('当前状态:', { 
+                    page: app.page, 
+                    formStatus: app.form?.status,
+                    showApprovalModal: app.showApprovalModal 
+                });
+                app.showApprovalProcess();
+            };
+            
+            console.log('✅ 审批过程方法已成功暴露到 window 对象');
+        } else {
+            console.error('❌ Vue 应用或 showApprovalProcess 方法未找到');
+        }
+    });
 </script>
 </body>
 </html>
