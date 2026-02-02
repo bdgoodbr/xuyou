@@ -362,7 +362,7 @@
                         </template>
 
                         <div class="h-6 w-px bg-slate-300 mx-2"></div>
-                        <button type="button" @click.stop="showApprovalProcess" onclick="if(typeof window.showApprovalProcess === 'function') { window.showApprovalProcess(); } else if(window.app && typeof window.app.showApprovalProcess === 'function') { window.app.showApprovalProcess(); } else { console.error('showApprovalProcess 方法未找到'); alert('审批过程功能暂时不可用，请刷新页面后重试'); }" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative; pointer-events: auto; min-width: auto;"><i class="fas fa-history mr-1"></i>审批过程</button>
+                        <button type="button" @click.stop="showApprovalProcess" onclick="if(typeof window.showApprovalProcess === 'function') { window.showApprovalProcess(); } else if(window._htmApprovalProcess && typeof window._htmApprovalProcess === 'function') { window._htmApprovalProcess(); } else if(window.app && typeof window.app.showApprovalProcess === 'function') { window.app.showApprovalProcess(); } else { console.error('showApprovalProcess 方法未找到'); console.error('window.showApprovalProcess:', typeof window.showApprovalProcess); console.error('window._htmApprovalProcess:', typeof window._htmApprovalProcess); console.error('window.app:', window.app); alert('审批过程功能暂时不可用，请刷新页面后重试'); }" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative; pointer-events: auto; min-width: auto;"><i class="fas fa-history mr-1"></i>审批过程</button>
                     </div>
                 </div>
 
@@ -720,6 +720,10 @@
 
     const vueApp = createApp({
         setup() {
+            console.log('=== Vue setup 函数开始执行 ===');
+            console.log('window 对象:', typeof window);
+            console.log('window._htmApprovalProcess 初始值:', window._htmApprovalProcess);
+            
             const state = reactive({
                 page: 'list',
                 pageTitle: '查询列表',
@@ -982,21 +986,33 @@
             
             // 在 setup 函数内部直接暴露方法到 window（使用闭包访问 state）
             // 这样不依赖 Vue 实例挂载，确保方法立即可用
-            const exposedMethod = showApprovalProcess;
-            window.showApprovalProcess = exposedMethod;
-            window._htmApprovalProcess = exposedMethod; // 也存储到全局变量中
+            console.log('=== 准备暴露 showApprovalProcess 方法 ===');
+            console.log('showApprovalProcess 函数:', typeof showApprovalProcess);
             
-            window.testApprovalProcess = () => {
-                console.log('=== 手动测试审批过程 ===');
-                console.log('当前状态:', { 
-                    page: state.page, 
-                    formStatus: state.form.status,
-                    showApprovalModal: state.showApprovalModal 
-                });
-                showApprovalProcess();
-            };
-            console.log('✅ 审批过程方法已在 setup 中暴露到 window 对象');
-            console.log('window.showApprovalProcess 类型:', typeof window.showApprovalProcess);
+            const exposedMethod = showApprovalProcess;
+            
+            // 立即暴露到 window
+            try {
+                window.showApprovalProcess = exposedMethod;
+                window._htmApprovalProcess = exposedMethod; // 也存储到全局变量中
+                
+                window.testApprovalProcess = () => {
+                    console.log('=== 手动测试审批过程 ===');
+                    console.log('当前状态:', { 
+                        page: state.page, 
+                        formStatus: state.form.status,
+                        showApprovalModal: state.showApprovalModal 
+                    });
+                    showApprovalProcess();
+                };
+                
+                console.log('✅ 审批过程方法已在 setup 中暴露到 window 对象');
+                console.log('window.showApprovalProcess 类型:', typeof window.showApprovalProcess);
+                console.log('window._htmApprovalProcess 类型:', typeof window._htmApprovalProcess);
+                console.log('验证: window.showApprovalProcess === showApprovalProcess', window.showApprovalProcess === showApprovalProcess);
+            } catch (error) {
+                console.error('❌ 暴露方法时出错:', error);
+            }
             
             return appContext;
         }
