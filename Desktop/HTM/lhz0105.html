@@ -362,7 +362,7 @@
                         </template>
 
                         <div class="h-6 w-px bg-slate-300 mx-2"></div>
-                        <button type="button" @click.stop="showApprovalProcess" onclick="if(window.app && typeof window.app.showApprovalProcess === 'function') { window.app.showApprovalProcess(); } else if(typeof window.showApprovalProcess === 'function') { window.showApprovalProcess(); } else { console.error('showApprovalProcess 方法未找到，请刷新页面重试'); alert('审批过程功能暂时不可用，请刷新页面后重试'); }" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative; pointer-events: auto; min-width: auto;"><i class="fas fa-history mr-1"></i>审批过程</button>
+                        <button type="button" @click.stop="showApprovalProcess" onclick="if(typeof window.showApprovalProcess === 'function') { window.showApprovalProcess(); } else if(window.app && typeof window.app.showApprovalProcess === 'function') { window.app.showApprovalProcess(); } else { console.error('showApprovalProcess 方法未找到'); alert('审批过程功能暂时不可用，请刷新页面后重试'); }" class="text-slate-500 hover:text-blue-600 text-xs ml-2 cursor-pointer" style="z-index: 1000; position: relative; pointer-events: auto; min-width: auto;"><i class="fas fa-history mr-1"></i>审批过程</button>
                     </div>
                 </div>
 
@@ -977,18 +977,7 @@
                 addContainer, removeContainer, handleContainerTypeChange, toggleQuery, handleRefCreate, showApprovalProcess
             };
             
-            // 直接在 setup 函数内部暴露方法到 window（不依赖 Vue 实例挂载）
-            window.showApprovalProcess = showApprovalProcess;
-            window.testApprovalProcess = () => {
-                console.log('=== 手动测试审批过程 ===');
-                console.log('当前状态:', { 
-                    page: state.page, 
-                    formStatus: state.form.status,
-                    showApprovalModal: state.showApprovalModal 
-                });
-                showApprovalProcess();
-            };
-            console.log('✅ 审批过程方法已在 setup 中暴露到 window 对象');
+            // 注意：不在 setup 中直接暴露，而是在挂载后通过 app 实例暴露
             
             return appContext;
         }
@@ -998,24 +987,45 @@
     const app = vueApp.mount('#app');
     window.app = app;
     
-    // 验证方法是否已暴露（作为备用检查）
-    nextTick(() => {
-        if (typeof window.showApprovalProcess === 'function') {
-            console.log('✅ 审批过程方法已成功暴露（在 setup 中）');
+    // 在 Vue 实例挂载后，立即暴露方法到 window
+    // 使用立即执行函数确保方法正确绑定
+    (function() {
+        if (app && typeof app.showApprovalProcess === 'function') {
+            // 直接绑定方法
+            window.showApprovalProcess = app.showApprovalProcess.bind(app);
+            
+            // 暴露测试方法
+            window.testApprovalProcess = () => {
+                console.log('=== 手动测试审批过程 ===');
+                console.log('当前状态:', { 
+                    page: app.page, 
+                    formStatus: app.form?.status,
+                    showApprovalModal: app.showApprovalModal 
+                });
+                app.showApprovalProcess();
+            };
+            
+            console.log('✅ 审批过程方法已成功暴露到 window 对象');
+            console.log('window.showApprovalProcess 类型:', typeof window.showApprovalProcess);
         } else {
-            console.warn('⚠️ 审批过程方法未找到，尝试从 app 实例获取');
-            if (app && typeof app.showApprovalProcess === 'function') {
-                window.showApprovalProcess = app.showApprovalProcess;
-                window.testApprovalProcess = () => {
-                    console.log('=== 手动测试审批过程 ===');
-                    app.showApprovalProcess();
-                };
-                console.log('✅ 审批过程方法已从 app 实例暴露');
-            } else {
-                console.error('❌ 无法找到 showApprovalProcess 方法');
-            }
+            console.error('❌ 无法找到 showApprovalProcess 方法');
+            console.error('app 对象:', app);
+            console.error('app.showApprovalProcess:', app?.showApprovalProcess);
+            
+            // 如果立即暴露失败，使用 nextTick 延迟尝试
+            nextTick(() => {
+                console.log('=== nextTick 中重试暴露方法 ===');
+                if (app && typeof app.showApprovalProcess === 'function') {
+                    window.showApprovalProcess = app.showApprovalProcess.bind(app);
+                    window.testApprovalProcess = () => {
+                        console.log('=== 手动测试审批过程 ===');
+                        app.showApprovalProcess();
+                    };
+                    console.log('✅ 审批过程方法已在 nextTick 中暴露');
+                }
+            });
         }
-    });
+    })();
 </script>
 </body>
 </html>
