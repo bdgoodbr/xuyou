@@ -1051,19 +1051,19 @@
                             </div>
                         </div>
                         <div class="p-4" v-show="!currentStatusCollapsed">
-                            <!-- 距离信息（按最新 update_time 的记录） -->
-                            <div class="flex justify-end gap-8 mb-4">
-                                <div class="text-right">
-                                    <div class="text-xs text-slate-500">距离始发站口岸(KM)</div>
-                                    <div class="text-lg font-semibold text-slate-900">
+                            <!-- 距离信息（按最新 update_time 的记录，一行展示） -->
+                            <div class="flex justify-end items-baseline gap-10 mb-4 text-sm text-slate-600">
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-xs text-slate-500">距离始发站口岸(KM)</span>
+                                    <span class="text-lg font-semibold text-slate-900">
                                         {{ qLatestDistances.kmFromOverseasOrigin != null ? qLatestDistances.kmFromOverseasOrigin : '-' }}
-                                    </div>
+                                    </span>
                                 </div>
-                                <div class="text-right">
-                                    <div class="text-xs text-slate-500">距离目的地(KM)</div>
-                                    <div class="text-lg font-semibold text-slate-900">
+                                <div class="flex items-baseline gap-1">
+                                    <span class="text-xs text-slate-500">距离目的地(KM)</span>
+                                    <span class="text-lg font-semibold text-slate-900">
                                         {{ qLatestDistances.kmToDestinationStation != null ? qLatestDistances.kmToDestinationStation : '-' }}
-                                    </div>
+                                    </span>
                                 </div>
                             </div>
                             <!-- 进度条 -->
