@@ -1051,6 +1051,21 @@
                             </div>
                         </div>
                         <div class="p-4" v-show="!currentStatusCollapsed">
+                            <!-- 距离信息（按最新 update_time 的记录） -->
+                            <div class="flex justify-end gap-8 mb-4">
+                                <div class="text-right">
+                                    <div class="text-xs text-slate-500">距离始发站口岸(KM)</div>
+                                    <div class="text-lg font-semibold text-slate-900">
+                                        {{ qLatestDistances.kmFromOverseasOrigin != null ? qLatestDistances.kmFromOverseasOrigin : '-' }}
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-slate-500">距离目的地(KM)</div>
+                                    <div class="text-lg font-semibold text-slate-900">
+                                        {{ qLatestDistances.kmToDestinationStation != null ? qLatestDistances.kmToDestinationStation : '-' }}
+                                    </div>
+                                </div>
+                            </div>
                             <!-- 进度条 -->
                             <div class="status-progress-container mb-4">
                                 <div class="status-progress-bar">
@@ -1834,8 +1849,8 @@
                     remark: ''
                 },
                 qUploads: [
-                    { uploadTime: '2026-01-18 09:10:00', kmFromOverseasOrigin: 420, kmToDestinationStation: 980 },
-                    { uploadTime: '2026-01-19 09:18:04', kmFromOverseasOrigin: 410, kmToDestinationStation: 960 }
+                    { uploadTime: '2026-01-18 09:10:00', updateTime: '2026-01-18 09:10:00', kmFromOverseasOrigin: 420, kmToDestinationStation: 980 },
+                    { uploadTime: '2026-01-19 09:18:04', updateTime: '2026-01-19 09:18:04', kmFromOverseasOrigin: 410, kmToDestinationStation: 960 }
                 ],
                 qRealtimeNodes: {
                     depart: { pol: 'QINGDAO-CN', time: '2025-10-30 14:46:00' },
@@ -2016,14 +2031,16 @@
 
                 // ===== Query (native) =====
                 qLatestUpload() {
+                    // 取该 SO 下「更新时间 updateTime 最大」的一条记录
                     if (!this.qUploads || this.qUploads.length === 0) return null;
-                    return [...this.qUploads].sort((a, b) => (a.uploadTime || '').localeCompare(b.uploadTime || '')).slice(-1)[0];
+                    return [...this.qUploads]
+                        .sort((a, b) => (b.updateTime || '').localeCompare(a.updateTime || ''))[0];
                 },
                 qLatestDistances() {
                     const u = this.qLatestUpload;
                     return {
-                        kmFromOverseasOrigin: u?.kmFromOverseasOrigin ?? null,
-                        kmToDestinationStation: u?.kmToDestinationStation ?? null
+                        kmFromOverseasOrigin: u && u.kmFromOverseasOrigin != null ? u.kmFromOverseasOrigin : null,
+                        kmToDestinationStation: u && u.kmToDestinationStation != null ? u.kmToDestinationStation : null
                     };
                 },
                 qSubscription() {
