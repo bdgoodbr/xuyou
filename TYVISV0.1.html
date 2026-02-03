@@ -1045,27 +1045,29 @@
                     <!-- Current Status Visualization -->
                     <div v-if="aggregatedBookingStatus" class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
                         <div class="px-4 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors" @click="currentStatusCollapsed = !currentStatusCollapsed">
-                            <div class="font-bold text-slate-900 flex items-center gap-2">
-                                <i :class="currentStatusCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'" class="text-slate-400 text-sm transition-transform"></i>
-                                当前状态可视化 <span class="text-slate-400 text-xs font-normal">Current Status Visualization</span>
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="font-bold text-slate-900 flex items-center gap-2">
+                                    <i :class="currentStatusCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'" class="text-slate-400 text-sm transition-transform"></i>
+                                    当前状态可视化 <span class="text-slate-400 text-xs font-normal">Current Status Visualization</span>
+                                </div>
+                                <!-- 距离信息（按最新 update_time 的记录，一行展示，与标题同一行居中对齐） -->
+                                <div class="flex items-baseline gap-10 text-sm text-slate-600">
+                                    <div class="flex items-baseline gap-1">
+                                        <span class="text-xs text-slate-500">距离始发站口岸(KM)</span>
+                                        <span class="text-lg font-semibold text-slate-900">
+                                            {{ qLatestDistances.kmFromOverseasOrigin != null ? qLatestDistances.kmFromOverseasOrigin : '-' }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-baseline gap-1">
+                                        <span class="text-xs text-slate-500">距离目的地(KM)</span>
+                                        <span class="text-lg font-semibold text-slate-900">
+                                            {{ qLatestDistances.kmToDestinationStation != null ? qLatestDistances.kmToDestinationStation : '-' }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="p-4" v-show="!currentStatusCollapsed">
-                            <!-- 距离信息（按最新 update_time 的记录，一行展示） -->
-                            <div class="flex justify-end items-baseline gap-10 mb-4 text-sm text-slate-600">
-                                <div class="flex items-baseline gap-1">
-                                    <span class="text-xs text-slate-500">距离始发站口岸(KM)</span>
-                                    <span class="text-lg font-semibold text-slate-900">
-                                        {{ qLatestDistances.kmFromOverseasOrigin != null ? qLatestDistances.kmFromOverseasOrigin : '-' }}
-                                    </span>
-                                </div>
-                                <div class="flex items-baseline gap-1">
-                                    <span class="text-xs text-slate-500">距离目的地(KM)</span>
-                                    <span class="text-lg font-semibold text-slate-900">
-                                        {{ qLatestDistances.kmToDestinationStation != null ? qLatestDistances.kmToDestinationStation : '-' }}
-                                    </span>
-                                </div>
-                            </div>
                             <!-- 进度条 -->
                             <div class="status-progress-container mb-4">
                                 <div class="status-progress-bar">
