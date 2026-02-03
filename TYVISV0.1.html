@@ -982,15 +982,16 @@
 
                     <!-- Basic Information -->
                     <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
-                        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-                            <div class="font-bold text-slate-900">
+                        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors" @click="basicInfoCollapsed = !basicInfoCollapsed">
+                            <div class="font-bold text-slate-900 flex items-center gap-2">
+                                <i :class="basicInfoCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'" class="text-slate-400 text-sm transition-transform"></i>
                                 基本信息 <span class="text-slate-400 text-xs font-normal">Basic information</span>
                             </div>
                             <div class="text-xs text-slate-500">
                                 运输方式：<span class="font-semibold text-slate-800">{{ qBasic.transport }}</span>
                             </div>
                         </div>
-                        <div class="p-4">
+                        <div class="p-4" v-show="!basicInfoCollapsed">
                             <div class="grid grid-cols-3 gap-0 border border-gray-200 rounded overflow-hidden">
                                 <div class="border-r border-gray-200">
                                     <table class="w-full q-table-compact">
@@ -1651,6 +1652,9 @@
                     carrier: '青岛经汉物流服务有限公司'
                     },
                     currentUploadTime: '',
+                    
+                    // Collapse states
+                    basicInfoCollapsed: false,
                     
                     // Filters
                     filters: {
