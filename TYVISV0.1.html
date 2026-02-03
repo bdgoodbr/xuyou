@@ -810,7 +810,7 @@
                     </span>
                 </div>
                 <div class="space-x-2">
-                    <button v-if="canUpload" @click="showAddModal = true" class="bg-blue-600 text-white text-xs px-4 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
+                    <button v-if="canUpload" @click="openAddModal" class="bg-blue-600 text-white text-xs px-4 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
                         <i class="fas fa-plus mr-1"></i> 新建
                     </button>
                     <button @click="showBatchModal = true" class="bg-white border border-gray-300 text-gray-700 text-xs px-4 h-10 rounded hover:bg-gray-50 shadow-sm transition-colors">
@@ -848,6 +848,7 @@
                                 <th>距离始发站口岸(KM)</th>
                                 <th>距离目的地(KM)</th>
                                 <th>上传时间</th>
+                                <th>修改时间</th>
                                 <th>上传人</th>
                                 <th class="min-w-[100px]">所属货代</th>
                                 <th class="min-w-[120px]">订舱人</th>
@@ -873,10 +874,12 @@
                                 <td>{{ item.kmToBorder }}</td>
                                 <td>{{ item.kmToDestination || '-' }}</td>
                                 <td class="font-mono text-xs text-gray-500">{{ item.uploadTime }}</td>
+                                <td class="font-mono text-xs text-gray-500">{{ item.modifyTime || item.uploadTime }}</td>
                                 <td>{{ item.uploadUser || '-' }}</td>
                                 <td class="text-gray-700 min-w-[100px]">{{ item.carrier || '-' }}</td>
                                 <td class="min-w-[120px]">{{ item.bookingOperator || '-' }}</td>
-                                <td class="text-center w-32 sticky right-0 bg-white z-10">
+                                <td class="text-center w-32 sticky right-0 bg-white z-10 space-x-2">
+                                    <button v-if="canUpload" @click="openEditModal(item)" class="text-blue-600 hover:text-blue-800 text-xs font-medium transition-colors">修改</button>
                                     <button v-if="canDelete" @click="deleteItem(item)" class="text-red-600 hover:text-red-800 text-xs font-medium transition-colors">删除</button>
                                 </td>
                             </tr>
@@ -1346,7 +1349,7 @@
         <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
             <div class="modal-content" @click.stop>
                 <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-slate-900">新增可视化信息</h2>
+                    <h2 class="text-lg font-bold text-slate-900">{{ isEditMode ? '修改可视化信息' : '新增可视化信息' }}</h2>
                 </div>
                 <div class="p-6">
                     <form @submit.prevent="saveItem">
@@ -1404,16 +1407,18 @@
                                 <input v-model.number="form.kmToDestination" type="number" step="0.01" min="0" class="htm-input" placeholder="请输入距离">
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5">实时ETD</label>
-                                <input v-model="form.realETD" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
+                                <label class="block text-xs text-gray-500 mb-1.5 required">实时ETD</label>
+                                <input v-model="form.realETD" type="datetime-local" class="htm-input" :class="{error: errors.realETD}" placeholder="YYYY-MM-DD HH:mm:ss" @blur="validateField('realETD')">
+                                <span v-if="errors.realETD" class="error-message">{{ errors.realETD }}</span>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1.5">ATD</label>
                                 <input v-model="form.atd" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5">实时ETA</label>
-                                <input v-model="form.realETA" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
+                                <label class="block text-xs text-gray-500 mb-1.5 required">实时ETA</label>
+                                <input v-model="form.realETA" type="datetime-local" class="htm-input" :class="{error: errors.realETA}" placeholder="YYYY-MM-DD HH:mm:ss" @blur="validateField('realETA')">
+                                <span v-if="errors.realETA" class="error-message">{{ errors.realETA }}</span>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1.5">ATA</label>
@@ -1666,6 +1671,7 @@
                             realETA: '2025-02-15',
                             ata: null,
                             uploadTime: '2025-01-26 09:30:00',
+                            modifyTime: '2025-01-26 09:30:00',
                             uploadUser: '用户A'
                         },
                         {
@@ -1686,6 +1692,7 @@
                             realETA: '2025-02-16',
                             ata: null,
                             uploadTime: '2025-01-26 10:15:00',
+                            modifyTime: '2025-01-26 10:15:00',
                             uploadUser: '用户A'
                         },
                         {
@@ -1706,6 +1713,7 @@
                             realETA: '2025-02-18',
                             ata: null,
                             uploadTime: '2025-01-26 11:20:00',
+                            modifyTime: '2025-01-26 11:20:00',
                             uploadUser: '用户B'
                         },
                         {
@@ -1726,6 +1734,7 @@
                             realETA: '2025-02-17',
                             ata: null,
                             uploadTime: '2025-01-26 14:45:00',
+                            modifyTime: '2025-01-26 14:45:00',
                             uploadUser: '用户B'
                         },
                         {
@@ -1746,6 +1755,7 @@
                             realETA: '2025-02-19',
                             ata: null,
                             uploadTime: '2025-01-27 08:15:00',
+                            modifyTime: '2025-01-27 08:15:00',
                             uploadUser: '用户C'
                         },
                         {
@@ -1766,6 +1776,7 @@
                             realETA: '2025-02-20',
                             ata: null,
                             uploadTime: '2025-01-27 09:30:00',
+                            modifyTime: '2025-01-27 09:30:00',
                             uploadUser: '用户A'
                         }
                     ],
@@ -1916,7 +1927,9 @@
                     showDeleteConfirm: false,
                     showExportModal: false,
                     
-                    // Form
+                    // Form（新增/修改共用）
+                    isEditMode: false,
+                    editingItemId: null,
                     form: {
                         pol: '',
                         pod: '',
@@ -2559,7 +2572,7 @@
                     return 'status-pending';
                 },
                 validateField(field) {
-                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder'];
+                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder', 'realETD', 'realETA'];
                     if (requiredFields.includes(field) && !this.form[field]) {
                         this.$set(this.errors, field, `请填写${this.getFieldLabel(field)}`);
                         return;
@@ -2579,13 +2592,15 @@
                         containerSize: '箱型',
                         currentStatus: '当前状态',
                         currentLocation: '当前位置',
-                        kmToBorder: '距离始发站口岸'
+                        kmToBorder: '距离始发站口岸',
+                        realETD: '实时ETD',
+                        realETA: '实时ETA'
                     };
                     return labels[field] || field;
                 },
                 validateForm() {
                     this.errors = {};
-                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder'];
+                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder', 'realETD', 'realETA'];
                     let hasError = false;
                     
                     requiredFields.forEach(field => {
@@ -2616,41 +2631,128 @@
                     // 这里简单模拟：如果订舱号包含'INVALID'则校验失败
                     return !lhzOrder.includes('INVALID');
                 },
+                toDateTimeLocal(dateStr) {
+                    if (!dateStr) return '';
+                    // 如果已经是日期时间格式，直接替换空格为T
+                    if (dateStr.includes(' ')) {
+                        return dateStr.replace(' ', 'T');
+                    }
+                    // 如果只有日期，补一个时间部分
+                    if (dateStr.length === 10) {
+                        return `${dateStr}T00:00:00`;
+                    }
+                    return dateStr;
+                },
+                openAddModal() {
+                    this.isEditMode = false;
+                    this.editingItemId = null;
+                    this.showAddModal = true;
+                    this.updateUploadTime();
+                    this.form = {
+                        pol: '',
+                        pod: '',
+                        lhzOrder: '',
+                        containerNo: '',
+                        containerSize: '',
+                        currentStatus: '',
+                        currentLocation: '',
+                        kmToBorder: null,
+                        kmToDestination: null,
+                        realETD: '',
+                        atd: '',
+                        realETA: '',
+                        ata: ''
+                    };
+                    this.errors = {};
+                },
+                openEditModal(item) {
+                    this.isEditMode = true;
+                    this.editingItemId = item.id;
+                    this.showAddModal = true;
+                    this.errors = {};
+                    // 仅加载业务可编辑字段，系统字段（货代/上传人/上传时间/订舱人）不在表单中体现
+                    this.form = {
+                        pol: item.pol || '',
+                        pod: item.pod || '',
+                        lhzOrder: item.lhzOrder || '',
+                        containerNo: item.containerNo || '',
+                        containerSize: item.containerSize || '',
+                        currentStatus: item.currentStatus || '',
+                        currentLocation: item.currentLocation || '',
+                        kmToBorder: item.kmToBorder != null ? item.kmToBorder : null,
+                        kmToDestination: item.kmToDestination != null ? item.kmToDestination : null,
+                        realETD: this.toDateTimeLocal(item.realETD),
+                        atd: this.toDateTimeLocal(item.atd),
+                        realETA: this.toDateTimeLocal(item.realETA),
+                        ata: this.toDateTimeLocal(item.ata)
+                    };
+                },
                 saveItem() {
                     if (!this.validateForm()) {
                         return;
                     }
                     
-                    // 更新上传时间
+                    // 更新“当前时间”（用于上传时间/修改时间）
                     this.updateUploadTime();
                     
-                    // 模拟保存
-                    const newItem = {
-                        id: this.tableData.length + 1,
-                        lhzOrder: this.form.lhzOrder,
-                        carrier: this.currentUser.carrier,
-                        containerNo: this.form.containerNo,
-                        containerSize: this.form.containerSize,
-                        pol: this.form.pol,
-                        pod: this.form.pod,
-                        currentStatus: this.form.currentStatus,
-                        currentLocation: this.form.currentLocation,
-                        kmToBorder: this.form.kmToBorder,
-                        kmToDestination: this.form.kmToDestination,
-                        realETD: this.formatDateOnly(this.formatDateTime(this.form.realETD)),
-                        atd: this.formatDateOnly(this.formatDateTime(this.form.atd)),
-                        realETA: this.formatDateOnly(this.formatDateTime(this.form.realETA)),
-                        ata: this.formatDateOnly(this.formatDateTime(this.form.ata)),
-                        uploadTime: this.currentUploadTime,
-                        uploadUser: this.currentUser.name,
-                        // 订舱人：实际系统应根据订舱号从订舱信息中自动带出，这里仅做占位展示
-                        bookingOperator: '系统根据订舱号自动带出'
-                    };
-                    
-                    this.tableData.unshift(newItem);
-                    this.closeAddModal();
-                    this.search();
-                    this.showToast('保存成功', 'success');
+                    if (this.isEditMode && this.editingItemId != null) {
+                        // 修改模式：只更新业务字段和修改时间，保持上传时间/上传人/货代/订舱人不变
+                        const index = this.tableData.findIndex(d => d.id === this.editingItemId);
+                        if (index > -1) {
+                            const oldItem = this.tableData[index];
+                            const updated = {
+                                ...oldItem,
+                                lhzOrder: this.form.lhzOrder,
+                                containerNo: this.form.containerNo,
+                                containerSize: this.form.containerSize,
+                                pol: this.form.pol,
+                                pod: this.form.pod,
+                                currentStatus: this.form.currentStatus,
+                                currentLocation: this.form.currentLocation,
+                                kmToBorder: this.form.kmToBorder,
+                                kmToDestination: this.form.kmToDestination,
+                                realETD: this.formatDateOnly(this.formatDateTime(this.form.realETD)),
+                                atd: this.formatDateOnly(this.formatDateTime(this.form.atd)),
+                                realETA: this.formatDateOnly(this.formatDateTime(this.form.realETA)),
+                                ata: this.formatDateOnly(this.formatDateTime(this.form.ata)),
+                                // 系统字段保持不变：carrier / uploadUser / uploadTime / bookingOperator
+                                modifyTime: this.currentUploadTime
+                            };
+                            this.tableData.splice(index, 1, updated);
+                        }
+                        this.closeAddModal();
+                        this.search();
+                        this.showToast('修改成功', 'success');
+                    } else {
+                        // 新建模式：插入新记录，上传时间和修改时间初始一致
+                        const newItem = {
+                            id: this.tableData.length + 1,
+                            lhzOrder: this.form.lhzOrder,
+                            carrier: this.currentUser.carrier,
+                            containerNo: this.form.containerNo,
+                            containerSize: this.form.containerSize,
+                            pol: this.form.pol,
+                            pod: this.form.pod,
+                            currentStatus: this.form.currentStatus,
+                            currentLocation: this.form.currentLocation,
+                            kmToBorder: this.form.kmToBorder,
+                            kmToDestination: this.form.kmToDestination,
+                            realETD: this.formatDateOnly(this.formatDateTime(this.form.realETD)),
+                            atd: this.formatDateOnly(this.formatDateTime(this.form.atd)),
+                            realETA: this.formatDateOnly(this.formatDateTime(this.form.realETA)),
+                            ata: this.formatDateOnly(this.formatDateTime(this.form.ata)),
+                            uploadTime: this.currentUploadTime,
+                            modifyTime: this.currentUploadTime,
+                            uploadUser: this.currentUser.name,
+                            // 订舱人：实际系统应根据订舱号从订舱信息中自动带出，这里仅做占位展示
+                            bookingOperator: '系统根据订舱号自动带出'
+                        };
+                        
+                        this.tableData.unshift(newItem);
+                        this.closeAddModal();
+                        this.search();
+                        this.showToast('保存成功', 'success');
+                    }
                 },
                 formatDateTime(datetimeLocal) {
                     if (!datetimeLocal) return null;
@@ -2670,7 +2772,8 @@
                 },
                 closeAddModal() {
                     this.showAddModal = false;
-                    this.updateUploadTime();
+                    this.isEditMode = false;
+                    this.editingItemId = null;
                     this.form = {
                         pol: '',
                         pod: '',
@@ -2761,8 +2864,8 @@
                             const failedCount = 3;
                             const errors = [
                                 {row: 2, lhzOrder: 'LHZ001', containerNo: 'CTU1', message: '请填写起运港'},
-                                {row: 5, lhzOrder: 'LHZ002', containerNo: 'CTU2', message: '该SO未处于已订舱状态，无法上传可视化信息'},
-                                {row: 8, lhzOrder: 'LHZ003', containerNo: 'CTU3', message: '该落货纸不属于当前货代，无法上传'}
+                                {row: 5, lhzOrder: 'LHZ002', containerNo: 'CTU2', message: '该订舱号未处于已订舱状态，无法上传可视化信息'},
+                                {row: 8, lhzOrder: 'LHZ003', containerNo: 'CTU3', message: '该订舱号不属于当前货代，无法上传'}
                             ];
                             
                             // 规则：如果有失败的记录，所有记录都不入库（全部回滚）
