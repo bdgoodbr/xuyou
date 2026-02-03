@@ -1041,12 +1041,13 @@
 
                     <!-- Current Status Visualization -->
                     <div v-if="aggregatedBookingStatus" class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
-                        <div class="px-4 py-3 border-b border-gray-200">
-                            <div class="font-bold text-slate-900">
+                        <div class="px-4 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors" @click="currentStatusCollapsed = !currentStatusCollapsed">
+                            <div class="font-bold text-slate-900 flex items-center gap-2">
+                                <i :class="currentStatusCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'" class="text-slate-400 text-sm transition-transform"></i>
                                 当前状态可视化 <span class="text-slate-400 text-xs font-normal">Current Status Visualization</span>
                             </div>
                         </div>
-                        <div class="p-4">
+                        <div class="p-4" v-show="!currentStatusCollapsed">
                             <!-- 进度条 -->
                             <div class="status-progress-container mb-4">
                                 <div class="status-progress-bar">
@@ -1109,6 +1110,49 @@
                                         <p><strong>多箱子规则：</strong>只要有一个箱子到达了某个节点，所有前面的节点都应该显示为已完成（绿色），当前最高节点也显示为绿色。</p>
                                         <p><strong>示例：</strong>如果6个箱子中，有1个箱子在"境外换装"（30），则00、10、20、30节点都显示为已完成/激活（绿色），40、50节点显示为未到达（灰色，虚线连接）。</p>
                                     </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 集装箱维度最新动态明细 -->
+                            <div class="border-t border-gray-200 pt-4 mt-4">
+                                <div class="text-xs text-slate-500 flex items-center justify-between mb-2">
+                                    <div class="font-semibold text-slate-700">集装箱维度最新动态明细</div>
+                                    <div class="flex items-center gap-2">
+                                        <span>最新动态</span>
+                                        <input class="htm-input h-7 w-40 text-xs" placeholder="请输入集装箱号" v-model="containerSearchQuery">
+                                        <button class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-7 rounded shadow-sm" @click="searchContainer">查询 QUERY</button>
+                                    </div>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full q-table-compact">
+                                        <thead>
+                                            <tr>
+                                                <th class="w-12">序号<br>NO.</th>
+                                                <th class="w-32">集装箱号<br>Container No.</th>
+                                                <th class="w-40">实时ETD<br>ETD Pol Updates</th>
+                                                <th class="w-40">实时ETA<br>Last Pod Updates</th>
+                                                <th class="w-48">最新节点<br>Current Status</th>
+                                                <th class="w-40">更新时间<br>Update time of Current Time</th>
+                                                <th class="w-40">最新地点<br>Current Location</th>
+                                                <th class="w-16">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(row, idx) in filteredContainerStatus" :key="row.containerNo">
+                                                <td class="text-slate-500">{{ idx + 1 }}</td>
+                                                <td class="font-mono text-xs text-slate-700">{{ row.containerNo }}</td>
+                                                <td class="font-mono text-xs text-slate-700">{{ row.realEtd }}</td>
+                                                <td class="font-mono text-xs text-slate-700">{{ row.realEta }}</td>
+                                                <td class="text-slate-700">{{ row.currentStatus }}</td>
+                                                <td class="font-mono text-xs text-slate-700">{{ row.updateTime }}</td>
+                                                <td class="font-mono text-xs text-slate-700">{{ row.currentLocation }}</td>
+                                                <td class="text-teal-600 text-xs cursor-pointer">查看</td>
+                                            </tr>
+                                            <tr v-if="filteredContainerStatus.length === 0">
+                                                <td colspan="8" class="text-center text-slate-400 py-6">暂无数据</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
@@ -1655,6 +1699,10 @@
                     
                     // Collapse states
                     basicInfoCollapsed: false,
+                    currentStatusCollapsed: false,
+                    
+                    // Container search
+                    containerSearchQuery: '',
                     
                     // Filters
                     filters: {
@@ -2267,6 +2315,18 @@
                             timeLabel: getArrivedTimeLabel()
                         }
                     ];
+                },
+                filteredContainerStatus() {
+                    if (!this.qContainerStatus || this.qContainerStatus.length === 0) {
+                        return [];
+                    }
+                    if (!this.containerSearchQuery || this.containerSearchQuery.trim() === '') {
+                        return this.qContainerStatus;
+                    }
+                    const query = this.containerSearchQuery.trim().toLowerCase();
+                    return this.qContainerStatus.filter(container => 
+                        container.containerNo && container.containerNo.toLowerCase().includes(query)
+                    );
                 }
             },
             mounted() {
@@ -2293,6 +2353,10 @@
                 });
             },
             methods: {
+                searchContainer() {
+                    // 搜索功能由filteredContainerStatus计算属性自动处理
+                    // 这个方法可以用于触发其他操作，如API调用等
+                },
                 parseList(value) {
                     if (!value) return [];
                     return value
