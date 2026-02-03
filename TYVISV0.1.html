@@ -2357,6 +2357,15 @@
                     this.showToast('导出列表功能待实现（原型演示）', 'success');
                 },
                 search() {
+                    let result = [...this.tableData];
+
+                    // 先按更新时间（修改时间）倒序排序；若无修改时间则退回上传时间
+                    result.sort((a, b) => {
+                        const aTime = a.modifyTime || a.uploadTime || '';
+                        const bTime = b.modifyTime || b.uploadTime || '';
+                        return (bTime || '').localeCompare(aTime || '');
+                    });
+
                     const lhzList = this.parseList(this.filters.lhzOrder);
                     const ctnList = this.parseList(this.filters.containerNo);
                     const polList = Array.isArray(this.filters.pol) ? this.filters.pol : [];
@@ -2366,8 +2375,6 @@
                     const carrierVal = this.filters.carrier.trim();
                     const uploadUserVal = this.filters.uploadUser.trim();
                     const uploadTimeRange = this.filters.uploadTimeRange.trim();
-
-                    let result = [...this.tableData];
 
                     // 数据权限过滤：货代A不能搜索到货代B上传的数据
                     if (this.userRole === 'carrier') {
@@ -2551,9 +2558,17 @@
                 },
                 // 获取连接线状态样式类
                 getLineStatusClass(currentNode, nextNode) {
-                    // 连接线的状态取决于下一个节点的状态
-                    // 如果下一个节点已完成或激活，连接线应该显示为已完成或激活
                     const nextClass = this.getNodeStatusClass(nextNode);
+                    const currentClass = this.getNodeStatusClass(currentNode);
+
+                    // 特殊规则：当前最高激活节点右侧的连接线应为灰色虚线
+                    // 场景：current = status-active, next = status-pending
+                    if (currentClass === 'status-active' && nextClass === 'status-pending') {
+                        return 'status-pending';
+                    }
+
+                    // 连接线的默认状态优先取决于下一个节点的状态
+                    // 如果下一个节点已完成或激活，连接线应该显示为已完成或激活
                     if (nextClass === 'status-completed') {
                         return 'status-completed';
                     }
@@ -2561,7 +2576,6 @@
                         return 'status-active';
                     }
                     // 如果当前节点已完成，连接线为绿色
-                    const currentClass = this.getNodeStatusClass(currentNode);
                     if (currentClass === 'status-completed') {
                         return 'status-completed';
                     }
