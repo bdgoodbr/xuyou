@@ -227,6 +227,15 @@
         .htm-table tr:hover td { 
             background-color: #F9FAFB; 
         }
+        .htm-table tr:hover td[class*="sticky"] { 
+            background-color: #F9FAFB !important; 
+        }
+        .htm-table thead th[class*="sticky"] {
+            box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
+        }
+        .htm-table tbody td[class*="sticky"] {
+            box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
+        }
         
         /* Required Field */
         .required::after { 
@@ -506,14 +515,6 @@
                         <label class="block text-xs text-gray-500 mb-1.5 font-medium">上传人</label>
                         <input v-model="filters.uploadUser" type="text" class="htm-input" placeholder="请输入上传人">
                     </div>
-                    <div class="col-span-3 flex items-end gap-3">
-                        <button @click="resetFilters" class="bg-white text-gray-600 text-sm px-5 h-10 rounded-md hover:bg-gray-50 border border-gray-300 font-medium transition-colors shadow-sm">
-                            重置
-                        </button>
-                        <button @click="search" class="bg-blue-600 text-white text-sm px-6 h-10 rounded-md hover:bg-blue-700 font-medium shadow-sm transition-colors flex items-center justify-center">
-                            <i class="fas fa-search mr-1.5"></i> 查询
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -525,7 +526,7 @@
                         已选择 {{ selectedIds.length }} 项
                     </span>
                 </div>
-                <div class="space-x-2">
+                <div class="flex items-center space-x-2">
                     <button v-if="canUpload" @click="showAddModal = true" class="bg-blue-600 text-white text-xs px-4 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
                         <i class="fas fa-plus mr-1"></i> 新建
                     </button>
@@ -538,6 +539,14 @@
                     <button @click="exportData" class="bg-white border border-gray-300 text-gray-700 text-xs px-4 h-10 rounded hover:bg-gray-50 shadow-sm transition-colors">
                         <i class="fas fa-file-export mr-1"></i> 导出
                     </button>
+                    <div class="ml-4 flex items-center gap-3 border-l border-gray-300 pl-4">
+                        <button @click="resetFilters" class="bg-white text-gray-600 text-sm px-5 h-10 rounded-md hover:bg-gray-50 border border-gray-300 font-medium transition-colors shadow-sm">
+                            重置
+                        </button>
+                        <button @click="search" class="bg-blue-600 text-white text-sm px-6 h-10 rounded-md hover:bg-blue-700 font-medium shadow-sm transition-colors flex items-center justify-center">
+                            <i class="fas fa-search mr-1.5"></i> 查询
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -566,7 +575,7 @@
                                 <th>上传时间</th>
                                 <th>上传人</th>
                                 <th class="min-w-[100px]">所属货代</th>
-                                <th class="text-center w-32 sticky right-0 bg-gray-50 z-10">操作</th>
+                                <th class="text-center w-32 sticky right-0 bg-gray-50 z-10 border-l border-gray-200">操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -590,8 +599,11 @@
                                 <td class="font-mono text-xs text-gray-500">{{ item.uploadTime }}</td>
                                 <td>{{ item.uploadUser || '-' }}</td>
                                 <td class="text-gray-700 min-w-[100px]">{{ item.carrier || '-' }}</td>
-                                <td class="text-center w-32 sticky right-0 bg-white z-10">
-                                    <button v-if="canDelete" @click="deleteItem(item)" class="text-red-600 hover:text-red-800 text-xs font-medium transition-colors">删除</button>
+                                <td class="text-center w-32 sticky right-0 bg-white z-10 border-l border-gray-200">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <button v-if="canEdit" @click="editItem(item)" class="text-blue-600 hover:text-blue-800 text-xs font-medium transition-colors">修改</button>
+                                        <button v-if="canDelete" @click="deleteItem(item)" class="text-red-600 hover:text-red-800 text-xs font-medium transition-colors">删除</button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -629,7 +641,7 @@
         <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
             <div class="modal-content" @click.stop>
                 <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-slate-900">新增可视化信息</h2>
+                    <h2 class="text-lg font-bold text-slate-900">{{ editingItemId ? '修改可视化信息' : '新增可视化信息' }}</h2>
                 </div>
                 <div class="p-6">
                     <form @submit.prevent="saveItem">
@@ -1066,6 +1078,7 @@
                     showBatchModal: false,
                     showImportResult: false,
                     showDeleteConfirm: false,
+                    editingItemId: null,
                     
                     // Form
                     form: {
@@ -1117,6 +1130,9 @@
                 },
                 canDelete() {
                     return this.userRole === 'carrier' || this.userRole === 'admin';
+                },
+                canEdit() {
+                    return this.userRole === 'carrier' || this.userRole === 'logistics' || this.userRole === 'admin';
                 },
                 filteredPolOptions() {
                     if (!this.polSearch) return this.portOptions;
@@ -1403,11 +1419,8 @@
                     // 更新上传时间
                     this.updateUploadTime();
                     
-                    // 模拟保存
-                    const newItem = {
-                        id: this.tableData.length + 1,
+                    const itemData = {
                         lhzOrder: this.form.lhzOrder,
-                        carrier: this.currentUser.carrier,
                         containerNo: this.form.containerNo,
                         containerSize: this.form.containerSize,
                         pol: this.form.pol,
@@ -1420,14 +1433,31 @@
                         atd: this.formatDateOnly(this.formatDateTime(this.form.atd)),
                         realETA: this.formatDateOnly(this.formatDateTime(this.form.realETA)),
                         ata: this.formatDateOnly(this.formatDateTime(this.form.ata)),
-                        uploadTime: this.currentUploadTime,
-                        uploadUser: this.currentUser.name
+                        modifyTime: this.currentUploadTime
                     };
                     
-                    this.tableData.unshift(newItem);
+                    if (this.editingItemId) {
+                        // 编辑模式：更新现有记录
+                        const index = this.tableData.findIndex(d => d.id === this.editingItemId);
+                        if (index > -1) {
+                            Object.assign(this.tableData[index], itemData);
+                            this.showToast('修改成功', 'success');
+                        }
+                    } else {
+                        // 新增模式：添加新记录
+                        const newItem = {
+                            id: this.tableData.length + 1,
+                            ...itemData,
+                            carrier: this.currentUser.carrier,
+                            uploadTime: this.currentUploadTime,
+                            uploadUser: this.currentUser.name
+                        };
+                        this.tableData.unshift(newItem);
+                        this.showToast('保存成功', 'success');
+                    }
+                    
                     this.closeAddModal();
                     this.search();
-                    this.showToast('保存成功', 'success');
                 },
                 formatDateTime(datetimeLocal) {
                     if (!datetimeLocal) return null;
@@ -1447,6 +1477,7 @@
                 },
                 closeAddModal() {
                     this.showAddModal = false;
+                    this.editingItemId = null;
                     this.updateUploadTime();
                     this.form = {
                         pol: '',
@@ -1464,6 +1495,38 @@
                         ata: ''
                     };
                     this.errors = {};
+                },
+                editItem(item) {
+                    this.editingItemId = item.id;
+                    this.form = {
+                        pol: item.pol || '',
+                        pod: item.pod || '',
+                        lhzOrder: item.lhzOrder || '',
+                        containerNo: item.containerNo || '',
+                        containerSize: item.containerSize || '',
+                        currentStatus: item.currentStatus || '',
+                        currentLocation: item.currentLocation || '',
+                        kmToBorder: item.kmToBorder || '',
+                        kmToDestination: item.kmToDestination || '',
+                        realETD: item.realETD && item.realETD !== '-' ? this.formatToDateTimeLocal(item.realETD) : '',
+                        atd: item.atd && item.atd !== '-' ? this.formatToDateTimeLocal(item.atd) : '',
+                        realETA: item.realETA && item.realETA !== '-' ? this.formatToDateTimeLocal(item.realETA) : '',
+                        ata: item.ata && item.ata !== '-' ? this.formatToDateTimeLocal(item.ata) : ''
+                    };
+                    this.errors = {};
+                    this.showAddModal = true;
+                },
+                formatToDateTimeLocal(dateStr) {
+                    if (!dateStr || dateStr === '-') return '';
+                    // 如果是日期格式 YYYY-MM-DD，转换为 datetime-local 格式
+                    if (dateStr.length === 10) {
+                        return dateStr + 'T00:00';
+                    }
+                    // 如果是日期时间格式，转换为 datetime-local 格式
+                    if (dateStr.includes(' ')) {
+                        return dateStr.replace(' ', 'T');
+                    }
+                    return dateStr;
                 },
                 deleteItem(item) {
                     if (confirm(`确定要删除落货纸号 ${item.lhzOrder} 的箱号 ${item.containerNo} 的记录吗？`)) {
