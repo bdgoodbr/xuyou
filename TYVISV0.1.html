@@ -600,7 +600,7 @@
                         <tbody>
                             <tr v-for="item in paginatedData" :key="item.id">
                                 <td class="text-center">
-                                    <input type="checkbox" :value="String(item.id)" v-model="selectedIds">
+                                    <input type="checkbox" :value="item.id" v-model="selectedIds">
                                 </td>
                                 <td class="font-mono text-blue-600 font-medium min-w-[120px]">{{ item.lhzOrder }}</td>
                                 <td class="font-mono min-w-[100px]">{{ item.containerNo }}</td>
@@ -1369,7 +1369,7 @@
                     if (this.isAllSelected) {
                         this.selectedIds = [];
                     } else {
-                        this.selectedIds = this.paginatedData.map(item => String(item.id));
+                        this.selectedIds = this.paginatedData.map(item => item.id);
                     }
                 },
                 validateField(field) {
@@ -1559,8 +1559,7 @@
                 },
                 confirmDelete() {
                     this.selectedIds.forEach(id => {
-                        const numericId = Number(id);
-                        const index = this.tableData.findIndex(d => d.id === numericId);
+                        const index = this.tableData.findIndex(d => d.id === id);
                         if (index > -1) {
                             this.tableData.splice(index, 1);
                         }
