@@ -377,25 +377,27 @@
         .sticky-col-left {
             position: sticky;
             left: 0;
-            z-index: 20;
+            /* 必须低于表头，否则会把表头盖住（出现“方框丢了/操作按钮没了”） */
+            z-index: 5;
             background: #fff;
         }
         .sticky-col-left-header {
             position: sticky;
             left: 0;
-            z-index: 30;
+            z-index: 60;
             background: #F9FAFB;
         }
         .sticky-col-right {
             position: sticky;
             right: 0;
-            z-index: 20;
+            /* 必须低于表头，否则会把表头盖住（出现“修改/删除”跑到表头） */
+            z-index: 5;
             background: #fff;
         }
         .sticky-col-right-header {
             position: sticky;
             right: 0;
-            z-index: 30;
+            z-index: 60;
             background: #F9FAFB;
         }
         .htm-table thead th.sticky-col-left-header,
@@ -924,7 +926,7 @@
             <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto custom-scroll">
                     <table class="w-full htm-table" style="min-width: 1800px;">
-                        <thead class="bg-gray-50 sticky top-0 z-10">
+                        <thead class="bg-gray-50 sticky top-0 z-50">
                             <tr>
                                 <th class="w-10 text-center sticky-col-left-header border-r border-gray-200">
                                     <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
