@@ -774,7 +774,7 @@
                         <select v-model="filters.currentStatus" class="htm-input">
                             <option value="">全部</option>
                             <option v-for="status in statusOptions" :key="status.code" :value="status.code">
-                                {{ status.code }} - {{ status.label }}
+                                {{ status.label }}
                             </option>
                         </select>
                     </div>
@@ -1404,7 +1404,7 @@
                                 <select v-model="form.currentStatus" class="htm-input" :class="{error: errors.currentStatus}" @blur="validateField('currentStatus')">
                                     <option value="">请选择</option>
                                     <option v-for="status in statusOptions" :key="status.code" :value="status.code">
-                                        {{ status.code }} - {{ status.label }}
+                                        {{ status.label }}
                                     </option>
                                 </select>
                                 <span v-if="errors.currentStatus" class="error-message">{{ errors.currentStatus }}</span>
@@ -2544,7 +2544,7 @@
                 getStatusLabel(code) {
                     if (!code) return '-';
                     const matched = this.statusOptions.find(s => s.code === code);
-                    return matched ? `${matched.code}-${matched.label}` : code;
+                    return matched ? matched.label : code;
                 },
                 // 获取节点状态样式类
                 getNodeStatusClass(node) {
