@@ -373,35 +373,20 @@
             white-space: nowrap; 
             position: relative;
         }
-        /* Sticky columns (left multi-cols / right action) */
-        /* 左侧：支持多列固定（checkbox + 订舱号 + 集装箱号） */
-        :root {
-            --sticky-left-0: 0px;     /* checkbox */
-            --sticky-left-1: 40px;    /* checkbox(40) */
-            --sticky-left-2: 160px;   /* checkbox(40) + 订舱号(120) */
-        }
-        .sticky-col-left-0,
-        .sticky-col-left-1,
-        .sticky-col-left-2 {
+        /* Sticky columns (left checkbox / right action) */
+        .sticky-col-left {
             position: sticky;
-            /* 必须低于表头，否则会把表头盖住 */
+            left: 0;
+            /* 必须低于表头，否则会把表头盖住（出现“方框丢了/操作按钮没了”） */
             z-index: 5;
             background: #fff;
         }
-        .sticky-col-left-0 { left: var(--sticky-left-0); }
-        .sticky-col-left-1 { left: var(--sticky-left-1); }
-        .sticky-col-left-2 { left: var(--sticky-left-2); }
-
-        .sticky-col-left-0-header,
-        .sticky-col-left-1-header,
-        .sticky-col-left-2-header {
+        .sticky-col-left-header {
             position: sticky;
+            left: 0;
             z-index: 60;
             background: #F9FAFB;
         }
-        .sticky-col-left-0-header { left: var(--sticky-left-0); }
-        .sticky-col-left-1-header { left: var(--sticky-left-1); }
-        .sticky-col-left-2-header { left: var(--sticky-left-2); }
         .sticky-col-right {
             position: sticky;
             right: 0;
@@ -419,13 +404,9 @@
         .htm-table thead th.sticky-col-right-header {
             box-shadow: 0 0 0 0 rgba(0,0,0,0);
         }
-        .htm-table tbody td.sticky-col-left-0,
-        .htm-table tbody td.sticky-col-left-1,
-        .htm-table tbody td.sticky-col-left-2,
+        .htm-table tbody td.sticky-col-left,
         .htm-table tbody td.sticky-col-right,
-        .htm-table thead th.sticky-col-left-0-header,
-        .htm-table thead th.sticky-col-left-1-header,
-        .htm-table thead th.sticky-col-left-2-header,
+        .htm-table thead th.sticky-col-left-header,
         .htm-table thead th.sticky-col-right-header {
             box-shadow: 2px 0 4px rgba(0,0,0,0.04);
         }
@@ -433,9 +414,7 @@
         .htm-table thead th.sticky-col-right-header {
             box-shadow: -2px 0 4px rgba(0,0,0,0.04);
         }
-        .htm-table tr:hover td.sticky-col-left-0,
-        .htm-table tr:hover td.sticky-col-left-1,
-        .htm-table tr:hover td.sticky-col-left-2,
+        .htm-table tr:hover td.sticky-col-left,
         .htm-table tr:hover td.sticky-col-right {
             background-color: #F9FAFB !important;
         }
@@ -949,11 +928,11 @@
                     <table class="w-full htm-table" style="min-width: 1800px;">
                         <thead class="bg-gray-50 sticky top-0 z-50">
                             <tr>
-                                <th class="w-10 text-center sticky-col-left-0-header border-r border-gray-200">
+                                <th class="w-10 text-center sticky-col-left-header border-r border-gray-200">
                                     <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
                                 </th>
-                                <th class="min-w-[120px] sticky-col-left-1-header bg-gray-50 border-r border-gray-200">订舱号</th>
-                                <th class="min-w-[100px] sticky-col-left-2-header bg-gray-50 border-r border-gray-200">集装箱号</th>
+                                <th class="min-w-[120px]">订舱号</th>
+                                <th class="min-w-[100px]">集装箱号</th>
                                 <th>箱型</th>
                                 <th>起运港</th>
                                 <th>目的港</th>
@@ -1031,11 +1010,11 @@
                         </thead>
                         <tbody>
                             <tr v-for="item in paginatedData" :key="item.id">
-                                <td class="text-center sticky-col-left-0 border-r border-gray-200">
+                                <td class="text-center sticky-col-left border-r border-gray-200">
                                     <input type="checkbox" :value="item.id" v-model="selectedIds">
                                 </td>
-                                <td class="font-mono text-blue-600 font-medium min-w-[120px] sticky-col-left-1 border-r border-gray-200">{{ item.lhzOrder }}</td>
-                                <td class="font-mono min-w-[100px] sticky-col-left-2 border-r border-gray-200">{{ item.containerNo }}</td>
+                                <td class="font-mono text-blue-600 font-medium min-w-[120px]">{{ item.lhzOrder }}</td>
+                                <td class="font-mono min-w-[100px]">{{ item.containerNo }}</td>
                                 <td>{{ item.containerSize }}</td>
                                 <td>{{ item.pol }}</td>
                                 <td>{{ item.pod }}</td>
