@@ -203,6 +203,45 @@
             font-weight: bold;
             margin-right: 4px;
         }
+
+        /* Table & sticky columns */
+        .htm-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .htm-table th,
+        .htm-table td {
+            background-color: #ffffff;
+        }
+        .htm-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+        .sticky-col-left-header {
+            position: sticky;
+            left: 0;
+            z-index: 50;
+            background-color: #f9fafb;
+        }
+        .sticky-col-left {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            background-color: #ffffff;
+        }
+        .sticky-col-right-header {
+            position: sticky;
+            right: 0;
+            z-index: 50;
+            background-color: #f9fafb;
+        }
+        .sticky-col-right {
+            position: sticky;
+            right: 0;
+            z-index: 20;
+            background-color: #ffffff;
+        }
         
         /* Error Message */
         .error-message {
