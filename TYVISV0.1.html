@@ -371,6 +371,39 @@
             text-align: left; 
             border-bottom: 1px solid #E5E7EB; 
             white-space: nowrap; 
+            position: relative;
+        }
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+        }
+        .sortable-header:hover {
+            background-color: #F3F4F6;
+        }
+        .sort-icon {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-left: 4px;
+            vertical-align: middle;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+        .sortable-header:hover .sort-icon {
+            opacity: 0.7;
+        }
+        .sort-icon.active {
+            opacity: 1;
+        }
+        .sort-icon.asc::before {
+            content: '▲';
+            color: #2563EB;
+            font-size: 10px;
+        }
+        .sort-icon.desc::before {
+            content: '▼';
+            color: #2563EB;
+            font-size: 10px;
         }
         .htm-table td { 
             padding: 12px 8px; 
@@ -841,14 +874,38 @@
                                 <th>目的港</th>
                                 <th>当前状态</th>
                                 <th>当前位置</th>
-                                <th>实时ETD</th>
-                                <th>ATD</th>
-                                <th>实时ETA</th>
-                                <th>ATA</th>
-                                <th>距离始发站口岸(KM)</th>
-                                <th>距离目的地(KM)</th>
-                                <th>上传时间</th>
-                                <th>修改时间</th>
+                                <th class="sortable-header" @click="handleSort('realETD')">
+                                    实时ETD
+                                    <span class="sort-icon" :class="getSortIconClass('realETD')"></span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('atd')">
+                                    ATD
+                                    <span class="sort-icon" :class="getSortIconClass('atd')"></span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('realETA')">
+                                    实时ETA
+                                    <span class="sort-icon" :class="getSortIconClass('realETA')"></span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('ata')">
+                                    ATA
+                                    <span class="sort-icon" :class="getSortIconClass('ata')"></span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('kmToBorder')">
+                                    距离始发站口岸(KM)
+                                    <span class="sort-icon" :class="getSortIconClass('kmToBorder')"></span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('kmToDestination')">
+                                    距离目的地(KM)
+                                    <span class="sort-icon" :class="getSortIconClass('kmToDestination')"></span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('uploadTime')">
+                                    上传时间
+                                    <span class="sort-icon" :class="getSortIconClass('uploadTime')"></span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('modifyTime')">
+                                    修改时间
+                                    <span class="sort-icon" :class="getSortIconClass('modifyTime')"></span>
+                                </th>
                                 <th>上传人</th>
                                 <th class="min-w-[100px]">所属货代</th>
                                 <th class="min-w-[120px]">订舱人</th>
@@ -1802,6 +1859,10 @@
                     selectedIds: [],
                     filteredData: [],
                     
+                    // Sorting
+                    sortColumn: null, // 当前排序的列：'realETD', 'atd', 'realETA', 'ata', 'kmToBorder', 'kmToDestination', 'uploadTime', 'modifyTime'
+                    sortDirection: null, // 'asc' 或 'desc'
+                    
                     // Pagination
                     pagination: {
                         current: 1,
@@ -2375,15 +2436,91 @@
                 qExportList() {
                     this.showToast('导出列表功能待实现（原型演示）', 'success');
                 },
+                handleSort(column) {
+                    // 如果点击的是当前排序列，切换排序方向；否则设置为新列并默认降序
+                    if (this.sortColumn === column) {
+                        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        this.sortColumn = column;
+                        this.sortDirection = 'desc'; // 默认降序
+                    }
+                    // 重新执行搜索以应用排序
+                    this.search();
+                },
+                getSortIconClass(column) {
+                    if (this.sortColumn !== column) {
+                        return ''; // 未排序的列不显示图标
+                    }
+                    return this.sortDirection === 'asc' ? 'active asc' : 'active desc';
+                },
                 search() {
                     let result = [...this.tableData];
 
-                    // 先按更新时间（修改时间）倒序排序；若无修改时间则退回上传时间
-                    result.sort((a, b) => {
-                        const aTime = a.modifyTime || a.uploadTime || '';
-                        const bTime = b.modifyTime || b.uploadTime || '';
-                        return (bTime || '').localeCompare(aTime || '');
-                    });
+                    // 如果用户点击了列排序，优先使用列排序；否则使用默认排序（按更新时间倒序）
+                    if (this.sortColumn) {
+                        result.sort((a, b) => {
+                            let aVal, bVal;
+                            
+                            // 根据列名获取对应的值
+                            switch (this.sortColumn) {
+                                case 'realETD':
+                                    aVal = a.realETD || '';
+                                    bVal = b.realETD || '';
+                                    break;
+                                case 'atd':
+                                    aVal = a.atd || '';
+                                    bVal = b.atd || '';
+                                    break;
+                                case 'realETA':
+                                    aVal = a.realETA || '';
+                                    bVal = b.realETA || '';
+                                    break;
+                                case 'ata':
+                                    aVal = a.ata || '';
+                                    bVal = b.ata || '';
+                                    break;
+                                case 'kmToBorder':
+                                    aVal = a.kmToBorder != null ? a.kmToBorder : -Infinity;
+                                    bVal = b.kmToBorder != null ? b.kmToBorder : -Infinity;
+                                    break;
+                                case 'kmToDestination':
+                                    aVal = a.kmToDestination != null ? a.kmToDestination : -Infinity;
+                                    bVal = b.kmToDestination != null ? b.kmToDestination : -Infinity;
+                                    break;
+                                case 'uploadTime':
+                                    aVal = a.uploadTime || '';
+                                    bVal = b.uploadTime || '';
+                                    break;
+                                case 'modifyTime':
+                                    aVal = a.modifyTime || a.uploadTime || '';
+                                    bVal = b.modifyTime || b.uploadTime || '';
+                                    break;
+                                default:
+                                    return 0;
+                            }
+                            
+                            // 处理空值：空值排在最后
+                            if (!aVal && !bVal) return 0;
+                            if (!aVal) return 1;
+                            if (!bVal) return -1;
+                            
+                            // 数值类型直接比较
+                            if (typeof aVal === 'number' && typeof bVal === 'number') {
+                                return this.sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                            }
+                            
+                            // 字符串类型（时间）使用localeCompare
+                            const comparison = (aVal || '').localeCompare(bVal || '');
+                            return this.sortDirection === 'asc' ? comparison : -comparison;
+                        });
+                    } else {
+                        // 默认排序：按更新时间（修改时间）倒序排序；若无修改时间则退回上传时间
+                        result.sort((a, b) => {
+                            const aTime = a.modifyTime || a.uploadTime || '';
+                            const bTime = b.modifyTime || b.uploadTime || '';
+                            return (bTime || '').localeCompare(aTime || '');
+                        });
+                    }
 
                     const lhzList = this.parseList(this.filters.lhzOrder);
                     const ctnList = this.parseList(this.filters.containerNo);
@@ -2469,6 +2606,9 @@
                     this.polSearch = '';
                     this.podSearch = '';
                     this.sizeSearch = '';
+                    // 重置排序状态
+                    this.sortColumn = null;
+                    this.sortDirection = null;
                     this.search();
                 },
                 // Multi-select methods for POL
