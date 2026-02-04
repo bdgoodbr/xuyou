@@ -376,24 +376,25 @@
         .sortable-header {
             cursor: pointer;
             user-select: none;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        }
+        .sortable-header > span:first-child {
+            display: inline-block;
+            vertical-align: middle;
         }
         .sortable-header:hover {
             background-color: #F3F4F6;
         }
         .sort-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            display: inline-block;
             width: 16px;
             height: 16px;
-            flex-shrink: 0;
+            vertical-align: middle;
+            margin-left: 6px;
             color: #9CA3AF;
             font-size: 11px;
             transition: color 0.2s;
             position: relative;
+            line-height: 1;
         }
         .sortable-header:hover .sort-icon {
             color: #6B7280;
@@ -404,6 +405,9 @@
         .sort-icon i {
             position: absolute;
             display: none;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
         /* 默认状态：显示 fa-sort */
         .sort-icon:not(.active) i.fa-sort {
