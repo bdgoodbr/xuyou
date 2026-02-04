@@ -389,17 +389,17 @@
                 <div class="flex-1 p-6 overflow-y-auto flex flex-col custom-scroll">
                     <!-- Filter Section -->
             <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-4">
-                <div class="grid grid-cols-6 gap-4">
-                    <!-- 第一行：大文本框 -->
-                    <div class="col-span-2">
+                <div class="grid grid-cols-12 gap-4">
+                    <!-- 第一行 -->
+                    <div class="col-span-3">
                         <label class="block text-xs text-gray-500 mb-1.5 font-medium">订舱号</label>
                         <textarea v-model="filters.lhzOrder" rows="2" class="htm-input resize-none" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
-                    <div class="col-span-2">
+                    <div class="col-span-3">
                         <label class="block text-xs text-gray-500 mb-1.5 font-medium">集装箱号</label>
                         <textarea v-model="filters.containerNo" rows="2" class="htm-input resize-none" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
-                    <div>
+                    <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5 font-medium">起运港</label>
                         <div class="custom-multiselect">
                             <div class="multiselect-input" :class="{open: showPolDropdown}" @click="showPolDropdown = !showPolDropdown">
@@ -427,7 +427,7 @@
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5 font-medium">目的港</label>
                         <div class="custom-multiselect">
                             <div class="multiselect-input" :class="{open: showPodDropdown}" @click="showPodDropdown = !showPodDropdown">
@@ -455,9 +455,7 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- 第二行：其他筛选字段 -->
-                    <div>
+                    <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5 font-medium">箱型</label>
                         <div class="custom-multiselect">
                             <div class="multiselect-input" :class="{open: showSizeDropdown}" @click="showSizeDropdown = !showSizeDropdown">
@@ -485,7 +483,9 @@
                             </div>
                         </div>
                     </div>
-                    <div>
+                    
+                    <!-- 第二行 -->
+                    <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5 font-medium">当前状态</label>
                         <select v-model="filters.currentStatus" class="htm-input">
                             <option value="">全部</option>
@@ -494,19 +494,19 @@
                             </option>
                         </select>
                     </div>
-                    <div class="col-span-2">
+                    <div class="col-span-3">
                         <label class="block text-xs text-gray-500 mb-1.5 font-medium">上传时间</label>
                         <input v-model="filters.uploadTimeRange" type="text" class="htm-input" placeholder="YYYY-MM-DD - YYYY-MM-DD">
                     </div>
-                    <div>
+                    <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5 font-medium">货代</label>
                         <input v-model="filters.carrier" type="text" class="htm-input" placeholder="请输入货代">
                     </div>
-                    <div>
+                    <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5 font-medium">上传人</label>
                         <input v-model="filters.uploadUser" type="text" class="htm-input" placeholder="请输入上传人">
                     </div>
-                    <div class="flex items-end justify-end space-x-3">
+                    <div class="col-span-3 flex items-end justify-end gap-3">
                         <button @click="resetFilters" class="bg-white text-gray-600 text-sm px-5 h-10 rounded-md hover:bg-gray-50 border border-gray-300 font-medium transition-colors shadow-sm">
                             重置
                         </button>
