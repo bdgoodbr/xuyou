@@ -389,17 +389,18 @@
                 <div class="flex-1 p-6 overflow-y-auto flex flex-col custom-scroll">
                     <!-- Filter Section -->
             <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-4">
-                <div class="grid grid-cols-5 gap-4">
-                    <div class="col-span-1">
-                        <label class="block text-xs text-gray-500 mb-1.5">落货纸号</label>
-                        <textarea v-model="filters.lhzOrder" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
+                <div class="grid grid-cols-6 gap-4">
+                    <!-- 第一行：大文本框 -->
+                    <div class="col-span-2">
+                        <label class="block text-xs text-gray-500 mb-1.5 font-medium">订舱号</label>
+                        <textarea v-model="filters.lhzOrder" rows="2" class="htm-input resize-none" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
-                    <div class="col-span-1">
-                        <label class="block text-xs text-gray-500 mb-1.5">箱号</label>
-                        <textarea v-model="filters.containerNo" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
+                    <div class="col-span-2">
+                        <label class="block text-xs text-gray-500 mb-1.5 font-medium">集装箱号</label>
+                        <textarea v-model="filters.containerNo" rows="2" class="htm-input resize-none" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1.5">起运港</label>
+                        <label class="block text-xs text-gray-500 mb-1.5 font-medium">起运港</label>
                         <div class="custom-multiselect">
                             <div class="multiselect-input" :class="{open: showPolDropdown}" @click="showPolDropdown = !showPolDropdown">
                                 <template v-if="filters.pol && filters.pol.length > 0">
@@ -427,7 +428,7 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1.5">目的港</label>
+                        <label class="block text-xs text-gray-500 mb-1.5 font-medium">目的港</label>
                         <div class="custom-multiselect">
                             <div class="multiselect-input" :class="{open: showPodDropdown}" @click="showPodDropdown = !showPodDropdown">
                                 <template v-if="filters.pod && filters.pod.length > 0">
@@ -454,8 +455,10 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- 第二行：其他筛选字段 -->
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1.5">箱型</label>
+                        <label class="block text-xs text-gray-500 mb-1.5 font-medium">箱型</label>
                         <div class="custom-multiselect">
                             <div class="multiselect-input" :class="{open: showSizeDropdown}" @click="showSizeDropdown = !showSizeDropdown">
                                 <template v-if="filters.containerSize && filters.containerSize.length > 0">
@@ -483,32 +486,32 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1.5">当前状态</label>
+                        <label class="block text-xs text-gray-500 mb-1.5 font-medium">当前状态</label>
                         <select v-model="filters.currentStatus" class="htm-input">
                             <option value="">全部</option>
                             <option v-for="status in statusOptions" :key="status.code" :value="status.code">
-                                {{ status.code }} - {{ status.label }}
+                                {{ status.label }}
                             </option>
                         </select>
                     </div>
                     <div class="col-span-2">
-                        <label class="block text-xs text-gray-500 mb-1.5">上传时间</label>
+                        <label class="block text-xs text-gray-500 mb-1.5 font-medium">上传时间</label>
                         <input v-model="filters.uploadTimeRange" type="text" class="htm-input" placeholder="YYYY-MM-DD - YYYY-MM-DD">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1.5">货代</label>
+                        <label class="block text-xs text-gray-500 mb-1.5 font-medium">货代</label>
                         <input v-model="filters.carrier" type="text" class="htm-input" placeholder="请输入货代">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-500 mb-1.5">上传人</label>
+                        <label class="block text-xs text-gray-500 mb-1.5 font-medium">上传人</label>
                         <input v-model="filters.uploadUser" type="text" class="htm-input" placeholder="请输入上传人">
                     </div>
-                    <div class="flex items-end justify-end space-x-2 col-span-2">
-                        <button @click="resetFilters" class="bg-white text-gray-600 text-xs px-4 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
+                    <div class="flex items-end justify-end space-x-3">
+                        <button @click="resetFilters" class="bg-white text-gray-600 text-sm px-5 h-10 rounded-md hover:bg-gray-50 border border-gray-300 font-medium transition-colors shadow-sm">
                             重置
                         </button>
-                        <button @click="search" class="bg-blue-600 text-white text-xs px-6 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
-                            <i class="fas fa-search mr-1"></i> 查询
+                        <button @click="search" class="bg-blue-600 text-white text-sm px-6 h-10 rounded-md hover:bg-blue-700 font-medium shadow-sm transition-colors flex items-center justify-center">
+                            <i class="fas fa-search mr-1.5"></i> 查询
                         </button>
                     </div>
                 </div>
@@ -664,7 +667,7 @@
                                 <select v-model="form.currentStatus" class="htm-input" :class="{error: errors.currentStatus}" @blur="validateField('currentStatus')">
                                     <option value="">请选择</option>
                                     <option v-for="status in statusOptions" :key="status.code" :value="status.code">
-                                        {{ status.code }} - {{ status.label }}
+                                        {{ status.label }}
                                     </option>
                                 </select>
                                 <span v-if="errors.currentStatus" class="error-message">{{ errors.currentStatus }}</span>
@@ -1535,8 +1538,8 @@
                             const failedCount = 3;
                             const errors = [
                                 {row: 2, lhzOrder: 'LHZ001', containerNo: 'CTU1', message: '请填写起运港'},
-                                {row: 5, lhzOrder: 'LHZ002', containerNo: 'CTU2', message: '该SO未处于已订舱状态，无法上传可视化信息'},
-                                {row: 8, lhzOrder: 'LHZ003', containerNo: 'CTU3', message: '该落货纸不属于当前货代，无法上传'}
+                                {row: 5, lhzOrder: 'LHZ002', containerNo: 'CTU2', message: '状态不能回退，如需更改，请先删除之前录入错误的状态记录，再上传新的状态'},
+                                {row: 8, lhzOrder: 'LHZ003', containerNo: 'CTU3', message: '该订舱号不属于当前货代，无法上传'}
                             ];
                             
                             // 规则：如果有失败的记录，所有记录都不入库（全部回滚）
