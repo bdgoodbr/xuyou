@@ -1052,7 +1052,7 @@
                 return history;
             };
 
-            // 原型用：获取审批过程样例数据（提交审核 + 区域经理通过）
+            // 原型用：获取审批过程样例数据（模拟完整审批流程）
             const getApprovalDemoRows = () => {
                 const fmt = (d) => new Date(d).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g,'-');
                 const baseId = state.form.id || 'LR251230001';
@@ -1071,10 +1071,28 @@
                         id: 'demo-2',
                         sequenceNo: 2,
                         nodeName: '区域经理审核',
-                        approver: state.form.regionalManager || '区域经理 张三',
-                        action: '通过',
+                        approver: '区域经理 张三',
+                        action: '转办',
                         comments: '',
-                        actionTime: fmt(new Date('2025-12-28T14:30:00'))
+                        actionTime: fmt(new Date('2025-12-28T11:00:00'))
+                    },
+                    {
+                        id: 'demo-3',
+                        sequenceNo: 3,
+                        nodeName: '区域经理审核',
+                        approver: '区域经理 李四',
+                        action: '驳回',
+                        comments: '价格不对',
+                        actionTime: fmt(new Date('2025-12-28T15:00:00'))
+                    },
+                    {
+                        id: 'demo-4',
+                        sequenceNo: 4,
+                        nodeName: '提交审核',
+                        approver: state.form.orderPerson || 'Wilson',
+                        action: '提交审核',
+                        comments: '',
+                        actionTime: fmt(new Date('2025-12-28T16:00:00'))
                     }
                 ];
             };

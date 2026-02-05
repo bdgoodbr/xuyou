@@ -42,6 +42,13 @@
             overflow: hidden;
         }
         
+        /* Hard guarantee for layout stretching (avoid any Tailwind/JIT surprises) */
+        .main-content {
+            flex: 1 1 0%;
+            min-width: 0;
+            width: 100%;
+        }
+        
         /* Sidebar */
         .nav-item {
             color: #374151;
@@ -196,6 +203,43 @@
             font-weight: bold;
             margin-right: 4px;
         }
+
+        /* Table & sticky columns */
+        .htm-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .htm-table th,
+        .htm-table td {
+            background-color: #ffffff;
+        }
+        .htm-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+        .sticky-col-left {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            background-color: #ffffff;
+        }
+        .htm-table thead .sticky-col-left {
+            z-index: 60;
+            background-color: #f9fafb;
+        }
+        .sticky-col-right-header {
+            position: sticky;
+            right: 0;
+            z-index: 50;
+            background-color: #f9fafb;
+        }
+        .sticky-col-right {
+            position: sticky;
+            right: 0;
+            z-index: 20;
+            background-color: #ffffff;
+        }
         
         /* Error Message */
         .error-message {
@@ -203,6 +247,155 @@
             color: #EF4444;
             margin-top: 4px;
             display: block;
+        }
+        
+        /* Status Progress Bar */
+        .status-progress-container {
+            padding: 20px 0;
+        }
+        .status-progress-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            padding: 0 20px;
+        }
+        .progress-node-wrapper {
+            display: flex;
+            align-items: flex-start;
+            flex: 1;
+            position: relative;
+        }
+        .progress-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            min-height: 180px; /* 确保所有节点高度一致，包括时间框 */
+        }
+        .node-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid;
+            background-color: #fff;
+            margin-bottom: 8px;
+            margin-top: 0;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 3; /* 确保图标在连接线上方 */
+        }
+        .node-dot i {
+            font-size: 18px;
+            color: inherit;
+        }
+        .progress-node.status-pending .node-dot i {
+            color: #94a3b8;
+        }
+        .progress-node.status-active .node-dot i {
+            color: #ffffff; /* 图标保持白色 */
+        }
+        .progress-node.status-completed .node-dot i {
+            color: #ffffff;
+        }
+        .node-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 4px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .node-count {
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .node-time {
+            margin-top: 8px;
+            text-align: center;
+            padding: 4px 8px;
+            background-color: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            min-width: 120px;
+            min-height: 50px; /* 确保时间框有固定高度，保持对齐 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .node-time.invisible {
+            visibility: hidden; /* 使用visibility而不是display，保持占位 */
+        }
+        .node-time .text-xs {
+            line-height: 1.4;
+        }
+        .progress-node.status-pending .node-dot {
+            border-color: #cbd5e1;
+            background-color: #f1f5f9;
+        }
+        .progress-node.status-pending .node-label,
+        .progress-node.status-pending .node-count {
+            color: #94a3b8;
+        }
+        .progress-node.status-active .node-dot {
+            border-color: #10b981; /* 统一为绿色 */
+            background-color: #10b981; /* 统一为绿色 */
+        }
+        .progress-node.status-active .node-label,
+        .progress-node.status-active .node-count {
+            color: #059669; /* 统一为绿色 */
+        }
+        .progress-node.status-completed .node-dot {
+            border-color: #10b981;
+            background-color: #10b981;
+        }
+        .progress-node.status-completed .node-label,
+        .progress-node.status-completed .node-count {
+            color: #059669;
+        }
+        .progress-line {
+            flex: 1;
+            height: 3px;
+            position: absolute;
+            top: 20px; /* 位于节点图标中心位置（20px是node-dot高度的一半） */
+            left: calc(50% + 20px); /* 从当前节点中心向右延伸（20px是node-dot半径） */
+            right: calc(-50% + 20px); /* 延伸到下一个节点中心 */
+            z-index: 1;
+        }
+        .progress-node-wrapper:last-child .progress-line {
+            display: none; /* 最后一个节点不需要连接线 */
+        }
+        .progress-line.status-pending {
+            background-color: transparent;
+            background-image: repeating-linear-gradient(
+                to right,
+                #cbd5e1 0,
+                #cbd5e1 8px,
+                transparent 8px,
+                transparent 16px
+            );
+            height: 3px;
+        }
+        .progress-line.status-active {
+            background-color: #10b981; /* 统一为绿色 */
+        }
+        .progress-line.status-completed {
+            background-color: #10b981; /* 统一为绿色 */
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            background-color: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #475569;
         }
         
         /* Table Styles */
@@ -215,6 +408,100 @@
             text-align: left; 
             border-bottom: 1px solid #E5E7EB; 
             white-space: nowrap; 
+            position: relative;
+        }
+        /* Sticky columns (left checkbox / right action) */
+        .sticky-col-left {
+            position: sticky;
+            left: 0;
+            /* 必须低于表头，否则会把表头盖住（出现“方框丢了/操作按钮没了”） */
+            z-index: 5;
+            background: #fff;
+        }
+        .sticky-col-left-header {
+            position: sticky;
+            left: 0;
+            z-index: 60;
+            background: #F9FAFB;
+        }
+        .sticky-col-right {
+            position: sticky;
+            right: 0;
+            /* 必须低于表头，否则会把表头盖住（出现“修改/删除”跑到表头） */
+            z-index: 5;
+            background: #fff;
+        }
+        .sticky-col-right-header {
+            position: sticky;
+            right: 0;
+            z-index: 60;
+            background: #F9FAFB;
+        }
+        .htm-table thead th.sticky-col-left-header,
+        .htm-table thead th.sticky-col-right-header {
+            box-shadow: 0 0 0 0 rgba(0,0,0,0);
+        }
+        .htm-table tbody td.sticky-col-left,
+        .htm-table tbody td.sticky-col-right,
+        .htm-table thead th.sticky-col-left-header,
+        .htm-table thead th.sticky-col-right-header {
+            box-shadow: 2px 0 4px rgba(0,0,0,0.04);
+        }
+        .htm-table tbody td.sticky-col-right,
+        .htm-table thead th.sticky-col-right-header {
+            box-shadow: -2px 0 4px rgba(0,0,0,0.04);
+        }
+        .htm-table tr:hover td.sticky-col-left,
+        .htm-table tr:hover td.sticky-col-right {
+            background-color: #F9FAFB !important;
+        }
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+        }
+        .sortable-header > span:first-child {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .sortable-header:hover {
+            background-color: #F3F4F6;
+        }
+        .sort-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+            margin-left: 6px;
+            color: #9CA3AF;
+            font-size: 11px;
+            transition: color 0.2s;
+            position: relative;
+            line-height: 1;
+        }
+        .sortable-header:hover .sort-icon {
+            color: #6B7280;
+        }
+        .sort-icon.active {
+            color: #2563EB;
+        }
+        .sort-icon i {
+            position: absolute;
+            display: none;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        /* 默认状态：显示 fa-sort */
+        .sort-icon:not(.active) i.fa-sort {
+            display: block;
+        }
+        /* 激活状态 - 升序：显示 fa-sort-up */
+        .sort-icon.active.asc i.fa-sort-up {
+            display: block;
+        }
+        /* 激活状态 - 降序：显示 fa-sort-down */
+        .sort-icon.active.desc i.fa-sort-down {
+            display: block;
         }
         .htm-table td { 
             padding: 12px 8px; 
@@ -257,6 +544,75 @@
             max-height: 90vh;
             overflow-y: auto;
             animation: slideIn 0.2s ease-out; 
+        }
+
+        /* Export Modal (Query) - polish */
+        .export-modal .modal-content{
+            width: 980px;
+            max-width: calc(100vw - 40px);
+            max-height: 88vh;
+            overflow: hidden;
+        }
+        .export-modal .export-modal-header{
+            padding: 14px 16px;
+            border-bottom: 1px solid #E5E7EB;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+        }
+        .export-modal .export-modal-body{
+            padding: 14px 16px;
+            background: #F8FAFC;
+            overflow: auto;
+            max-height: calc(88vh - 140px);
+        }
+        .export-modal .export-grid{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            align-items:start;
+        }
+        .export-modal .export-col{ display:flex; flex-direction:column; gap: 12px; }
+        .export-modal .export-field{
+            display:flex;
+            gap: 12px;
+        }
+        .export-modal .export-label{
+            width: 112px;
+            text-align: right;
+            color:#334155;
+            font-size: 12.5px;
+            font-weight: 600;
+            line-height: 1.1;
+            padding-top: 6px;
+            flex: 0 0 112px;
+        }
+        .export-modal .export-label .en{
+            display:block;
+            font-weight: 500;
+            font-size: 11.5px;
+            color:#94a3b8;
+            margin-top: 3px;
+        }
+        .export-modal .htm-input{
+            height: 32px;
+            border-radius: 6px;
+        }
+        .export-modal textarea.htm-input{
+            height: 64px;
+            padding-top: 7px;
+            padding-bottom: 7px;
+            resize: none;
+        }
+        .export-modal .export-right .export-field{ align-items:center; }
+        .export-modal .export-right .export-label{ padding-top: 0; }
+        .export-modal .export-modal-footer{
+            padding: 12px 16px;
+            border-top: 1px solid #E5E7EB;
+            background: #fff;
+            display:flex;
+            justify-content:flex-end;
+            gap: 10px;
         }
         @keyframes slideIn { 
             from { opacity: 0; transform: translateY(10px); } 
@@ -337,6 +693,64 @@
             color: #1F2937;
             font-weight: 600;
         }
+
+        /* Query View */
+        .q-tab {
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #64748b;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .q-tab.active {
+            color: #2563EB;
+            border-bottom-color: #2563EB;
+            font-weight: 600;
+        }
+        .q-tab:hover { color: #2563EB; }
+
+        .q-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 9999px;
+            background: #10b981;
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+        }
+        .q-status-line {
+            height: 2px;
+            background: #e2e8f0;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        .q-status-line::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, #34d399, #60a5fa);
+            opacity: 0.7;
+        }
+
+        .q-table-compact th {
+            background: #f8fafc;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 12px;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            white-space: nowrap;
+            text-align: left;
+        }
+        .q-table-compact td {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+            color: #334155;
+        }
+        .q-table-compact tr:hover { background: #f8fafc; }
     </style>
 </head>
 <body>
@@ -356,9 +770,13 @@
                         <div class="px-6 py-2 text-sm font-semibold text-gray-700 flex items-center bg-gray-200 border-b border-gray-300">
                             <i class="fas fa-folder-open mr-2 text-blue-600"></i> 业务操作模块
                         </div>
-                        <div class="mt-1">
-                            <div @click="navigateToPage" :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', 'active']">
+                        <div class="mt-1 space-y-1">
+                            <div @click="switchView('upload')" :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', currentView==='upload' ? 'active' : '']">
                                 <span>铁运可视化信息上报</span>
+                            </div>
+                            <!-- 铁运可视化查询入口：同页切换（不跳转） -->
+                            <div @click="switchView('query')" :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', currentView==='query' ? 'active' : '']">
+                                <span>铁运可视化查询</span>
                             </div>
                         </div>
                     </div>
@@ -374,31 +792,75 @@
             </div>
 
             <!-- Main Content Area -->
-            <div class="flex-1 flex flex-col bg-slate-50 overflow-hidden relative">
+            <div ref="mainContent" class="main-content flex flex-col bg-slate-50 overflow-hidden relative overflow-x-hidden">
                 <!-- Header -->
                 <div class="h-14 bg-white border-b border-slate-200 flex justify-between items-center px-6 shrink-0 z-20">
                     <div class="text-compact text-slate-500">
-                        HTM / 业务操作模块 / <span class="text-slate-900 font-semibold">铁运可视化信息上报</span>
+                        HTM / 业务操作模块 / <span class="text-slate-900 font-semibold">{{ currentView === 'upload' ? '铁运可视化信息上报' : currentView === 'query' ? '铁运可视化查询' : '下载中心' }}</span>
                     </div>
-                    <div class="flex space-x-4 text-slate-400">
-                        <i class="fas fa-bell hover:text-blue-600 cursor-pointer transition-colors"></i>
+                    <div class="flex items-center space-x-4">
+                        <!-- 我的下载按钮（独立） -->
+                        <button 
+                            @click="goToDownloadCenter"
+                            class="relative flex items-center space-x-2 px-3 py-1.5 text-sm text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors border border-slate-200 hover:border-blue-300"
+                        >
+                            <i class="fas fa-download text-slate-500"></i>
+                            <span class="font-medium">我的下载</span>
+                            <span v-if="unreadDownloadCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                                {{ unreadDownloadCount > 99 ? '99+' : unreadDownloadCount }}
+                            </span>
+                        </button>
+                        <!-- Tenant Dropdown -->
+                        <div class="relative" v-click-outside="() => showTenantDropdown = false">
+                            <button 
+                                @click="showTenantDropdown = !showTenantDropdown"
+                                class="flex items-center space-x-2 px-3 py-1.5 text-sm text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors border border-slate-200 hover:border-blue-300"
+                            >
+                                <i class="fas fa-building text-slate-500"></i>
+                                <span class="font-medium">{{ selectedTenant.name }}</span>
+                                <i class="fas fa-chevron-down text-xs transition-transform" :class="{ 'rotate-180': showTenantDropdown }"></i>
+                            </button>
+                            <!-- Dropdown Menu -->
+                            <div 
+                                v-show="showTenantDropdown"
+                                class="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-md shadow-lg z-50"
+                            >
+                                <div class="py-1">
+                                    <!-- 租户列表 -->
+                                    <div class="px-2 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wide border-b border-slate-100">
+                                        租户切换
+                                    </div>
+                                    <button
+                                        v-for="tenant in tenantOptions"
+                                        :key="tenant.code"
+                                        @click="selectTenant(tenant)"
+                                        class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center justify-between"
+                                        :class="{ 'bg-blue-50 text-blue-600 font-medium': selectedTenant.code === tenant.code }"
+                                    >
+                                        <span>{{ tenant.name }}</span>
+                                        <i v-if="selectedTenant.code === tenant.code" class="fas fa-check text-blue-600"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Main Content -->
-                <div class="flex-1 p-6 overflow-y-auto flex flex-col custom-scroll">
+                <div v-if="currentView === 'upload'" class="flex-1 p-6 overflow-y-auto overflow-x-hidden flex flex-col custom-scroll min-w-0 w-full">
                     <!-- Filter Section -->
             <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-4">
-                <div class="grid grid-cols-5 gap-4">
-                    <div class="col-span-1">
-                        <label class="block text-xs text-gray-500 mb-1.5">落货纸号</label>
+                <div class="grid grid-cols-12 gap-4">
+                    <!-- 第一行 -->
+                    <div class="col-span-3">
+                        <label class="block text-xs text-gray-500 mb-1.5">订舱号</label>
                         <textarea v-model="filters.lhzOrder" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
-                    <div class="col-span-1">
-                        <label class="block text-xs text-gray-500 mb-1.5">箱号</label>
+                    <div class="col-span-3">
+                        <label class="block text-xs text-gray-500 mb-1.5">集装箱号</label>
                         <textarea v-model="filters.containerNo" rows="2" class="htm-input" style="height: 64px;" placeholder="支持批量输入，逗号/换行分隔"></textarea>
                     </div>
-                    <div>
+                    <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5">起运港</label>
                         <div class="custom-multiselect">
                             <div class="multiselect-input" :class="{open: showPolDropdown}" @click="showPolDropdown = !showPolDropdown">
@@ -426,7 +888,7 @@
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5">目的港</label>
                         <div class="custom-multiselect">
                             <div class="multiselect-input" :class="{open: showPodDropdown}" @click="showPodDropdown = !showPodDropdown">
@@ -454,7 +916,7 @@
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="col-span-2">
                         <label class="block text-xs text-gray-500 mb-1.5">箱型</label>
                         <div class="custom-multiselect">
                             <div class="multiselect-input" :class="{open: showSizeDropdown}" @click="showSizeDropdown = !showSizeDropdown">
@@ -482,19 +944,30 @@
                             </div>
                         </div>
                     </div>
+                    <!-- 第二行 -->
                     <div class="col-span-2">
+                        <label class="block text-xs text-gray-500 mb-1.5">当前状态</label>
+                        <select v-model="filters.currentStatus" class="htm-input">
+                            <option value="">全部</option>
+                            <option v-for="status in statusOptions" :key="status.code" :value="status.code">
+                                {{ status.label }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-span-4">
                         <label class="block text-xs text-gray-500 mb-1.5">上传时间</label>
                         <input v-model="filters.uploadTimeRange" type="text" class="htm-input" placeholder="YYYY-MM-DD - YYYY-MM-DD">
                     </div>
-                    <div>
+                    <div class="col-span-3">
                         <label class="block text-xs text-gray-500 mb-1.5">货代</label>
                         <input v-model="filters.carrier" type="text" class="htm-input" placeholder="请输入货代">
                     </div>
-                    <div>
+                    <div class="col-span-3">
                         <label class="block text-xs text-gray-500 mb-1.5">上传人</label>
                         <input v-model="filters.uploadUser" type="text" class="htm-input" placeholder="请输入上传人">
                     </div>
-                    <div class="flex items-end justify-end space-x-2 col-span-2">
+                    <!-- 按钮：固定到右侧（你截图右侧红框位置） -->
+                    <div class="col-span-12 flex items-end justify-end gap-3">
                         <button @click="resetFilters" class="bg-white text-gray-600 text-xs px-4 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
                             重置
                         </button>
@@ -514,7 +987,7 @@
                     </span>
                 </div>
                 <div class="space-x-2">
-                    <button v-if="canUpload" @click="showAddModal = true" class="bg-blue-600 text-white text-xs px-4 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
+                    <button v-if="canUpload" @click="openAddModal" class="bg-blue-600 text-white text-xs px-4 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
                         <i class="fas fa-plus mr-1"></i> 新建
                     </button>
                     <button @click="showBatchModal = true" class="bg-white border border-gray-300 text-gray-700 text-xs px-4 h-10 rounded hover:bg-gray-50 shadow-sm transition-colors">
@@ -533,32 +1006,91 @@
             <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto custom-scroll">
                     <table class="w-full htm-table" style="min-width: 1800px;">
-                        <thead class="bg-gray-50 sticky top-0 z-10">
+                        <thead class="bg-gray-50 sticky top-0 z-50">
                             <tr>
-                                <th class="w-10 text-center">
+                                <th class="w-10 text-center sticky-col-left border-r border-gray-200">
                                     <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll">
                                 </th>
-                                <th class="min-w-[120px]">落货纸号</th>
-                                <th class="min-w-[100px]">箱号</th>
+                                <th class="min-w-[120px]">订舱号</th>
+                                <th class="min-w-[100px]">集装箱号</th>
                                 <th>箱型</th>
                                 <th>起运港</th>
                                 <th>目的港</th>
+                                <th>当前状态</th>
                                 <th>当前位置</th>
-                                <th>实时ETD</th>
-                                <th>ATD</th>
-                                <th>实时ETA</th>
-                                <th>ATA</th>
-                                <th>距离始发站口岸(KM)</th>
-                                <th>距离目的地(KM)</th>
-                                <th>上传时间</th>
+                                <th class="sortable-header" @click="handleSort('realETD')">
+                                    <span>实时ETD</span>
+                                    <span class="sort-icon" :class="getSortIconClass('realETD')">
+                                        <i class="fas fa-sort"></i>
+                                        <i class="fas fa-sort-up"></i>
+                                        <i class="fas fa-sort-down"></i>
+                                    </span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('atd')">
+                                    <span>ATD</span>
+                                    <span class="sort-icon" :class="getSortIconClass('atd')">
+                                        <i class="fas fa-sort"></i>
+                                        <i class="fas fa-sort-up"></i>
+                                        <i class="fas fa-sort-down"></i>
+                                    </span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('realETA')">
+                                    <span>实时ETA</span>
+                                    <span class="sort-icon" :class="getSortIconClass('realETA')">
+                                        <i class="fas fa-sort"></i>
+                                        <i class="fas fa-sort-up"></i>
+                                        <i class="fas fa-sort-down"></i>
+                                    </span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('ata')">
+                                    <span>ATA</span>
+                                    <span class="sort-icon" :class="getSortIconClass('ata')">
+                                        <i class="fas fa-sort"></i>
+                                        <i class="fas fa-sort-up"></i>
+                                        <i class="fas fa-sort-down"></i>
+                                    </span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('kmToBorder')">
+                                    <span>距离始发站口岸(KM)</span>
+                                    <span class="sort-icon" :class="getSortIconClass('kmToBorder')">
+                                        <i class="fas fa-sort"></i>
+                                        <i class="fas fa-sort-up"></i>
+                                        <i class="fas fa-sort-down"></i>
+                                    </span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('kmToDestination')">
+                                    <span>距离目的地(KM)</span>
+                                    <span class="sort-icon" :class="getSortIconClass('kmToDestination')">
+                                        <i class="fas fa-sort"></i>
+                                        <i class="fas fa-sort-up"></i>
+                                        <i class="fas fa-sort-down"></i>
+                                    </span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('uploadTime')">
+                                    <span>上传时间</span>
+                                    <span class="sort-icon" :class="getSortIconClass('uploadTime')">
+                                        <i class="fas fa-sort"></i>
+                                        <i class="fas fa-sort-up"></i>
+                                        <i class="fas fa-sort-down"></i>
+                                    </span>
+                                </th>
+                                <th class="sortable-header" @click="handleSort('modifyTime')">
+                                    <span>修改时间</span>
+                                    <span class="sort-icon" :class="getSortIconClass('modifyTime')">
+                                        <i class="fas fa-sort"></i>
+                                        <i class="fas fa-sort-up"></i>
+                                        <i class="fas fa-sort-down"></i>
+                                    </span>
+                                </th>
                                 <th>上传人</th>
                                 <th class="min-w-[100px]">所属货代</th>
-                                <th class="text-center w-32 sticky right-0 bg-gray-50 z-10">操作</th>
+                                <th class="min-w-[120px]">订舱人</th>
+                                <th class="text-center w-32 sticky-col-right-header border-l border-gray-200">操作</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="item in paginatedData" :key="item.id">
-                                <td class="text-center">
+                                <td class="text-center sticky-col-left border-r border-gray-200">
                                     <input type="checkbox" :value="item.id" v-model="selectedIds">
                                 </td>
                                 <td class="font-mono text-blue-600 font-medium min-w-[120px]">{{ item.lhzOrder }}</td>
@@ -566,6 +1098,7 @@
                                 <td>{{ item.containerSize }}</td>
                                 <td>{{ item.pol }}</td>
                                 <td>{{ item.pod }}</td>
+                                <td>{{ getStatusLabel(item.currentStatus) }}</td>
                                 <td>{{ item.currentLocation }}</td>
                                 <td class="font-mono text-xs">{{ formatDateOnly(item.realETD) }}</td>
                                 <td class="font-mono text-xs">{{ formatDateOnly(item.atd) }}</td>
@@ -574,9 +1107,12 @@
                                 <td>{{ item.kmToBorder }}</td>
                                 <td>{{ item.kmToDestination || '-' }}</td>
                                 <td class="font-mono text-xs text-gray-500">{{ item.uploadTime }}</td>
+                                <td class="font-mono text-xs text-gray-500">{{ item.modifyTime || item.uploadTime }}</td>
                                 <td>{{ item.uploadUser || '-' }}</td>
                                 <td class="text-gray-700 min-w-[100px]">{{ item.carrier || '-' }}</td>
-                                <td class="text-center w-32 sticky right-0 bg-white z-10">
+                                <td class="min-w-[120px]">{{ item.bookingOperator || '-' }}</td>
+                                <td class="text-center w-32 sticky-col-right border-l border-gray-200 space-x-2">
+                                    <button v-if="canUpload" @click="openEditModal(item)" class="text-blue-600 hover:text-blue-800 text-xs font-medium transition-colors">修改</button>
                                     <button v-if="canDelete" @click="deleteItem(item)" class="text-red-600 hover:text-red-800 text-xs font-medium transition-colors">删除</button>
                                 </td>
                             </tr>
@@ -609,13 +1145,461 @@
                 </div>
                     </div>
                 </div>
+
+                <!-- Query Content (Native) -->
+                <div v-if="currentView === 'query'" class="flex-1 p-6 overflow-y-auto overflow-x-hidden custom-scroll min-w-0 w-full self-stretch" style="width:100%;max-width:none;">
+                    <div class="w-full max-w-none">
+                    <!-- Tabs -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
+                        <div class="flex items-center gap-2 border-b border-gray-200 px-4">
+                            <div :class="['q-tab', qActiveTab==='tracking'?'active':'']" @click="qActiveTab='tracking'">节点可视 Tracking Status</div>
+                            <div :class="['q-tab', qActiveTab==='map'?'active':'']" @click="qActiveTab='map'">地图可视 Tracking on Map</div>
+                            <div :class="['q-tab', qActiveTab==='congestion'?'active':'']" @click="qActiveTab='congestion'">港口拥堵报告 Port Congestion Report</div>
+                        </div>
+
+                        <!-- Query Bar -->
+                        <div class="p-4 flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-2">
+                                <select v-model="qQueryType" class="htm-input" style="width: 150px;">
+                                    <option value="so">订舱号 SO NO.</option>
+                                    <option value="lhz">订舱号（原落货纸号）</option>
+                                    <option value="waybill">物流运单号</option>
+                                </select>
+                                <input v-model="qQueryValue" class="htm-input font-mono" style="width: 220px;" placeholder="请输入...">
+                                <button @click="qDoQuery" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-4 h-9 rounded shadow-sm transition-colors">
+                                    查询 QUERY
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button @click="qOpenBookingInfo" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-9 rounded shadow-sm">订舱信息 Booking information</button>
+                                <button @click="qOpenExportModal" class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-9 rounded shadow-sm">导出列表信息 Export list information</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subscription / Status strip -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 p-4 w-full">
+                        <div class="grid grid-cols-4 gap-6 items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="q-status-dot"></div>
+                                <div>
+                                    <div class="text-xs text-slate-500">订阅方 Date From</div>
+                                    <div class="text-sm font-semibold text-slate-800">{{ qSubscription.from }}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="q-status-dot"></div>
+                                <div>
+                                    <div class="text-xs text-slate-500">订阅状态 Subscription Status</div>
+                                    <div class="text-sm font-semibold text-green-700">{{ qSubscription.status }}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="q-status-dot"></div>
+                                <div>
+                                    <div class="text-xs text-slate-500">数据状态 Data Status</div>
+                                    <div class="text-sm font-semibold text-slate-800">{{ qSubscription.dataStatus }}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 justify-end">
+                                <div class="text-right">
+                                    <div class="text-xs text-slate-500">更新时间 Update</div>
+                                    <div class="text-sm font-semibold text-slate-800">{{ qSubscription.updatedAt }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 mt-3">
+                            <div class="q-status-line"></div>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-2">
+                            - 海运：订阅方显示船公司/数据源，逻辑不变；铁运：订阅方显示具体货代名称，完成订舱后默认订阅成功。
+                        </div>
+                    </div>
+
+                    <!-- Basic Information -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
+                        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors" @click="basicInfoCollapsed = !basicInfoCollapsed">
+                            <div class="font-bold text-slate-900 flex items-center gap-2">
+                                <i :class="basicInfoCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'" class="text-slate-400 text-sm transition-transform"></i>
+                                基本信息 <span class="text-slate-400 text-xs font-normal">Basic information</span>
+                            </div>
+                            <div class="text-xs text-slate-500">
+                                运输方式：<span class="font-semibold text-slate-800">{{ qBasic.transport }}</span>
+                            </div>
+                        </div>
+                        <div class="p-4" v-show="!basicInfoCollapsed">
+                            <div class="grid grid-cols-3 gap-0 border border-gray-200 rounded overflow-hidden">
+                                <div class="border-r border-gray-200">
+                                    <table class="w-full q-table-compact">
+                                        <tbody>
+                                            <tr><th class="w-48">物流运单号 Hisense Tracking No.</th><td class="font-mono">{{ qBasic.waybillNo }}</td></tr>
+                                            <tr><th>订舱号 Booking No.</th><td class="font-mono">{{ qBasic.deliveryNotes }}</td></tr>
+                                            <tr><th>货代 Shipping Carrier</th><td>{{ qBasic.carrier }}</td></tr>
+                                            <tr><th>起运港 POL</th><td>{{ qBasic.pol }}</td></tr>
+                                            <tr><th>接货地 Place of Receipt</th><td>{{ qBasic.placeOfReceipt }}</td></tr>
+                                            <tr><th>订舱ETD (Booking)</th><td>{{ qBasic.etdBooking }}</td></tr>
+                                            <tr><th>实时ETD (Update)</th><td>{{ qBasic.etdUpdate }}</td></tr>
+                                            <tr><th>物流岗 Booking Operator</th><td>{{ qBasic.bookingOperator }}</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="border-r border-gray-200">
+                                    <table class="w-full q-table-compact">
+                                        <tbody>
+                                            <tr><th class="w-48">SO NO.</th><td class="font-mono">{{ qBasic.soNo }}</td></tr>
+                                            <tr><th>价格条款 Price Terms</th><td>{{ qBasic.priceTerms }}</td></tr>
+                                            <tr><th>船名/航次 Ocean Vessel/Voy. No.</th><td>{{ qBasic.vesselVoy || '-' }}</td></tr>
+                                            <tr><th>中转港 Port of Transshipment</th><td>{{ qBasic.transshipment || '-' }}</td></tr>
+                                            <tr><th>装货港 POL</th><td>{{ qBasic.pol2 }}</td></tr>
+                                            <tr><th>订舱ETA (Booking)</th><td>{{ qBasic.etaBooking }}</td></tr>
+                                            <tr><th>实时ETA (Update)</th><td>{{ qBasic.etaUpdate }}</td></tr>
+                                            <tr><th>单证人员 Document Operator</th><td>{{ qBasic.docOperator }}</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div>
+                                    <table class="w-full q-table-compact">
+                                        <tbody>
+                                            <tr><th class="w-48">提单号 B/L No.</th><td>{{ qBasic.blNo || '-' }}</td></tr>
+                                            <tr><th>箱型箱量 Size and Qty. of</th><td>{{ qBasic.sizeQty }}</td></tr>
+                                            <tr><th>目的站 Port of Delivery</th><td>{{ qBasic.destination }}</td></tr>
+                                            <tr><th>卸货地 Place of Delivery</th><td>{{ qBasic.placeOfDelivery }}</td></tr>
+                                            <tr><th>ATD</th><td>{{ qBasic.atd }}</td></tr>
+                                            <tr><th>ATA</th><td>{{ qBasic.ata }}</td></tr>
+                                            <tr><th>多式联运 Multi-transportation</th><td>{{ qBasic.multi || '-' }}</td></tr>
+                                            <tr><th>备注</th><td>{{ qBasic.remark || '-' }}</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Status Visualization -->
+                    <div v-if="aggregatedBookingStatus" class="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 w-full">
+                        <div class="px-4 py-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors" @click="currentStatusCollapsed = !currentStatusCollapsed">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="font-bold text-slate-900 flex items-center gap-2">
+                                    <i :class="currentStatusCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'" class="text-slate-400 text-sm transition-transform"></i>
+                                    当前状态可视化 <span class="text-slate-400 text-xs font-normal">Current Status Visualization</span>
+                                </div>
+                                <!-- 距离信息（按最新 update_time 的记录，一行展示，与标题同一行居中对齐） -->
+                                <div class="flex items-baseline gap-10 text-sm text-slate-600">
+                                    <div class="flex items-baseline gap-1">
+                                        <span class="text-xs text-slate-500">距离始发站口岸(KM)</span>
+                                        <span class="text-lg font-semibold text-slate-900">
+                                            {{ qLatestDistances.kmFromOverseasOrigin != null ? qLatestDistances.kmFromOverseasOrigin : '-' }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-baseline gap-1">
+                                        <span class="text-xs text-slate-500">距离目的地(KM)</span>
+                                        <span class="text-lg font-semibold text-slate-900">
+                                            {{ qLatestDistances.kmToDestinationStation != null ? qLatestDistances.kmToDestinationStation : '-' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4" v-show="!currentStatusCollapsed">
+                            <!-- 进度条 -->
+                            <div class="status-progress-container mb-4">
+                                <div class="status-progress-bar">
+                                    <div 
+                                        v-for="(node, idx) in progressNodes" 
+                                        :key="node.code"
+                                        class="progress-node-wrapper"
+                                    >
+                                        <div class="progress-node" :class="getNodeStatusClass(node)">
+                                            <div class="node-dot">
+                                                <i :class="node.icon"></i>
+                                            </div>
+                                            <div class="node-label">{{ node.label }}</div>
+                                            <div class="node-count">{{ node.count }}/{{ node.total }}</div>
+                                            <div class="node-time" :class="{ 'invisible': !node.timeLabel }">
+                                                <div class="text-xs text-slate-500">{{ node.timeLabel || '' }}</div>
+                                                <div class="text-xs font-semibold text-slate-700">{{ node.time || '-' }}</div>
+                                            </div>
+                                        </div>
+                                        <div v-if="idx < progressNodes.length - 1" class="progress-line" :class="getLineStatusClass(node, progressNodes[idx + 1])"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 状态分布 -->
+                            <div class="border-t border-gray-200 pt-4">
+                                <div class="text-xs text-slate-500 mb-2">状态分布</div>
+                                <div class="flex flex-wrap gap-2">
+                                    <div 
+                                        v-for="(node, idx) in progressNodes.filter(n => n.count > 0)" 
+                                        :key="node.code"
+                                        class="status-badge"
+                                    >
+                                        <span class="font-semibold">{{ node.code }}-{{ node.label }}:</span>
+                                        <span class="ml-1">{{ node.count }}箱</span>
+                                    </div>
+                                    <div v-if="progressNodes.filter(n => n.count > 0).length === 0" class="text-slate-400 text-xs">
+                                        暂无状态数据
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 颜色说明和业务逻辑说明 -->
+                            <div class="border-t border-gray-200 pt-4 mt-4">
+                                <div class="bg-slate-50 rounded-lg p-4">
+                                    <div class="text-xs font-semibold text-slate-700 mb-3">颜色说明 Color Legend</div>
+                                    <div class="grid grid-cols-2 gap-4 mb-4">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-4 h-4 rounded-full bg-green-500 border-2 border-green-500"></div>
+                                            <span class="text-xs text-slate-600">绿色：已完成/当前激活节点</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-4 h-4 rounded-full bg-gray-300 border-2 border-gray-300"></div>
+                                            <span class="text-xs text-slate-600">灰色：未到达节点（虚线连接）</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs font-semibold text-slate-700 mb-2">业务逻辑说明 Business Logic</div>
+                                    <div class="text-xs text-slate-600 space-y-1">
+                                        <p><strong>状态推断规则：</strong>如果某个订舱号有箱子传了某个状态，系统认为前面的所有节点也已经完成。</p>
+                                        <p><strong>多箱子规则：</strong>只要有一个箱子到达了某个节点，所有前面的节点都应该显示为已完成（绿色），当前最高节点也显示为绿色。</p>
+                                        <p><strong>示例：</strong>如果6个箱子中，有1个箱子在"境外换装"（30），则00、10、20、30节点都显示为已完成/激活（绿色），40、50节点显示为未到达（灰色，虚线连接）。</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 集装箱维度最新动态明细 -->
+                            <div class="border-t border-gray-200 pt-4 mt-4">
+                                <div class="text-xs text-slate-500 flex items-center justify-between mb-2">
+                                    <div class="font-semibold text-slate-700">集装箱维度最新动态明细</div>
+                                    <div class="flex items-center gap-2">
+                                        <span>最新动态</span>
+                                        <input class="htm-input h-7 w-40 text-xs" placeholder="请输入集装箱号" v-model="containerSearchQuery">
+                                        <button class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-3 h-7 rounded shadow-sm" @click="searchContainer">查询 QUERY</button>
+                                    </div>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full q-table-compact">
+                                        <thead>
+                                            <tr>
+                                                <th class="w-12">序号<br>NO.</th>
+                                                <th class="w-32">集装箱号<br>Container No.</th>
+                                                <th class="w-40">实时ETD<br>ETD Pol Updates</th>
+                                                <th class="w-40">实时ETA<br>Last Pod Updates</th>
+                                                <th class="w-48">最新节点<br>Current Status</th>
+                                                <th class="w-40">更新时间<br>Update time of Current Time</th>
+                                                <th class="w-40">最新地点<br>Current Location</th>
+                                                <th class="w-16">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(row, idx) in filteredContainerStatus" :key="row.containerNo">
+                                                <td class="text-slate-500">{{ idx + 1 }}</td>
+                                                <td class="font-mono text-xs text-slate-700">{{ row.containerNo }}</td>
+                                                <td class="font-mono text-xs text-slate-700">{{ row.realEtd }}</td>
+                                                <td class="font-mono text-xs text-slate-700">{{ row.realEta }}</td>
+                                                <td class="text-slate-700">{{ row.currentStatus }}</td>
+                                                <td class="font-mono text-xs text-slate-700">{{ row.updateTime }}</td>
+                                                <td class="font-mono text-xs text-slate-700">{{ row.currentLocation }}</td>
+                                                <td class="text-teal-600 text-xs cursor-pointer">查看</td>
+                                            </tr>
+                                            <tr v-if="filteredContainerStatus.length === 0">
+                                                <td colspan="8" class="text-center text-slate-400 py-6">暂无数据</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail table -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm w-full">
+                        <div class="px-4 py-3 border-b border-gray-200 font-bold text-slate-900">
+                            实时船期明细 <span class="text-slate-400 text-xs font-normal">Tracking Status</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full q-table-compact">
+                                <thead>
+                                    <tr>
+                                        <th class="w-12">NO.</th>
+                                        <th>Milestones</th>
+                                        <th class="w-56">Location</th>
+                                        <th class="w-56">Transport Mode</th>
+                                        <th class="w-56">Actual Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(row, idx) in qMilestones" :key="idx">
+                                        <td class="text-slate-500">{{ idx + 1 }}</td>
+                                        <td>{{ row.milestone }}</td>
+                                        <td class="font-mono text-xs text-slate-600">{{ row.location }}</td>
+                                        <td class="text-slate-600">{{ row.mode }}</td>
+                                        <td class="font-mono text-xs text-slate-600">{{ row.actualDate }}</td>
+                                    </tr>
+                                    <tr v-if="qMilestones.length===0">
+                                        <td colspan="5" class="text-center text-slate-400 py-6">暂无数据</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+        <!-- Export List Modal (Query) -->
+        <div v-if="showExportModal" class="modal-overlay export-modal" @click.self="closeExportModal">
+            <div class="modal-content" @click.stop>
+                <div class="export-modal-header">
+                    <h2 class="text-lg font-bold text-slate-900">导出列表信息</h2>
+                    <button class="text-slate-400 hover:text-slate-600" @click="closeExportModal" aria-label="close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="export-modal-body custom-scroll">
+                    <div class="export-grid">
+                        <!-- Left column: 4 textarea blocks -->
+                        <div class="export-col export-left">
+                            <div class="export-field items-start">
+                                <div class="export-label">
+                                    订舱号
+                                    <span class="en">delivery note</span>
+                                </div>
+                                <textarea v-model="exportForm.bookingNo" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                            </div>
+                            <div class="export-field items-start">
+                                <div class="export-label">
+                                    SO NO
+                                </div>
+                                <textarea v-model="exportForm.soNo" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                            </div>
+                            <div class="export-field items-start">
+                                <div class="export-label">
+                                    集装箱号
+                                    <span class="en">CTN NO</span>
+                                </div>
+                                <textarea v-model="exportForm.containerNo" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                            </div>
+                            <div class="export-field items-start">
+                                <div class="export-label">
+                                    船名/航次
+                                    <span class="en">Ocean Vessel/Voy. No.</span>
+                                </div>
+                                <textarea v-model="exportForm.vesselVoy" rows="3" class="htm-input flex-1" placeholder="如需查询多个,请用回车分割"></textarea>
+                            </div>
+                            <div class="export-field">
+                                <div class="export-label">
+                                    运输方式
+                                    <span class="en">Transport mode</span>
+                                </div>
+                                <select v-model="exportForm.transportMode" class="htm-input flex-1">
+                                    <option value="">全部</option>
+                                    <option value="rail">铁运</option>
+                                    <option value="sea">海运</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Right column: dates + selects; transport mode at end -->
+                        <div class="export-col export-right">
+                            <div class="export-field">
+                                <div class="export-label">ETD</div>
+                                <input v-model="exportForm.etd" type="date" class="htm-input flex-1">
+                            </div>
+                            <div class="export-field">
+                                <div class="export-label">ATD</div>
+                                <input v-model="exportForm.atd" type="date" class="htm-input flex-1">
+                            </div>
+                            <div class="export-field">
+                                <div class="export-label">ETA</div>
+                                <input v-model="exportForm.eta" type="date" class="htm-input flex-1">
+                            </div>
+                            <div class="export-field">
+                                <div class="export-label">ATA</div>
+                                <input v-model="exportForm.ata" type="date" class="htm-input flex-1">
+                            </div>
+                            <div class="export-field">
+                                <div class="export-label">
+                                    出口国家
+                                    <span class="en">destination country</span>
+                                </div>
+                                <select v-model="exportForm.destinationCountry" class="htm-input flex-1">
+                                    <option value="">请选择</option>
+                                    <option value="HR">HR</option>
+                                    <option value="BA">BA</option>
+                                    <option value="RS">RS</option>
+                                </select>
+                            </div>
+                            <div class="export-field">
+                                <div class="export-label">
+                                    船公司
+                                    <span class="en">Shipping Carrier</span>
+                                </div>
+                                <select v-model="exportForm.shippingCarrier" class="htm-input flex-1">
+                                    <option value="">请选择</option>
+                                    <option value="MSC">MSC</option>
+                                    <option value="MAERSK">MAERSK</option>
+                                    <option value="COSCO">COSCO</option>
+                                </select>
+                            </div>
+                            <div class="export-field">
+                                <div class="export-label">
+                                    销售办公室
+                                    <span class="en">Sales Business Unit</span>
+                                </div>
+                                <select v-model="exportForm.salesBu" class="htm-input flex-1">
+                                    <option value="">请选择</option>
+                                    <option value="EU">EU</option>
+                                    <option value="MEA">MEA</option>
+                                    <option value="APAC">APAC</option>
+                                </select>
+                            </div>
+                            <div class="export-field">
+                                <div class="export-label">
+                                    销售大区
+                                    <span class="en">Global Sales Region</span>
+                                </div>
+                                <select v-model="exportForm.salesRegion" class="htm-input flex-1">
+                                    <option value="">请选择</option>
+                                    <option value="EUROPE">EUROPE</option>
+                                    <option value="BALKANS">BALKANS</option>
+                                    <option value="CENTRAL">CENTRAL</option>
+                                </select>
+                            </div>
+                            <div class="export-field">
+                                <div class="export-label">
+                                    状态
+                                    <span class="en">Hisense Order Status</span>
+                                </div>
+                                <select v-model="exportForm.orderStatus" class="htm-input flex-1">
+                                    <option value="">请选择</option>
+                                    <option value="IN_TRANSIT">IN_TRANSIT</option>
+                                    <option value="ARRIVED">ARRIVED</option>
+                                    <option value="DELIVERED">DELIVERED</option>
+                                </select>
+                            </div>
+                            <div class="export-field">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="export-modal-footer">
+                    <button @click="closeExportModal" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
+                        取消<br><span class="text-xs text-slate-400 font-normal">cancel</span>
+                    </button>
+                    <button @click="resetExportForm" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
+                        重置<br><span class="text-xs text-slate-400 font-normal">reset</span>
+                    </button>
+                    <button @click="confirmExport" class="bg-teal-600 text-white text-sm px-6 h-10 rounded hover:bg-teal-700 font-medium shadow-sm transition-colors">
+                        确定<br><span class="text-xs text-teal-50 font-normal">confirm</span>
+                    </button>
+                    </div>
+                </div>
             </div>
 
         <!-- Add Modal -->
         <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
             <div class="modal-content" @click.stop>
                 <div class="p-6 border-b border-gray-200">
-                    <h2 class="text-lg font-bold text-slate-900">新增可视化信息</h2>
+                    <h2 class="text-lg font-bold text-slate-900">{{ isEditMode ? '修改可视化信息' : '新增可视化信息' }}</h2>
                 </div>
                 <div class="p-6">
                     <form @submit.prevent="saveItem">
@@ -631,13 +1615,13 @@
                                 <span v-if="errors.pod" class="error-message">{{ errors.pod }}</span>
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5 required">落货纸号</label>
-                                <input v-model="form.lhzOrder" type="text" class="htm-input" :class="{error: errors.lhzOrder}" placeholder="请输入落货纸号" @blur="validateField('lhzOrder')">
+                                <label class="block text-xs text-gray-500 mb-1.5 required">订舱号</label>
+                                <input v-model="form.lhzOrder" type="text" class="htm-input" :class="{error: errors.lhzOrder}" placeholder="请输入订舱号" @blur="validateField('lhzOrder')">
                                 <span v-if="errors.lhzOrder" class="error-message">{{ errors.lhzOrder }}</span>
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5 required">箱号</label>
-                                <input v-model="form.containerNo" type="text" class="htm-input" :class="{error: errors.containerNo}" placeholder="请输入箱号" @blur="validateField('containerNo')">
+                                <label class="block text-xs text-gray-500 mb-1.5 required">集装箱号</label>
+                                <input v-model="form.containerNo" type="text" class="htm-input" :class="{error: errors.containerNo}" placeholder="请输入集装箱号" @blur="validateField('containerNo')">
                                 <span v-if="errors.containerNo" class="error-message">{{ errors.containerNo }}</span>
                             </div>
                             <div>
@@ -647,6 +1631,16 @@
                                     <option v-for="size in containerSizes" :key="size" :value="size">{{ size }}</option>
                                 </select>
                                 <span v-if="errors.containerSize" class="error-message">{{ errors.containerSize }}</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1.5 required">当前状态</label>
+                                <select v-model="form.currentStatus" class="htm-input" :class="{error: errors.currentStatus}" @blur="validateField('currentStatus')">
+                                    <option value="">请选择</option>
+                                    <option v-for="status in statusOptions" :key="status.code" :value="status.code">
+                                        {{ status.label }}
+                                    </option>
+                                </select>
+                                <span v-if="errors.currentStatus" class="error-message">{{ errors.currentStatus }}</span>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1.5 required">当前位置</label>
@@ -663,33 +1657,24 @@
                                 <input v-model.number="form.kmToDestination" type="number" step="0.01" min="0" class="htm-input" placeholder="请输入距离">
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5">实时ETD</label>
-                                <input v-model="form.realETD" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
+                                <label class="block text-xs text-gray-500 mb-1.5 required">实时ETD</label>
+                                <input v-model="form.realETD" type="datetime-local" class="htm-input" :class="{error: errors.realETD}" placeholder="YYYY-MM-DD HH:mm:ss" @blur="validateField('realETD')">
+                                <span v-if="errors.realETD" class="error-message">{{ errors.realETD }}</span>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1.5">ATD</label>
                                 <input v-model="form.atd" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
                             </div>
                             <div>
-                                <label class="block text-xs text-gray-500 mb-1.5">实时ETA</label>
-                                <input v-model="form.realETA" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
+                                <label class="block text-xs text-gray-500 mb-1.5 required">实时ETA</label>
+                                <input v-model="form.realETA" type="datetime-local" class="htm-input" :class="{error: errors.realETA}" placeholder="YYYY-MM-DD HH:mm:ss" @blur="validateField('realETA')">
+                                <span v-if="errors.realETA" class="error-message">{{ errors.realETA }}</span>
                             </div>
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1.5">ATA</label>
                                 <input v-model="form.ata" type="datetime-local" class="htm-input" placeholder="YYYY-MM-DD HH:mm:ss">
                             </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1.5">货代</label>
-                                <input :value="currentUser.carrier" type="text" class="htm-input" readonly>
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1.5">上传人</label>
-                                <input :value="currentUser.name" type="text" class="htm-input" readonly>
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1.5">上传时间</label>
-                                <input :value="currentUploadTime" type="text" class="htm-input" readonly>
-                            </div>
+                            <!-- 货代 / 上传人 / 上传时间：仅系统自动带入，不在新增弹窗中单独展示 -->
                         </div>
                         <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
                             <button type="button" @click="closeAddModal" class="bg-white text-gray-600 text-sm px-6 h-10 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
@@ -803,8 +1788,8 @@
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="border border-gray-200 px-3 py-2 text-left">行号</th>
-                                        <th class="border border-gray-200 px-3 py-2 text-left">落货纸号</th>
-                                        <th class="border border-gray-200 px-3 py-2 text-left">箱号</th>
+                                        <th class="border border-gray-200 px-3 py-2 text-left">订舱号</th>
+                                        <th class="border border-gray-200 px-3 py-2 text-left">集装箱号</th>
                                         <th class="border border-gray-200 px-3 py-2 text-left">错误原因</th>
                                     </tr>
                                 </thead>
@@ -824,6 +1809,337 @@
                             关闭
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Center Content -->
+        <div v-if="currentView === 'downloadCenter'" class="flex-1 p-6 overflow-y-auto overflow-x-hidden flex flex-col custom-scroll min-w-0 w-full">
+            <!-- Page Title -->
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-slate-900">下载中心</h1>
+                <p class="text-sm text-slate-500 mt-1">管理您的导出任务和下载文件</p>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-4">
+                <div class="grid grid-cols-12 gap-4">
+                    <div class="col-span-3">
+                        <label class="block text-xs text-gray-500 mb-1.5">任务状态</label>
+                        <div class="custom-multiselect">
+                            <div class="multiselect-input" :class="{open: showStatusDropdown}" @click="showStatusDropdown = !showStatusDropdown">
+                                <span v-if="downloadFilters.status.length === 0" class="text-gray-400">全部</span>
+                                <span v-else class="text-gray-700">{{ downloadFilters.status.join(', ') }}</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                            </div>
+                            <div v-if="showStatusDropdown" class="multiselect-dropdown" @click.stop>
+                                <div class="p-2">
+                                    <input v-model="downloadStatusSearch" type="text" placeholder="搜索..." class="htm-input mb-2">
+                                </div>
+                                <div class="max-h-48 overflow-y-auto">
+                                    <div v-for="status in filteredDownloadStatusOptions" :key="status.value"
+                                         @click="toggleDownloadStatus(status.value)"
+                                         class="multiselect-option"
+                                         :class="{selected: downloadFilters.status.includes(status.value)}">
+                                        {{ status.label }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-3">
+                        <label class="block text-xs text-gray-500 mb-1.5">模块</label>
+                        <div class="custom-multiselect">
+                            <div class="multiselect-input" :class="{open: showModuleDropdown}" @click="showModuleDropdown = !showModuleDropdown">
+                                <span v-if="downloadFilters.module.length === 0" class="text-gray-400">全部</span>
+                                <span v-else class="text-gray-700">{{ downloadFilters.module.join(', ') }}</span>
+                                <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                            </div>
+                            <div v-if="showModuleDropdown" class="multiselect-dropdown" @click.stop>
+                                <div class="p-2">
+                                    <input v-model="downloadModuleSearch" type="text" placeholder="搜索..." class="htm-input mb-2">
+                                </div>
+                                <div class="max-h-48 overflow-y-auto">
+                                    <div v-for="module in filteredDownloadModuleOptions" :key="module.value"
+                                         @click="toggleDownloadModule(module.value)"
+                                         class="multiselect-option"
+                                         :class="{selected: downloadFilters.module.includes(module.value)}">
+                                        {{ module.label }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-3">
+                        <label class="block text-xs text-gray-500 mb-1.5">时间范围</label>
+                        <select v-model="downloadFilters.timeRange" class="htm-input">
+                            <option value="all">全部</option>
+                            <option value="today">今天</option>
+                            <option value="week">最近7天</option>
+                            <option value="month">最近30天</option>
+                        </select>
+                    </div>
+                    <div class="col-span-3 flex items-end">
+                        <div class="flex space-x-2 w-full">
+                            <button @click="resetDownloadFilters" class="bg-white border border-gray-300 text-gray-700 text-xs px-4 h-10 rounded hover:bg-gray-50 shadow-sm transition-colors flex-1">
+                                重置
+                            </button>
+                            <button @click="searchDownloadTasks" class="bg-blue-600 text-white text-xs px-4 h-10 rounded hover:bg-blue-700 shadow-sm transition-colors flex-1">
+                                <i class="fas fa-search mr-1"></i> 查询
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task List Section -->
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm flex-1 flex flex-col min-h-0">
+                <!-- Toolbar -->
+                <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-600">列表 ({{ filteredDownloadTasks.length }})</span>
+                        <span v-if="selectedDownloadTasks.length > 0" class="text-sm text-blue-600">
+                            已选择 {{ selectedDownloadTasks.length }} 项
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button v-if="selectedDownloadTasks.length > 0" 
+                                @click="batchDeleteDownloadTasks"
+                                class="bg-red-600 hover:bg-red-700 text-white text-xs px-4 h-9 rounded shadow-sm transition-colors">
+                            <i class="fas fa-trash mr-1"></i> 批量删除
+                        </button>
+                        <button @click="clearExpiredTasks" 
+                                class="bg-gray-600 hover:bg-gray-700 text-white text-xs px-4 h-9 rounded shadow-sm transition-colors">
+                            <i class="fas fa-broom mr-1"></i> 清空已过期
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="flex-1 overflow-auto">
+                    <table class="htm-table w-full">
+                        <thead>
+                            <tr>
+                                <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 50px;">
+                                    <input type="checkbox" 
+                                           :checked="isAllDownloadTasksSelected" 
+                                           @change="toggleSelectAllDownloadTasks"
+                                           class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                </th>
+                                <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="min-width: 300px;">文件名</th>
+                                <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 120px;">模块</th>
+                                <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 100px;">状态</th>
+                                <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 150px;">创建时间</th>
+                                <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 100px;">文件大小</th>
+                                <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 120px;">进度</th>
+                                <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 150px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-if="filteredDownloadTasks.length === 0">
+                                <td colspan="8" class="border border-gray-200 px-4 py-12 text-center text-gray-500">
+                                    <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                                    <p class="text-sm">暂无导出任务</p>
+                                    <p class="text-xs text-gray-400 mt-1">点击页面上的"导出"按钮创建导出任务</p>
+                                </td>
+                            </tr>
+                            <tr v-for="task in paginatedDownloadTasks" :key="task.taskId" 
+                                class="hover:bg-gray-50 transition-colors">
+                                <td class="border border-gray-200 px-4 py-3">
+                                    <input type="checkbox" 
+                                           :value="task.taskId" 
+                                           v-model="selectedDownloadTasks"
+                                           class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                </td>
+                                <td class="border border-gray-200 px-4 py-3">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fas fa-file-excel text-green-600"></i>
+                                        <span class="text-sm text-gray-700 cursor-pointer hover:text-blue-600" 
+                                              @click="showTaskDetail(task)"
+                                              :title="task.fileName">
+                                            {{ truncateFileName(task.fileName, 40) }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="border border-gray-200 px-4 py-3 text-sm text-gray-700">{{ task.module }}</td>
+                                <td class="border border-gray-200 px-4 py-3">
+                                    <span :class="getStatusBadgeClass(task.status)" class="px-2 py-1 rounded-full text-xs font-medium">
+                                        <i :class="getStatusIcon(task.status)" class="mr-1"></i>
+                                        {{ getStatusLabel(task.status) }}
+                                    </span>
+                                </td>
+                                <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">{{ formatRelativeTime(task.createTime) }}</td>
+                                <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
+                                    <span v-if="task.fileSize">{{ formatFileSize(task.fileSize) }}</span>
+                                    <span v-else class="text-gray-400">-</span>
+                                </td>
+                                <td class="border border-gray-200 px-4 py-3">
+                                    <div v-if="task.status === 'PROCESSING' && task.progress > 0" class="flex items-center space-x-2">
+                                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" :style="{width: task.progress + '%'}"></div>
+                                        </div>
+                                        <span class="text-xs text-gray-600 w-10 text-right">{{ task.progress }}%</span>
+                                    </div>
+                                    <span v-else class="text-sm text-gray-400">-</span>
+                                </td>
+                                <td class="border border-gray-200 px-4 py-3">
+                                    <div class="flex items-center space-x-2">
+                                        <button v-if="task.status === 'COMPLETED'" 
+                                                @click="downloadFile(task)"
+                                                class="text-blue-600 hover:text-blue-800 text-sm">
+                                            <i class="fas fa-download mr-1"></i> 下载
+                                        </button>
+                                        <button v-if="task.status === 'FAILED'" 
+                                                @click="retryTask(task)"
+                                                class="text-blue-600 hover:text-blue-800 text-sm">
+                                            <i class="fas fa-redo mr-1"></i> 重试
+                                        </button>
+                                        <button v-if="task.status === 'PROCESSING' || task.status === 'QUEUED'" 
+                                                @click="cancelTask(task)"
+                                                class="text-gray-600 hover:text-gray-800 text-sm">
+                                            <i class="fas fa-times mr-1"></i> 取消
+                                        </button>
+                                        <button @click="deleteDownloadTask(task)" 
+                                                class="text-red-600 hover:text-red-800 text-sm">
+                                            <i class="fas fa-trash mr-1"></i> 删除
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="filteredDownloadTasks.length > 0" class="p-4 border-t border-gray-200 flex items-center justify-between">
+                    <div class="text-sm text-gray-600">
+                        显示第 {{ (downloadPagination.current - 1) * downloadPagination.size + 1 }} 到 
+                        {{ Math.min(downloadPagination.current * downloadPagination.size, filteredDownloadTasks.length) }} 条，
+                        共 {{ filteredDownloadTasks.length }} 条
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <select v-model="downloadPagination.size" @change="downloadPagination.current = 1" class="htm-input text-xs" style="width: auto; padding: 4px 8px;">
+                            <option :value="10">10</option>
+                            <option :value="20">20</option>
+                            <option :value="50">50</option>
+                            <option :value="100">100</option>
+                        </select>
+                        <span class="text-sm text-gray-600">条/页</span>
+                        <button @click="downloadPagination.current = 1" 
+                                :disabled="downloadPagination.current === 1"
+                                class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            首页
+                        </button>
+                        <button @click="downloadPagination.current--" 
+                                :disabled="downloadPagination.current === 1"
+                                class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            上一页
+                        </button>
+                        <span class="text-sm text-gray-600">
+                            第 {{ downloadPagination.current }} / {{ downloadPaginationPages }} 页
+                        </span>
+                        <button @click="downloadPagination.current++" 
+                                :disabled="downloadPagination.current >= downloadPaginationPages"
+                                class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            下一页
+                        </button>
+                        <button @click="downloadPagination.current = downloadPaginationPages" 
+                                :disabled="downloadPagination.current >= downloadPaginationPages"
+                                class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                            末页
+                        </button>
+                        <span class="text-sm text-gray-600">跳至</span>
+                        <input type="number" 
+                               v-model.number="downloadPagination.jumpPage" 
+                               @keyup.enter="jumpToDownloadPage"
+                               min="1" 
+                               :max="downloadPaginationPages"
+                               class="htm-input text-xs" 
+                               style="width: 60px; padding: 4px 8px;">
+                        <span class="text-sm text-gray-600">页</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Detail Modal -->
+        <div v-if="showTaskDetailModal && selectedTaskDetail" class="modal-overlay" @click.self="closeTaskDetail">
+            <div class="modal-content" style="width: 700px; max-height: 80vh;" @click.stop>
+                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-slate-900">任务详情</h2>
+                    <button @click="closeTaskDetail" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6 overflow-y-auto" style="max-height: calc(80vh - 100px);">
+                    <!-- 基本信息 -->
+                    <div class="mb-6">
+                        <h3 class="text-sm font-bold text-gray-700 mb-3">基本信息</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-500">文件名：</span>
+                                <span class="text-gray-700">{{ selectedTaskDetail.fileName }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">模块：</span>
+                                <span class="text-gray-700">{{ selectedTaskDetail.module }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">创建时间：</span>
+                                <span class="text-gray-700">{{ formatDateTime(selectedTaskDetail.createTime) }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">完成时间：</span>
+                                <span class="text-gray-700">{{ selectedTaskDetail.completeTime ? formatDateTime(selectedTaskDetail.completeTime) : '-' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">文件大小：</span>
+                                <span class="text-gray-700">{{ selectedTaskDetail.fileSize ? formatFileSize(selectedTaskDetail.fileSize) : '-' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">下载次数：</span>
+                                <span class="text-gray-700">{{ selectedTaskDetail.downloadCount || 0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 导出条件 -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-bold text-gray-700">导出条件</h3>
+                            <button @click="downloadConditionsExpanded = !downloadConditionsExpanded" class="text-xs text-blue-600 hover:text-blue-800">
+                                {{ downloadConditionsExpanded ? '折叠' : '展开' }}
+                            </button>
+                        </div>
+                        <div v-if="downloadConditionsExpanded" class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <pre class="text-xs text-gray-700 whitespace-pre-wrap">{{ JSON.stringify(selectedTaskDetail.queryConditions, null, 2) }}</pre>
+                        </div>
+                    </div>
+                    <!-- 处理日志 -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-bold text-gray-700">处理日志</h3>
+                            <button @click="downloadLogsExpanded = !downloadLogsExpanded" class="text-xs text-blue-600 hover:text-blue-800">
+                                {{ downloadLogsExpanded ? '折叠' : '展开' }}
+                            </button>
+                        </div>
+                        <div v-if="downloadLogsExpanded" class="bg-gray-50 p-3 rounded border border-gray-200">
+                            <div v-for="(log, index) in selectedTaskDetail.logs" :key="index" class="text-xs text-gray-700 mb-1">
+                                {{ log.time }} - {{ log.message }}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 错误信息 -->
+                    <div v-if="selectedTaskDetail.errorMessage" class="mb-6">
+                        <h3 class="text-sm font-bold text-red-700 mb-2">错误信息</h3>
+                        <div class="bg-red-50 p-3 rounded border border-red-200">
+                            <p class="text-sm text-red-700">{{ selectedTaskDetail.errorMessage }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 border-t border-gray-200 flex justify-end">
+                    <button @click="closeTaskDetail" class="bg-blue-600 text-white text-sm px-6 h-10 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
+                        关闭
+                    </button>
                 </div>
             </div>
         </div>
@@ -855,6 +2171,9 @@
         </div>
     </div>
 
+    <!-- Close #app -->
+    </div>
+
     <script>
         const { createApp } = Vue;
 
@@ -867,9 +2186,118 @@
                     // Current User Info
                     currentUser: {
                         name: '用户A',
-                        carrier: '货代A'
+                    carrier: '青岛经汉物流服务有限公司'
                     },
                     currentUploadTime: '',
+                    
+                    // Tenant Selection
+                    showTenantDropdown: false,
+                    selectedTenant: { code: 'HGCC', name: 'HGCC(营销服)' },
+                    tenantOptions: [
+                        { code: 'HGCC', name: 'HGCC(营销服)' },
+                        { code: 'MXFCTR', name: 'MXFCTR(墨)' },
+                        { code: 'GORFAC', name: 'GORFAC(欧)' },
+                        { code: 'VITFAC', name: 'VITFAC(越)' },
+                        { code: 'SANFAC', name: 'SANFAC' }
+                    ],
+                    // Download Center
+                    unreadDownloadCount: 3, // 未下载任务数量（示例，实际应从后端获取）
+                    showStatusDropdown: false,
+                    showModuleDropdown: false,
+                    downloadStatusSearch: '',
+                    downloadModuleSearch: '',
+                    downloadFilters: {
+                        status: [],
+                        module: [],
+                        timeRange: 'week'
+                    },
+                    downloadTasks: [
+                        {
+                            taskId: 'task_001',
+                            fileName: 'Logistics_Orders_HGCC_20260205_085456_8829.xlsx',
+                            module: '物流台账',
+                            status: 'COMPLETED',
+                            createTime: '2026-02-05 08:54:56',
+                            completeTime: '2026-02-05 08:55:12',
+                            fileSize: 2621440,
+                            progress: 100,
+                            downloadCount: 0,
+                            queryConditions: { so_no: 'LHZ20250126001' },
+                            logs: [
+                                { time: '08:54:56', message: '任务已创建' },
+                                { time: '08:54:57', message: '任务已入队' },
+                                { time: '08:55:00', message: '开始处理' },
+                                { time: '08:55:12', message: '处理完成' }
+                            ]
+                        },
+                        {
+                            taskId: 'task_002',
+                            fileName: 'Visualization_Query_MXFCTR_20260205_090123_4567.xlsx',
+                            module: '可视化查询',
+                            status: 'PROCESSING',
+                            createTime: '2026-02-05 09:01:23',
+                            completeTime: null,
+                            fileSize: null,
+                            progress: 65,
+                            downloadCount: 0,
+                            queryConditions: { container_no: 'CONT001' },
+                            logs: [
+                                { time: '09:01:23', message: '任务已创建' },
+                                { time: '09:01:24', message: '任务已入队' },
+                                { time: '09:01:30', message: '开始处理' }
+                            ]
+                        },
+                        {
+                            taskId: 'task_003',
+                            fileName: 'Booking_Manage_GORFAC_20260205_091500_7890.xlsx',
+                            module: '订舱管理',
+                            status: 'FAILED',
+                            createTime: '2026-02-05 09:15:00',
+                            completeTime: null,
+                            fileSize: null,
+                            progress: 0,
+                            downloadCount: 0,
+                            errorMessage: '数据查询超时，请缩小查询范围后重试',
+                            queryConditions: { booking_no: 'BK001' },
+                            logs: [
+                                { time: '09:15:00', message: '任务已创建' },
+                                { time: '09:15:01', message: '任务已入队' },
+                                { time: '09:15:05', message: '开始处理' },
+                                { time: '09:15:30', message: '处理失败：数据查询超时' }
+                            ]
+                        }
+                    ],
+                    selectedDownloadTasks: [],
+                    downloadPagination: {
+                        current: 1,
+                        size: 20,
+                        jumpPage: 1
+                    },
+                    showTaskDetailModal: false,
+                    selectedTaskDetail: null,
+                    downloadConditionsExpanded: false,
+                    downloadLogsExpanded: false,
+                    downloadStatusOptions: [
+                        { value: 'PENDING', label: '待处理' },
+                        { value: 'QUEUED', label: '排队中' },
+                        { value: 'PROCESSING', label: '处理中' },
+                        { value: 'COMPLETED', label: '已完成' },
+                        { value: 'FAILED', label: '失败' },
+                        { value: 'EXPIRED', label: '已过期' }
+                    ],
+                    downloadModuleOptions: [
+                        { value: '物流台账', label: '物流台账' },
+                        { value: '可视化查询', label: '可视化查询' },
+                        { value: '订舱管理', label: '订舱管理' },
+                        { value: '落货纸管理', label: '落货纸管理' }
+                    ],
+                    
+                    // Collapse states
+                    basicInfoCollapsed: false,
+                    currentStatusCollapsed: false,
+                    
+                    // Container search
+                    containerSearchQuery: '',
                     
                     // Filters
                     filters: {
@@ -878,6 +2306,7 @@
                         pol: [],
                         pod: [],
                         containerSize: [],
+                        currentStatus: '',
                         uploadTimeRange: '',
                         carrier: '',
                         uploadUser: ''
@@ -893,6 +2322,15 @@
                     
                     // Container Sizes (HTM标准箱型)
                     containerSizes: ['20GP', '40GP', '40HQ', '40NOR'],
+                    // 当前状态枚举（与PRD 2.7.8 状态枚举表保持一致）
+                    statusOptions: [
+                        { code: '00', label: '已进站 / 待发运' },
+                        { code: '10', label: '已发车 / 国内在途' },
+                        { code: '20', label: '抵达国内口岸 / 排队' },
+                        { code: '30', label: '境外换装中' },
+                        { code: '40', label: '境外在途' },
+                        { code: '50', label: '已抵达目的站' }
+                    ],
                     // 港口枚举
                     portOptions: ['CNTAO', 'DEHAM', 'CNSHA', 'DEBRV', 'CNDLC'],
                     
@@ -901,11 +2339,13 @@
                         {
                             id: 1,
                             lhzOrder: 'LHZ20250126001',
+                            bookingOperator: '物流岗A（示例）', // 实际由后台根据订舱号自动带出
                             carrier: '货代A',
                             containerNo: 'CONT001',
                             containerSize: '40HQ',
                             pol: 'CNTAO',
                             pod: 'DEHAM',
+                            currentStatus: '20',
                             currentLocation: '阿拉山口',
                             kmToBorder: 120.5,
                             kmToDestination: 3500.0,
@@ -914,16 +2354,19 @@
                             realETA: '2025-02-15',
                             ata: null,
                             uploadTime: '2025-01-26 09:30:00',
+                            modifyTime: '2025-01-26 09:30:00',
                             uploadUser: '用户A'
                         },
                         {
                             id: 2,
                             lhzOrder: 'LHZ20250126002',
+                            bookingOperator: '物流岗A（示例）',
                             carrier: '货代A',
                             containerNo: 'CONT002',
                             containerSize: '20GP',
                             pol: 'CNTAO',
                             pod: 'DEHAM',
+                            currentStatus: '10',
                             currentLocation: '霍尔果斯',
                             kmToBorder: 80.0,
                             kmToDestination: 3800.0,
@@ -932,16 +2375,19 @@
                             realETA: '2025-02-16',
                             ata: null,
                             uploadTime: '2025-01-26 10:15:00',
+                            modifyTime: '2025-01-26 10:15:00',
                             uploadUser: '用户A'
                         },
                         {
                             id: 3,
                             lhzOrder: 'LHZ20250126003',
+                            bookingOperator: '物流岗B（示例）',
                             carrier: '货代B',
                             containerNo: 'CONT003',
                             containerSize: '40GP',
                             pol: 'CNSHA',
                             pod: 'DEBRV',
+                            currentStatus: '30',
                             currentLocation: '满洲里',
                             kmToBorder: 95.3,
                             kmToDestination: 4200.0,
@@ -950,16 +2396,19 @@
                             realETA: '2025-02-18',
                             ata: null,
                             uploadTime: '2025-01-26 11:20:00',
+                            modifyTime: '2025-01-26 11:20:00',
                             uploadUser: '用户B'
                         },
                         {
                             id: 4,
                             lhzOrder: 'LHZ20250126004',
-                            carrier: '货代B',
+                            bookingOperator: '物流岗B（示例）',
+                            carrier: '青岛经汉物流服务有限公司',
                             containerNo: 'CONT004',
                             containerSize: '40HQ',
                             pol: 'CNTAO',
                             pod: 'DEHAM',
+                            currentStatus: '40',
                             currentLocation: '二连浩特',
                             kmToBorder: 150.8,
                             kmToDestination: 3900.0,
@@ -968,16 +2417,19 @@
                             realETA: '2025-02-17',
                             ata: null,
                             uploadTime: '2025-01-26 14:45:00',
+                            modifyTime: '2025-01-26 14:45:00',
                             uploadUser: '用户B'
                         },
                         {
                             id: 5,
                             lhzOrder: 'LHZ20250126005',
-                            carrier: '货代C',
+                            bookingOperator: '物流岗C（示例）',
+                            carrier: '青岛经汉物流服务有限公司',
                             containerNo: 'CONT005',
                             containerSize: '20GP',
                             pol: 'CNDLC',
                             pod: 'DEHAM',
+                            currentStatus: '20',
                             currentLocation: '阿拉山口',
                             kmToBorder: 110.2,
                             kmToDestination: 3600.0,
@@ -986,16 +2438,19 @@
                             realETA: '2025-02-19',
                             ata: null,
                             uploadTime: '2025-01-27 08:15:00',
+                            modifyTime: '2025-01-27 08:15:00',
                             uploadUser: '用户C'
                         },
                         {
                             id: 6,
                             lhzOrder: 'LHZ20250127001',
-                            carrier: '货代A',
+                            bookingOperator: '物流岗A（示例）',
+                            carrier: '青岛经汉物流服务有限公司',
                             containerNo: 'CONT006',
                             containerSize: '40HQ',
                             pol: 'CNTAO',
                             pod: 'DEBRV',
+                            currentStatus: '10',
                             currentLocation: '霍尔果斯',
                             kmToBorder: 85.6,
                             kmToDestination: 4100.0,
@@ -1004,6 +2459,7 @@
                             realETA: '2025-02-20',
                             ata: null,
                             uploadTime: '2025-01-27 09:30:00',
+                            modifyTime: '2025-01-27 09:30:00',
                             uploadUser: '用户A'
                         }
                     ],
@@ -1011,6 +2467,10 @@
                     // Selection
                     selectedIds: [],
                     filteredData: [],
+                    
+                    // Sorting
+                    sortColumn: null, // 当前排序的列：'realETD', 'atd', 'realETA', 'ata', 'kmToBorder', 'kmToDestination', 'uploadTime', 'modifyTime'
+                    sortDirection: null, // 'asc' 或 'desc'
                     
                     // Pagination
                     pagination: {
@@ -1020,20 +2480,150 @@
                         pages: 0
                     },
                     jumpPage: 1,
+
+                // View switch (upload/query)
+                currentView: 'upload',
+
+                // Query (native)
+                qActiveTab: 'tracking',
+                qQueryType: 'so',
+                qQueryValue: 'COSU64321333310',
+                // 模拟：运输方式切换（海运/铁运），用于验证“订阅方横条”逻辑
+                qTransportType: 'rail', // 'sea' | 'rail'
+
+                qBasic: {
+                    transport: '铁运',
+                    waybillNo: '1696176(H)',
+                    deliveryNotes: '1696175,1696176',
+                    carrier: '青岛经汉物流服务有限公司',
+                    pol: 'QINGDAO-CN',
+                    placeOfReceipt: 'QINGDAO-CN',
+                    etdBooking: '2025-10-30',
+                    etdUpdate: '2025-10-30',
+                    bookingOperator: 'A-华鑫',
+
+                    soNo: 'COSU64321333310',
+                    priceTerms: 'DAP',
+                    vesselVoy: '-',
+                    transshipment: '-',
+                    pol2: 'QINGDAO-CN',
+                    etaBooking: '2025-12-24',
+                    etaUpdate: '2025-12-29',
+                    docOperator: 'A-周培',
+
+                    blNo: '',
+                    sizeQty: '40HQ*1',
+                    destination: 'RIJEKA,HR',
+                    placeOfDelivery: 'RIJEKA,HR',
+                    atd: '2025-10-30',
+                    ata: '2025-12-29',
+                    multi: '-',
+                    remark: ''
+                },
+                qUploads: [
+                    { uploadTime: '2026-01-18 09:10:00', updateTime: '2026-01-18 09:10:00', kmFromOverseasOrigin: 420, kmToDestinationStation: 980 },
+                    { uploadTime: '2026-01-19 09:18:04', updateTime: '2026-01-19 09:18:04', kmFromOverseasOrigin: 410, kmToDestinationStation: 960 }
+                ],
+                qRealtimeNodes: {
+                    depart: { pol: 'QINGDAO-CN', time: '2025-10-30 14:46:00' },
+                    arrive: { station: 'RIJEKA,HR', time: '2025-12-29 21:14:00' }
+                },
+                qMilestones: [
+                    { milestone: '起运港发船 / Departure from Origin', location: 'QINGDAO-CN', mode: 'Rail', actualDate: '2025-10-30 14:46:00' },
+                    { milestone: '目的站到港 / Arrival at Destination', location: 'RIJEKA,HR', mode: 'Rail', actualDate: '2025-12-29 21:14:00' }
+                ],
+                qContainerSummary: {
+                    firstDeparture: { completed: 6, total: 6 },
+                    lastArrival: { completed: 6, total: 6 },
+                    pickup: { completed: 5, total: 6 },
+                    emptyReturn: { completed: 4, total: 6 }
+                },
+                qContainerStatus: [
+                    {
+                        containerNo: 'OCUU8688267',
+                        realEtd: '2025-10-30 15:30:00',
+                        realEta: '2026-01-05 12:00:00',
+                        atd: '2025-10-30 14:46:00',
+                        ata: null,
+                        currentStatus: 'Arrived at Port',
+                        statusCode: '20', // 状态代码
+                        updateTime: '2026-01-17 10:00:00',
+                        currentLocation: '二连浩特'
+                    },
+                    {
+                        containerNo: 'OCUU8688268',
+                        realEtd: '2025-10-31 09:20:00',
+                        realEta: '2026-01-05 12:00:00',
+                        atd: '2025-10-31 08:15:00',
+                        ata: null,
+                        currentStatus: 'In Transit Domestically',
+                        statusCode: '10', // 状态代码
+                        updateTime: '2026-01-18 08:45:00',
+                        currentLocation: '霍尔果斯'
+                    },
+                    {
+                        containerNo: 'OCUU8688269',
+                        realEtd: '2025-11-01 16:10:00',
+                        realEta: '2026-01-05 12:00:00',
+                        atd: '2025-11-01 15:30:00',
+                        ata: null,
+                        currentStatus: 'Overseas Transfer',
+                        statusCode: '30', // 状态代码 - 最新节点
+                        updateTime: '2026-01-19 19:20:00',
+                        currentLocation: '阿拉山口'
+                    },
+                    {
+                        containerNo: 'OCUU8688270',
+                        realEtd: '2025-11-02 14:00:00',
+                        realEta: '2026-01-05 12:00:00',
+                        atd: '2025-11-02 13:20:00',
+                        ata: null,
+                        currentStatus: 'Arrived at Port',
+                        statusCode: '20', // 状态代码
+                        updateTime: '2025-11-02 14:05:00',
+                        currentLocation: '二连浩特'
+                    },
+                    {
+                        containerNo: 'OCUU8688271',
+                        realEtd: '2025-11-03 08:30:00',
+                        realEta: '2026-01-05 12:00:00',
+                        atd: '2025-11-03 07:45:00',
+                        ata: null,
+                        currentStatus: 'Overseas Transfer',
+                        statusCode: '30', // 状态代码
+                        updateTime: '2026-01-19 09:10:00',
+                        currentLocation: '阿拉山口'
+                    },
+                    {
+                        containerNo: 'OCUU8688272',
+                        realEtd: '2025-11-04 13:15:00',
+                        realEta: '2026-01-05 12:00:00',
+                        atd: '2025-11-04 12:30:00',
+                        ata: null,
+                        currentStatus: 'Overseas Transfer',
+                        statusCode: '30', // 状态代码
+                        updateTime: '2026-01-20 11:00:00',
+                        currentLocation: '阿拉山口'
+                    }
+                ],
                     
                     // Modals
                     showAddModal: false,
                     showBatchModal: false,
                     showImportResult: false,
                     showDeleteConfirm: false,
+                    showExportModal: false,
                     
-                    // Form
+                    // Form（新增/修改共用）
+                    isEditMode: false,
+                    editingItemId: null,
                     form: {
                         pol: '',
                         pod: '',
                         lhzOrder: '',
                         containerNo: '',
                         containerSize: '',
+                        currentStatus: '',
                         currentLocation: '',
                         kmToBorder: null,
                         kmToDestination: null,
@@ -1052,6 +2642,24 @@
                         success: 0,
                         failed: 0,
                         errors: []
+                    },
+                    
+                    // Export (query)
+                    exportForm: {
+                        bookingNo: '',
+                        soNo: '',
+                        containerNo: '',
+                        vesselVoy: '',
+                        etd: '',
+                        atd: '',
+                        eta: '',
+                        ata: '',
+                        destinationCountry: '',
+                        shippingCarrier: '',
+                        salesBu: '',
+                        salesRegion: '',
+                        orderStatus: '',
+                        transportMode: ''
                     },
                     
                     // Toast
@@ -1091,9 +2699,315 @@
                     if (!this.sizeSearch) return this.containerSizes;
                     const search = this.sizeSearch.toLowerCase();
                     return this.containerSizes.filter(size => size.toLowerCase().includes(search));
+                },
+
+                // ===== Query (native) =====
+                qLatestUpload() {
+                    // 取该 SO 下「更新时间 updateTime 最大」的一条记录
+                    if (!this.qUploads || this.qUploads.length === 0) return null;
+                    return [...this.qUploads]
+                        .sort((a, b) => (b.updateTime || '').localeCompare(a.updateTime || ''))[0];
+                },
+                qLatestDistances() {
+                    const u = this.qLatestUpload;
+                    return {
+                        kmFromOverseasOrigin: u && u.kmFromOverseasOrigin != null ? u.kmFromOverseasOrigin : null,
+                        kmToDestinationStation: u && u.kmToDestinationStation != null ? u.kmToDestinationStation : null
+                    };
+                },
+                qSubscription() {
+                    const isSea = this.qTransportType === 'sea';
+                    if (isSea) {
+                        return {
+                            from: '船公司/数据源',
+                            status: '订阅成功',
+                            dataStatus: '数据已推送',
+                            updatedAt: '2026-01-19 09:18:04'
+                        };
+                    }
+                    return {
+                        from: this.qBasic?.carrier || '货代',
+                        status: '订阅成功',
+                        dataStatus: '数据已推送',
+                        updatedAt: '2026-01-19 09:18:04'
+                    };
+                },
+                // 按订舱号聚合状态数据
+                aggregatedBookingStatus() {
+                    if (!this.qContainerStatus || this.qContainerStatus.length === 0) {
+                        return null;
+                    }
+                    
+                    // 1. 按 (订舱号, 集装箱号) 取最新（如果数据源已经是聚合后的，这步可省略）
+                    // 这里假设数据已经是按集装箱号取最新的，直接使用
+                    const containers = this.qContainerStatus;
+                    
+                    // 2. 计算状态分布
+                    const total = containers.length;
+                    const byStatus = {
+                        '00': 0,
+                        '10': 0,
+                        '20': 0,
+                        '30': 0,
+                        '40': 0,
+                        '50': 0
+                    };
+                    
+                    containers.forEach(container => {
+                        const statusCode = container.statusCode || '00';
+                        if (byStatus.hasOwnProperty(statusCode)) {
+                            byStatus[statusCode]++;
+                        }
+                    });
+                    
+                    // 3. 计算最晚的预计抵达时间
+                    const latestEta = containers
+                        .map(c => c.realEta)
+                        .filter(eta => eta)
+                        .sort()
+                        .pop() || null;
+                    
+                    // 4. 按状态分组箱子信息
+                    const containersByStatus = {};
+                    containers.forEach(container => {
+                        const statusCode = container.statusCode || '00';
+                        if (!containersByStatus[statusCode]) {
+                            containersByStatus[statusCode] = [];
+                        }
+                        containersByStatus[statusCode].push(container);
+                    });
+                    
+                    return {
+                        bookingNo: this.qQueryValue || this.qBasic?.deliveryNotes || '',
+                        containers: containers,
+                        statusSummary: {
+                            total: total,
+                            byStatus: byStatus,
+                            latestEta: latestEta
+                        },
+                        containersByStatus: containersByStatus
+                    };
+                },
+                // 进度条节点数据
+                progressNodes() {
+                    if (!this.aggregatedBookingStatus) return [];
+                    
+                    const summary = this.aggregatedBookingStatus.statusSummary;
+                    const total = summary.total;
+                    const containers = this.aggregatedBookingStatus.containers || [];
+                    
+                    // 格式化时间：只显示年月日，去掉时分秒
+                    const formatDateOnly = (dateTimeStr) => {
+                        if (!dateTimeStr) return null;
+                        // 如果包含空格，取空格前的部分（年月日）
+                        if (dateTimeStr.includes(' ')) {
+                            return dateTimeStr.split(' ')[0];
+                        }
+                        // 如果已经是日期格式，直接返回
+                        return dateTimeStr;
+                    };
+                    
+                    // 获取国内在途的时间：优先取ATD，没有则取实时ETD
+                    const getDomesticTransitTime = () => {
+                        // 优先从qBasic.atd获取（如果有完整时间格式）
+                        if (this.qBasic?.atd && this.qBasic.atd.includes(' ')) {
+                            return this.qBasic.atd;
+                        }
+                        // 从容器数据中查找ATD（优先找状态为10的，如果没有则找>=10的）
+                        const containerWithAtd = containers.find(c => c.atd && c.statusCode === '10') 
+                            || containers.find(c => c.atd && parseInt(c.statusCode) >= 10);
+                        if (containerWithAtd?.atd) {
+                            return containerWithAtd.atd;
+                        }
+                        // 如果没有ATD，取实时ETD（取最早的一个）
+                        const etdValues = containers
+                            .map(c => c.realEtd)
+                            .filter(etd => etd)
+                            .sort();
+                        return etdValues.length > 0 ? etdValues[0] : null;
+                    };
+                    
+                    // 获取国内在途的标签：根据是否有时间数据决定显示"实际发车"还是"预计发车"
+                    // 如果有ATD或实时ETD，显示"实际发车"；如果都没有，显示"预计发车"
+                    const getDomesticTransitTimeLabel = () => {
+                        const time = getDomesticTransitTime();
+                        return time ? '实际发车' : '预计发车';
+                    };
+                    
+                    // 获取已抵达的时间：根据节点状态决定显示ATA还是实时ETA
+                    const getArrivedTime = () => {
+                        // 计算最高状态码
+                        const statusCodes = containers
+                            .map(c => parseInt(c.statusCode || '00', 10))
+                            .filter(code => !isNaN(code));
+                        const maxStatusCode = statusCodes.length > 0 ? Math.max(...statusCodes) : 0;
+                        
+                        // 如果最高状态是50（已抵达），显示ATA（实际到站）
+                        if (maxStatusCode >= 50) {
+                            // 优先从qBasic.ata获取（如果有完整时间格式）
+                            if (this.qBasic?.ata && this.qBasic.ata.includes(' ')) {
+                                return formatDateOnly(this.qBasic.ata);
+                            }
+                            // 从容器数据中查找ATA（状态为50的）
+                            const containerWithAta = containers.find(c => c.ata && c.statusCode === '50');
+                            if (containerWithAta?.ata) {
+                                return formatDateOnly(containerWithAta.ata);
+                            }
+                        }
+                        
+                        // 如果最高状态不是50（未抵达），显示实时ETA（预计到站）
+                        const etaValues = containers
+                            .map(c => c.realEta)
+                            .filter(eta => eta)
+                            .sort();
+                        return etaValues.length > 0 ? formatDateOnly(etaValues[etaValues.length - 1]) : null;
+                    };
+                    
+                    // 获取已抵达的标签：根据节点状态决定显示"实际到站"还是"预计到站"
+                    const getArrivedTimeLabel = () => {
+                        const statusCodes = containers
+                            .map(c => parseInt(c.statusCode || '00', 10))
+                            .filter(code => !isNaN(code));
+                        const maxStatusCode = statusCodes.length > 0 ? Math.max(...statusCodes) : 0;
+                        return maxStatusCode >= 50 ? '实际到站' : '预计到站';
+                    };
+                    
+                    return [
+                        {
+                            code: '00',
+                            label: '已提柜',
+                            icon: 'fas fa-warehouse',
+                            count: summary.byStatus['00'] || 0,
+                            total: total,
+                            time: null
+                        },
+                        {
+                            code: '10',
+                            label: '国内已出发',
+                            icon: 'fas fa-truck',
+                            count: summary.byStatus['10'] || 0,
+                            total: total,
+                            time: formatDateOnly(getDomesticTransitTime()) || '-',
+                            timeLabel: getDomesticTransitTimeLabel()
+                        },
+                        {
+                            code: '20',
+                            label: '抵达口岸',
+                            icon: 'fas fa-border-all',
+                            count: summary.byStatus['20'] || 0,
+                            total: total,
+                            time: null
+                        },
+                        {
+                            code: '30',
+                            label: '境外换装',
+                            icon: 'fas fa-exchange-alt',
+                            count: summary.byStatus['30'] || 0,
+                            total: total,
+                            time: null
+                        },
+                        {
+                            code: '40',
+                            label: '境外在途',
+                            icon: 'fas fa-train',
+                            count: summary.byStatus['40'] || 0,
+                            total: total,
+                            time: null
+                        },
+                        {
+                            code: '50',
+                            label: '已抵达',
+                            icon: 'fas fa-flag-checkered',
+                            count: summary.byStatus['50'] || 0,
+                            total: total,
+                            time: getArrivedTime() || '-',
+                            timeLabel: getArrivedTimeLabel()
+                        }
+                    ];
+                },
+                filteredContainerStatus() {
+                    if (!this.qContainerStatus || this.qContainerStatus.length === 0) {
+                        return [];
+                    }
+                    if (!this.containerSearchQuery || this.containerSearchQuery.trim() === '') {
+                        return this.qContainerStatus;
+                    }
+                    const query = this.containerSearchQuery.trim().toLowerCase();
+                    return this.qContainerStatus.filter(container => 
+                        container.containerNo && container.containerNo.toLowerCase().includes(query)
+                    );
+                },
+                // Download Center Computed
+                filteredDownloadStatusOptions() {
+                    if (!this.downloadStatusSearch) return this.downloadStatusOptions;
+                    const search = this.downloadStatusSearch.toLowerCase();
+                    return this.downloadStatusOptions.filter(option => 
+                        option.label.toLowerCase().includes(search)
+                    );
+                },
+                filteredDownloadModuleOptions() {
+                    if (!this.downloadModuleSearch) return this.downloadModuleOptions;
+                    const search = this.downloadModuleSearch.toLowerCase();
+                    return this.downloadModuleOptions.filter(option => 
+                        option.label.toLowerCase().includes(search)
+                    );
+                },
+                filteredDownloadTasks() {
+                    let tasks = [...this.downloadTasks];
+                    
+                    // 状态筛选
+                    if (this.downloadFilters.status.length > 0) {
+                        tasks = tasks.filter(task => this.downloadFilters.status.includes(task.status));
+                    }
+                    
+                    // 模块筛选
+                    if (this.downloadFilters.module.length > 0) {
+                        tasks = tasks.filter(task => this.downloadFilters.module.includes(task.module));
+                    }
+                    
+                    // 时间范围筛选
+                    if (this.downloadFilters.timeRange !== 'all') {
+                        const now = new Date();
+                        const timeRanges = {
+                            'today': 1,
+                            'week': 7,
+                            'month': 30
+                        };
+                        const days = timeRanges[this.downloadFilters.timeRange] || 7;
+                        const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+                        tasks = tasks.filter(task => {
+                            const taskTime = new Date(task.createTime);
+                            return taskTime >= cutoff;
+                        });
+                    }
+                    
+                    // 按创建时间倒序排序
+                    return tasks.sort((a, b) => new Date(b.createTime) - new Date(a.createTime));
+                },
+                paginatedDownloadTasks() {
+                    const start = (this.downloadPagination.current - 1) * this.downloadPagination.size;
+                    const end = start + this.downloadPagination.size;
+                    return this.filteredDownloadTasks.slice(start, end);
+                },
+                isAllDownloadTasksSelected() {
+                    return this.paginatedDownloadTasks.length > 0 && 
+                           this.selectedDownloadTasks.length === this.paginatedDownloadTasks.length;
+                },
+                downloadPaginationPages() {
+                    return Math.ceil(this.filteredDownloadTasks.length / this.downloadPagination.size);
                 }
             },
             mounted() {
+                // Allow deep-linking: ?view=query or ?view=upload
+                try {
+                    const params = new URLSearchParams(window.location.search || '');
+                    const view = params.get('view');
+                    if (view === 'query' || view === 'upload') {
+                        this.currentView = view;
+                    }
+                } catch (e) {
+                    // ignore
+                }
                 this.updateUploadTime();
                 this.filteredData = this.tableData;
                 this.search();
@@ -1103,10 +3017,199 @@
                         this.showPolDropdown = false;
                         this.showPodDropdown = false;
                         this.showSizeDropdown = false;
+                        this.showStatusDropdown = false;
+                        this.showModuleDropdown = false;
                     }
                 });
             },
             methods: {
+                selectTenant(tenant) {
+                    this.selectedTenant = tenant;
+                    this.showTenantDropdown = false;
+                    // 这里可以添加切换租户后的逻辑，如重新加载数据等
+                },
+                goToDownloadCenter() {
+                    this.showTenantDropdown = false;
+                    this.currentView = 'downloadCenter';
+                },
+                // Download Center Methods
+                toggleDownloadStatus(status) {
+                    const index = this.downloadFilters.status.indexOf(status);
+                    if (index > -1) {
+                        this.downloadFilters.status.splice(index, 1);
+                    } else {
+                        this.downloadFilters.status.push(status);
+                    }
+                },
+                toggleDownloadModule(module) {
+                    const index = this.downloadFilters.module.indexOf(module);
+                    if (index > -1) {
+                        this.downloadFilters.module.splice(index, 1);
+                    } else {
+                        this.downloadFilters.module.push(module);
+                    }
+                },
+                resetDownloadFilters() {
+                    this.downloadFilters = {
+                        status: [],
+                        module: [],
+                        timeRange: 'week'
+                    };
+                    this.searchDownloadTasks();
+                },
+                searchDownloadTasks() {
+                    this.downloadPagination.current = 1;
+                },
+                toggleSelectAllDownloadTasks() {
+                    if (this.isAllDownloadTasksSelected) {
+                        this.selectedDownloadTasks = [];
+                    } else {
+                        this.selectedDownloadTasks = this.paginatedDownloadTasks.map(task => task.taskId);
+                    }
+                },
+                batchDeleteDownloadTasks() {
+                    if (this.selectedDownloadTasks.length === 0) return;
+                    if (confirm(`确定要删除选中的 ${this.selectedDownloadTasks.length} 个任务吗？删除后不可恢复。`)) {
+                        this.downloadTasks = this.downloadTasks.filter(task => !this.selectedDownloadTasks.includes(task.taskId));
+                        this.selectedDownloadTasks = [];
+                        this.showToast('批量删除成功', 'success');
+                    }
+                },
+                clearExpiredTasks() {
+                    const expiredCount = this.downloadTasks.filter(task => task.status === 'EXPIRED').length;
+                    if (expiredCount === 0) {
+                        this.showToast('没有已过期的任务', 'info');
+                        return;
+                    }
+                    if (confirm(`确定要清空 ${expiredCount} 个已过期的任务吗？`)) {
+                        this.downloadTasks = this.downloadTasks.filter(task => task.status !== 'EXPIRED');
+                        this.showToast('已清空过期任务', 'success');
+                    }
+                },
+                downloadFile(task) {
+                    // 实际实现时，这里应该调用后端API获取下载链接
+                    this.showToast(`开始下载：${task.fileName}`, 'success');
+                    task.downloadCount = (task.downloadCount || 0) + 1;
+                    // 模拟下载
+                    // window.open(task.fileUrl, '_blank');
+                },
+                retryTask(task) {
+                    task.status = 'QUEUED';
+                    task.progress = 0;
+                    task.errorMessage = null;
+                    this.showToast('任务已重新提交', 'success');
+                    // 实际实现时，这里应该调用后端API重新提交任务
+                },
+                cancelTask(task) {
+                    if (confirm('确定要取消该任务吗？')) {
+                        task.status = 'CANCELLED';
+                        this.showToast('任务已取消', 'success');
+                        // 实际实现时，这里应该调用后端API取消任务
+                    }
+                },
+                deleteDownloadTask(task) {
+                    if (confirm('确定要删除该任务吗？删除后不可恢复。')) {
+                        const index = this.downloadTasks.findIndex(t => t.taskId === task.taskId);
+                        if (index > -1) {
+                            this.downloadTasks.splice(index, 1);
+                            this.showToast('任务已删除', 'success');
+                        }
+                    }
+                },
+                showTaskDetail(task) {
+                    this.selectedTaskDetail = { ...task };
+                    this.showTaskDetailModal = true;
+                },
+                closeTaskDetail() {
+                    this.showTaskDetailModal = false;
+                    this.selectedTaskDetail = null;
+                },
+                jumpToDownloadPage() {
+                    const page = parseInt(this.downloadPagination.jumpPage);
+                    if (page >= 1 && page <= this.downloadPaginationPages) {
+                        this.downloadPagination.current = page;
+                    }
+                    this.downloadPagination.jumpPage = this.downloadPagination.current;
+                },
+                getStatusBadgeClass(status) {
+                    const classes = {
+                        'COMPLETED': 'bg-green-100 text-green-700',
+                        'PROCESSING': 'bg-blue-100 text-blue-700',
+                        'QUEUED': 'bg-gray-100 text-gray-700',
+                        'FAILED': 'bg-red-100 text-red-700',
+                        'PENDING': 'bg-yellow-100 text-yellow-700',
+                        'EXPIRED': 'bg-gray-50 text-gray-500',
+                        'CANCELLED': 'bg-gray-50 text-gray-500'
+                    };
+                    return classes[status] || 'bg-gray-100 text-gray-700';
+                },
+                getStatusIcon(status) {
+                    const icons = {
+                        'COMPLETED': 'fas fa-check-circle',
+                        'PROCESSING': 'fas fa-spinner fa-spin',
+                        'QUEUED': 'fas fa-clock',
+                        'FAILED': 'fas fa-times-circle',
+                        'PENDING': 'fas fa-hourglass-half',
+                        'EXPIRED': 'fas fa-clock',
+                        'CANCELLED': 'fas fa-ban'
+                    };
+                    return icons[status] || 'fas fa-question-circle';
+                },
+                getStatusLabel(status) {
+                    const labels = {
+                        'COMPLETED': '已完成',
+                        'PROCESSING': '处理中',
+                        'QUEUED': '排队中',
+                        'FAILED': '失败',
+                        'PENDING': '待处理',
+                        'EXPIRED': '已过期',
+                        'CANCELLED': '已取消'
+                    };
+                    return labels[status] || status;
+                },
+                truncateFileName(fileName, maxLength) {
+                    if (!fileName) return '';
+                    if (fileName.length <= maxLength) return fileName;
+                    const ext = fileName.substring(fileName.lastIndexOf('.'));
+                    const name = fileName.substring(0, fileName.lastIndexOf('.'));
+                    if (name.length <= maxLength - ext.length) return fileName;
+                    return name.substring(0, maxLength - ext.length - 3) + '...' + ext;
+                },
+                formatFileSize(bytes) {
+                    if (!bytes) return '-';
+                    if (bytes < 1024) return bytes + ' B';
+                    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+                    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+                },
+                formatRelativeTime(timeStr) {
+                    if (!timeStr) return '-';
+                    const now = new Date();
+                    const time = new Date(timeStr);
+                    const diff = now - time;
+                    const minutes = Math.floor(diff / 60000);
+                    const hours = Math.floor(diff / 3600000);
+                    const days = Math.floor(diff / 86400000);
+                    if (minutes < 1) return '刚刚';
+                    if (minutes < 60) return minutes + '分钟前';
+                    if (hours < 24) return hours + '小时前';
+                    if (days < 7) return days + '天前';
+                    return this.formatDateTime(timeStr);
+                },
+                formatDateTime(timeStr) {
+                    if (!timeStr) return '-';
+                    const date = new Date(timeStr);
+                    return date.getFullYear() + '-' + 
+                           String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(date.getDate()).padStart(2, '0') + ' ' + 
+                           String(date.getHours()).padStart(2, '0') + ':' + 
+                           String(date.getMinutes()).padStart(2, '0') + ':' + 
+                           String(date.getSeconds()).padStart(2, '0');
+                },
+                searchContainer() {
+                    // 搜索功能由filteredContainerStatus计算属性自动处理
+                    // 这个方法可以用于触发其他操作，如API调用等
+                },
                 parseList(value) {
                     if (!value) return [];
                     return value
@@ -1132,17 +3235,155 @@
                 navigateToPage() {
                     // 导航到当前页面（已选中状态）
                 },
+                // ===== Query Export Modal =====
+                qOpenExportModal() {
+                    this.showExportModal = true;
+                },
+                closeExportModal() {
+                    this.showExportModal = false;
+                },
+                resetExportForm() {
+                    this.exportForm = {
+                        bookingNo: '',
+                        soNo: '',
+                        containerNo: '',
+                        vesselVoy: '',
+                        etd: '',
+                        atd: '',
+                        eta: '',
+                        ata: '',
+                        destinationCountry: '',
+                        shippingCarrier: '',
+                        salesBu: '',
+                        salesRegion: '',
+                        orderStatus: '',
+                        transportMode: ''
+                    };
+                },
+                confirmExport() {
+                    // 原型阶段仅做提示，实际导出逻辑后续接入
+                    this.showToast('已根据筛选条件导出列表（原型演示，无真实下载）', 'success');
+                    this.closeExportModal();
+                },
+                switchView(view) {
+                    this.currentView = view;
+                    // 防止从“上报”宽表横向滚动后，切到“查询”出现左侧大空白（window 横向滚动未复位）
+                    this.$nextTick(() => {
+                        try {
+                            // reset internal container scrollLeft as well
+                            if (this.$refs.mainContent) {
+                                this.$refs.mainContent.scrollLeft = 0;
+                            }
+                            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                            document.documentElement.scrollLeft = 0;
+                            document.body.scrollLeft = 0;
+                        } catch (e) {}
+                    });
+                },
+                qDoQuery() {
+                    this.showToast('查询功能待接真实数据（原型演示）', 'success');
+                },
+                qOpenBookingInfo() {
+                    this.showToast('订舱信息功能待实现（原型演示）', 'success');
+                },
+                qExportList() {
+                    this.showToast('导出列表功能待实现（原型演示）', 'success');
+                },
+                handleSort(column) {
+                    // 如果点击的是当前排序列，切换排序方向；否则设置为新列并默认降序
+                    if (this.sortColumn === column) {
+                        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        this.sortColumn = column;
+                        this.sortDirection = 'desc'; // 默认降序
+                    }
+                    // 重新执行搜索以应用排序
+                    this.search();
+                },
+                getSortIconClass(column) {
+                    if (this.sortColumn !== column) {
+                        return ''; // 未排序的列显示默认排序图标
+                    }
+                    return this.sortDirection === 'asc' ? 'active asc' : 'active desc';
+                },
                 search() {
+                    let result = [...this.tableData];
+
+                    // 如果用户点击了列排序，优先使用列排序；否则使用默认排序（按更新时间倒序）
+                    if (this.sortColumn) {
+                        result.sort((a, b) => {
+                            let aVal, bVal;
+                            
+                            // 根据列名获取对应的值
+                            switch (this.sortColumn) {
+                                case 'realETD':
+                                    aVal = a.realETD || '';
+                                    bVal = b.realETD || '';
+                                    break;
+                                case 'atd':
+                                    aVal = a.atd || '';
+                                    bVal = b.atd || '';
+                                    break;
+                                case 'realETA':
+                                    aVal = a.realETA || '';
+                                    bVal = b.realETA || '';
+                                    break;
+                                case 'ata':
+                                    aVal = a.ata || '';
+                                    bVal = b.ata || '';
+                                    break;
+                                case 'kmToBorder':
+                                    aVal = a.kmToBorder != null ? a.kmToBorder : -Infinity;
+                                    bVal = b.kmToBorder != null ? b.kmToBorder : -Infinity;
+                                    break;
+                                case 'kmToDestination':
+                                    aVal = a.kmToDestination != null ? a.kmToDestination : -Infinity;
+                                    bVal = b.kmToDestination != null ? b.kmToDestination : -Infinity;
+                                    break;
+                                case 'uploadTime':
+                                    aVal = a.uploadTime || '';
+                                    bVal = b.uploadTime || '';
+                                    break;
+                                case 'modifyTime':
+                                    aVal = a.modifyTime || a.uploadTime || '';
+                                    bVal = b.modifyTime || b.uploadTime || '';
+                                    break;
+                                default:
+                                    return 0;
+                            }
+                            
+                            // 处理空值：空值排在最后
+                            if (!aVal && !bVal) return 0;
+                            if (!aVal) return 1;
+                            if (!bVal) return -1;
+                            
+                            // 数值类型直接比较
+                            if (typeof aVal === 'number' && typeof bVal === 'number') {
+                                return this.sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+                            }
+                            
+                            // 字符串类型（时间）使用localeCompare
+                            const comparison = (aVal || '').localeCompare(bVal || '');
+                            return this.sortDirection === 'asc' ? comparison : -comparison;
+                        });
+                    } else {
+                        // 默认排序：按更新时间（修改时间）倒序排序；若无修改时间则退回上传时间
+                        result.sort((a, b) => {
+                            const aTime = a.modifyTime || a.uploadTime || '';
+                            const bTime = b.modifyTime || b.uploadTime || '';
+                            return (bTime || '').localeCompare(aTime || '');
+                        });
+                    }
+
                     const lhzList = this.parseList(this.filters.lhzOrder);
                     const ctnList = this.parseList(this.filters.containerNo);
                     const polList = Array.isArray(this.filters.pol) ? this.filters.pol : [];
                     const podList = Array.isArray(this.filters.pod) ? this.filters.pod : [];
                     const sizeList = Array.isArray(this.filters.containerSize) ? this.filters.containerSize : [];
+                    const statusVal = (this.filters.currentStatus || '').trim();
                     const carrierVal = this.filters.carrier.trim();
                     const uploadUserVal = this.filters.uploadUser.trim();
                     const uploadTimeRange = this.filters.uploadTimeRange.trim();
-
-                    let result = [...this.tableData];
 
                     // 数据权限过滤：货代A不能搜索到货代B上传的数据
                     if (this.userRole === 'carrier') {
@@ -1163,6 +3404,9 @@
                     }
                     if (sizeList.length > 0) {
                         result = result.filter(item => sizeList.includes(item.containerSize));
+                    }
+                    if (statusVal) {
+                        result = result.filter(item => (item.currentStatus || '') === statusVal);
                     }
                     if (carrierVal) {
                         // 货代搜索：货代A只能搜索到自己货代的数据
@@ -1207,6 +3451,7 @@
                         pol: [],
                         pod: [],
                         containerSize: [],
+                        currentStatus: '',
                         uploadTimeRange: '',
                         carrier: '',
                         uploadUser: ''
@@ -1214,6 +3459,9 @@
                     this.polSearch = '';
                     this.podSearch = '';
                     this.sizeSearch = '';
+                    // 重置排序状态
+                    this.sortColumn = null;
+                    this.sortDirection = null;
                     this.search();
                 },
                 // Multi-select methods for POL
@@ -1286,8 +3534,71 @@
                         this.selectedIds = this.paginatedData.map(item => item.id);
                     }
                 },
+                getStatusLabel(code) {
+                    if (!code) return '-';
+                    const matched = this.statusOptions.find(s => s.code === code);
+                    return matched ? matched.label : code;
+                },
+                // 获取节点状态样式类
+                getNodeStatusClass(node) {
+                    if (!this.aggregatedBookingStatus || !this.aggregatedBookingStatus.containers || this.aggregatedBookingStatus.containers.length === 0) {
+                        return 'status-pending';
+                    }
+                    
+                    // 找到所有箱子中的最高状态（最大状态码）
+                    const statusCodes = this.aggregatedBookingStatus.containers
+                        .map(c => parseInt(c.statusCode || '00', 10))
+                        .filter(code => !isNaN(code));
+                    
+                    if (statusCodes.length === 0) {
+                        return 'status-pending';
+                    }
+                    
+                    const maxStatusCode = Math.max(...statusCodes);
+                    const currentNodeCode = parseInt(node.code, 10);
+                    
+                    // 如果当前节点代码小于最高状态，说明已完成（绿色）
+                    if (currentNodeCode < maxStatusCode) {
+                        return 'status-completed';
+                    }
+                    // 如果当前节点代码等于最高状态，说明是激活状态（蓝色）
+                    if (currentNodeCode === maxStatusCode) {
+                        return 'status-active';
+                    }
+                    // 如果当前节点代码大于最高状态，说明未到达（灰色）
+                    return 'status-pending';
+                },
+                // 获取连接线状态样式类
+                getLineStatusClass(currentNode, nextNode) {
+                    const nextClass = this.getNodeStatusClass(nextNode);
+                    const currentClass = this.getNodeStatusClass(currentNode);
+
+                    // 特殊规则：当前最高激活节点右侧的连接线应为灰色虚线
+                    // 场景：current = status-active, next = status-pending
+                    if (currentClass === 'status-active' && nextClass === 'status-pending') {
+                        return 'status-pending';
+                    }
+
+                    // 连接线的默认状态优先取决于下一个节点的状态
+                    // 如果下一个节点已完成或激活，连接线应该显示为已完成或激活
+                    if (nextClass === 'status-completed') {
+                        return 'status-completed';
+                    }
+                    if (nextClass === 'status-active') {
+                        return 'status-active';
+                    }
+                    // 如果当前节点已完成，连接线为绿色
+                    if (currentClass === 'status-completed') {
+                        return 'status-completed';
+                    }
+                    // 如果当前节点激活，连接线为蓝色
+                    if (currentClass === 'status-active') {
+                        return 'status-active';
+                    }
+                    return 'status-pending';
+                },
                 validateField(field) {
-                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentLocation', 'kmToBorder'];
+                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder', 'realETD', 'realETA'];
                     if (requiredFields.includes(field) && !this.form[field]) {
                         this.$set(this.errors, field, `请填写${this.getFieldLabel(field)}`);
                         return;
@@ -1302,17 +3613,20 @@
                     const labels = {
                         pol: '起运港',
                         pod: '目的港',
-                        lhzOrder: '落货纸号',
-                        containerNo: '箱号',
+                        lhzOrder: '订舱号',
+                        containerNo: '集装箱号',
                         containerSize: '箱型',
+                        currentStatus: '当前状态',
                         currentLocation: '当前位置',
-                        kmToBorder: '距离始发站口岸'
+                        kmToBorder: '距离始发站口岸',
+                        realETD: '实时ETD',
+                        realETA: '实时ETA'
                     };
                     return labels[field] || field;
                 },
                 validateForm() {
                     this.errors = {};
-                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentLocation', 'kmToBorder'];
+                    const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder', 'realETD', 'realETA'];
                     let hasError = false;
                     
                     requiredFields.forEach(field => {
@@ -1325,9 +3639,9 @@
                         }
                     });
                     
-                    // 业务校验：落货纸号校验（模拟）
+                    // 业务校验：订舱号校验（模拟）
                     if (this.form.lhzOrder && !this.validateLhzOrder(this.form.lhzOrder)) {
-                        this.$set(this.errors, 'lhzOrder', '该落货纸不属于当前货代，无法上传');
+                        this.$set(this.errors, 'lhzOrder', '该订舱号不属于当前货代，无法上传');
                         hasError = true;
                     }
                     
@@ -1340,18 +3654,103 @@
                 },
                 validateLhzOrder(lhzOrder) {
                     // 模拟校验逻辑：实际应该调用接口校验
-                    // 这里简单模拟：如果落货纸号包含'INVALID'则校验失败
+                    // 这里简单模拟：如果订舱号包含'INVALID'则校验失败
                     return !lhzOrder.includes('INVALID');
+                },
+                toDateTimeLocal(dateStr) {
+                    if (!dateStr) return '';
+                    // 如果已经是日期时间格式，直接替换空格为T
+                    if (dateStr.includes(' ')) {
+                        return dateStr.replace(' ', 'T');
+                    }
+                    // 如果只有日期，补一个时间部分
+                    if (dateStr.length === 10) {
+                        return `${dateStr}T00:00:00`;
+                    }
+                    return dateStr;
+                },
+                openAddModal() {
+                    this.isEditMode = false;
+                    this.editingItemId = null;
+                    this.showAddModal = true;
+                    this.updateUploadTime();
+                    this.form = {
+                        pol: '',
+                        pod: '',
+                        lhzOrder: '',
+                        containerNo: '',
+                        containerSize: '',
+                        currentStatus: '',
+                        currentLocation: '',
+                        kmToBorder: null,
+                        kmToDestination: null,
+                        realETD: '',
+                        atd: '',
+                        realETA: '',
+                        ata: ''
+                    };
+                    this.errors = {};
+                },
+                openEditModal(item) {
+                    this.isEditMode = true;
+                    this.editingItemId = item.id;
+                    this.showAddModal = true;
+                    this.errors = {};
+                    // 仅加载业务可编辑字段，系统字段（货代/上传人/上传时间/订舱人）不在表单中体现
+                    this.form = {
+                        pol: item.pol || '',
+                        pod: item.pod || '',
+                        lhzOrder: item.lhzOrder || '',
+                        containerNo: item.containerNo || '',
+                        containerSize: item.containerSize || '',
+                        currentStatus: item.currentStatus || '',
+                        currentLocation: item.currentLocation || '',
+                        kmToBorder: item.kmToBorder != null ? item.kmToBorder : null,
+                        kmToDestination: item.kmToDestination != null ? item.kmToDestination : null,
+                        realETD: this.toDateTimeLocal(item.realETD),
+                        atd: this.toDateTimeLocal(item.atd),
+                        realETA: this.toDateTimeLocal(item.realETA),
+                        ata: this.toDateTimeLocal(item.ata)
+                    };
                 },
                 saveItem() {
                     if (!this.validateForm()) {
                         return;
                     }
                     
-                    // 更新上传时间
+                    // 更新“当前时间”（用于上传时间/修改时间）
                     this.updateUploadTime();
                     
-                    // 模拟保存
+                    if (this.isEditMode && this.editingItemId != null) {
+                        // 修改模式：只更新业务字段和修改时间，保持上传时间/上传人/货代/订舱人不变
+                        const index = this.tableData.findIndex(d => d.id === this.editingItemId);
+                        if (index > -1) {
+                            const oldItem = this.tableData[index];
+                            const updated = {
+                                ...oldItem,
+                                lhzOrder: this.form.lhzOrder,
+                                containerNo: this.form.containerNo,
+                                containerSize: this.form.containerSize,
+                                pol: this.form.pol,
+                                pod: this.form.pod,
+                                currentStatus: this.form.currentStatus,
+                                currentLocation: this.form.currentLocation,
+                                kmToBorder: this.form.kmToBorder,
+                                kmToDestination: this.form.kmToDestination,
+                                realETD: this.formatDateOnly(this.formatDateTime(this.form.realETD)),
+                                atd: this.formatDateOnly(this.formatDateTime(this.form.atd)),
+                                realETA: this.formatDateOnly(this.formatDateTime(this.form.realETA)),
+                                ata: this.formatDateOnly(this.formatDateTime(this.form.ata)),
+                                // 系统字段保持不变：carrier / uploadUser / uploadTime / bookingOperator
+                                modifyTime: this.currentUploadTime
+                            };
+                            this.tableData.splice(index, 1, updated);
+                        }
+                        this.closeAddModal();
+                        this.search();
+                        this.showToast('修改成功', 'success');
+                    } else {
+                        // 新建模式：插入新记录，上传时间和修改时间初始一致
                     const newItem = {
                         id: this.tableData.length + 1,
                         lhzOrder: this.form.lhzOrder,
@@ -1360,6 +3759,7 @@
                         containerSize: this.form.containerSize,
                         pol: this.form.pol,
                         pod: this.form.pod,
+                            currentStatus: this.form.currentStatus,
                         currentLocation: this.form.currentLocation,
                         kmToBorder: this.form.kmToBorder,
                         kmToDestination: this.form.kmToDestination,
@@ -1368,13 +3768,17 @@
                         realETA: this.formatDateOnly(this.formatDateTime(this.form.realETA)),
                         ata: this.formatDateOnly(this.formatDateTime(this.form.ata)),
                         uploadTime: this.currentUploadTime,
-                        uploadUser: this.currentUser.name
+                            modifyTime: this.currentUploadTime,
+                            uploadUser: this.currentUser.name,
+                            // 订舱人：实际系统应根据订舱号从订舱信息中自动带出，这里仅做占位展示
+                            bookingOperator: '系统根据订舱号自动带出'
                     };
                     
                     this.tableData.unshift(newItem);
                     this.closeAddModal();
                     this.search();
                     this.showToast('保存成功', 'success');
+                    }
                 },
                 formatDateTime(datetimeLocal) {
                     if (!datetimeLocal) return null;
@@ -1394,13 +3798,15 @@
                 },
                 closeAddModal() {
                     this.showAddModal = false;
-                    this.updateUploadTime();
+                    this.isEditMode = false;
+                    this.editingItemId = null;
                     this.form = {
                         pol: '',
                         pod: '',
                         lhzOrder: '',
                         containerNo: '',
                         containerSize: '',
+                        currentStatus: '',
                         currentLocation: '',
                         kmToBorder: null,
                         kmToDestination: null,
@@ -1412,7 +3818,7 @@
                     this.errors = {};
                 },
                 deleteItem(item) {
-                    if (confirm(`确定要删除落货纸号 ${item.lhzOrder} 的箱号 ${item.containerNo} 的记录吗？`)) {
+                    if (confirm(`确定要删除订舱号 ${item.lhzOrder} 的集装箱号 ${item.containerNo} 的记录吗？`)) {
                         const index = this.tableData.findIndex(d => d.id === item.id);
                         if (index > -1) {
                             this.tableData.splice(index, 1);
@@ -1484,8 +3890,8 @@
                             const failedCount = 3;
                             const errors = [
                                 {row: 2, lhzOrder: 'LHZ001', containerNo: 'CTU1', message: '请填写起运港'},
-                                {row: 5, lhzOrder: 'LHZ002', containerNo: 'CTU2', message: '该SO未处于已订舱状态，无法上传可视化信息'},
-                                {row: 8, lhzOrder: 'LHZ003', containerNo: 'CTU3', message: '该落货纸不属于当前货代，无法上传'}
+                                {row: 5, lhzOrder: 'LHZ002', containerNo: 'CTU2', message: '该订舱号未处于已订舱状态，无法上传可视化信息'},
+                                {row: 8, lhzOrder: 'LHZ003', containerNo: 'CTU3', message: '该订舱号不属于当前货代，无法上传'}
                             ];
                             
                             // 规则：如果有失败的记录，所有记录都不入库（全部回滚）
@@ -1588,6 +3994,21 @@
                     setTimeout(() => {
                         this.toast.show = false;
                     }, 3000);
+                }
+            },
+            directives: {
+                'click-outside': {
+                    mounted(el, binding) {
+                        el.clickOutsideEvent = function(event) {
+                            if (!(el === event.target || el.contains(event.target))) {
+                                binding.value();
+                            }
+                        };
+                        document.addEventListener('click', el.clickOutsideEvent);
+                    },
+                    unmounted(el) {
+                        document.removeEventListener('click', el.clickOutsideEvent);
+                    }
                 }
             }
         }).mount('#app');
