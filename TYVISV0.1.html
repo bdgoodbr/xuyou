@@ -799,6 +799,17 @@
                         HTM / 业务操作模块 / <span class="text-slate-900 font-semibold">{{ currentView === 'upload' ? '铁运可视化信息上报' : currentView === 'query' ? '铁运可视化查询' : '下载中心' }}</span>
                     </div>
                     <div class="flex items-center space-x-4">
+                        <!-- 我的下载按钮（独立） -->
+                        <button 
+                            @click="goToDownloadCenter"
+                            class="relative flex items-center space-x-2 px-3 py-1.5 text-sm text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors border border-slate-200 hover:border-blue-300"
+                        >
+                            <i class="fas fa-download text-slate-500"></i>
+                            <span class="font-medium">我的下载</span>
+                            <span v-if="unreadDownloadCount > 0" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                                {{ unreadDownloadCount > 99 ? '99+' : unreadDownloadCount }}
+                            </span>
+                        </button>
                         <!-- Tenant Dropdown -->
                         <div class="relative" v-click-outside="() => showTenantDropdown = false">
                             <button 
@@ -828,19 +839,6 @@
                                     >
                                         <span>{{ tenant.name }}</span>
                                         <i v-if="selectedTenant.code === tenant.code" class="fas fa-check text-blue-600"></i>
-                                    </button>
-                                    <!-- 分隔线 -->
-                                    <div class="border-t border-slate-100 my-1"></div>
-                                    <!-- 我的下载入口 -->
-                                    <button
-                                        @click="goToDownloadCenter"
-                                        class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center space-x-2"
-                                    >
-                                        <i class="fas fa-download text-slate-500"></i>
-                                        <span>我的下载</span>
-                                        <span v-if="unreadDownloadCount > 0" class="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-                                            {{ unreadDownloadCount > 99 ? '99+' : unreadDownloadCount }}
-                                        </span>
                                     </button>
                                 </div>
                             </div>
