@@ -798,8 +798,36 @@
                     <div class="text-compact text-slate-500">
                         HTM / 业务操作模块 / <span class="text-slate-900 font-semibold">{{ currentView === 'upload' ? '铁运可视化信息上报' : '铁运可视化查询' }}</span>
                     </div>
-                    <div class="flex space-x-4 text-slate-400">
-                        <i class="fas fa-bell hover:text-blue-600 cursor-pointer transition-colors"></i>
+                    <div class="flex items-center space-x-4">
+                        <!-- Tenant Dropdown -->
+                        <div class="relative" v-click-outside="() => showTenantDropdown = false">
+                            <button 
+                                @click="showTenantDropdown = !showTenantDropdown"
+                                class="flex items-center space-x-2 px-3 py-1.5 text-sm text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors border border-slate-200 hover:border-blue-300"
+                            >
+                                <i class="fas fa-building text-slate-500"></i>
+                                <span class="font-medium">{{ selectedTenant.name }}</span>
+                                <i class="fas fa-chevron-down text-xs transition-transform" :class="{ 'rotate-180': showTenantDropdown }"></i>
+                            </button>
+                            <!-- Dropdown Menu -->
+                            <div 
+                                v-show="showTenantDropdown"
+                                class="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-md shadow-lg z-50"
+                            >
+                                <div class="py-1">
+                                    <button
+                                        v-for="tenant in tenantOptions"
+                                        :key="tenant.code"
+                                        @click="selectTenant(tenant)"
+                                        class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center justify-between"
+                                        :class="{ 'bg-blue-50 text-blue-600 font-medium': selectedTenant.code === tenant.code }"
+                                    >
+                                        <span>{{ tenant.name }}</span>
+                                        <i v-if="selectedTenant.code === tenant.code" class="fas fa-check text-blue-600"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1816,6 +1844,17 @@
                     },
                     currentUploadTime: '',
                     
+                    // Tenant Selection
+                    showTenantDropdown: false,
+                    selectedTenant: { code: 'HGCC', name: 'HGCC(营销服)' },
+                    tenantOptions: [
+                        { code: 'HGCC', name: 'HGCC(营销服)' },
+                        { code: 'MXFCTR', name: 'MXFCTR(墨)' },
+                        { code: 'GORFAC', name: 'GORFAC(欧)' },
+                        { code: 'VITFAC', name: 'VITFAC(越)' },
+                        { code: 'SANFAC', name: 'SANFAC' }
+                    ],
+                    
                     // Collapse states
                     basicInfoCollapsed: false,
                     currentStatusCollapsed: false,
@@ -2486,6 +2525,11 @@
                 });
             },
             methods: {
+                selectTenant(tenant) {
+                    this.selectedTenant = tenant;
+                    this.showTenantDropdown = false;
+                    // 这里可以添加切换租户后的逻辑，如重新加载数据等
+                },
                 searchContainer() {
                     // 搜索功能由filteredContainerStatus计算属性自动处理
                     // 这个方法可以用于触发其他操作，如API调用等
@@ -3274,6 +3318,21 @@
                     setTimeout(() => {
                         this.toast.show = false;
                     }, 3000);
+                }
+            },
+            directives: {
+                'click-outside': {
+                    mounted(el, binding) {
+                        el.clickOutsideEvent = function(event) {
+                            if (!(el === event.target || el.contains(event.target))) {
+                                binding.value();
+                            }
+                        };
+                        document.addEventListener('click', el.clickOutsideEvent);
+                    },
+                    unmounted(el) {
+                        document.removeEventListener('click', el.clickOutsideEvent);
+                    }
                 }
             }
         }).mount('#app');
