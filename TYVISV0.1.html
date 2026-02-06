@@ -1905,12 +1905,12 @@
                     <div class="flex items-center space-x-2">
                         <button
                                 @click="selectedDownloadTasks.length > 0 && batchDeleteDownloadTasks()"
-                                class="text-xs px-4 h-9 rounded shadow-sm transition-colors flex items-center"
-                                :class="selectedDownloadTasks.length > 0 ? 'bg-red-600 hover:bg-red-700 text-white cursor-pointer' : 'bg-red-100 text-red-400 cursor-not-allowed'">
+                                class="text-xs px-4 h-9 rounded shadow-sm transition-colors flex items-center border"
+                                :class="selectedDownloadTasks.length > 0 ? 'bg-white border-red-300 text-red-600 hover:bg-red-50 cursor-pointer' : 'bg-white border-gray-200 text-gray-300 cursor-not-allowed'">
                             <i class="fas fa-trash mr-1"></i> 批量删除
                         </button>
                         <button @click="clearExpiredTasks" 
-                                class="bg-gray-600 hover:bg-gray-700 text-white text-xs px-4 h-9 rounded shadow-sm transition-colors">
+                                class="bg-white border border-gray-300 text-gray-700 text-xs px-4 h-9 rounded hover:bg-gray-50 shadow-sm transition-colors flex items-center">
                             <i class="fas fa-broom mr-1"></i> 清空已过期
                         </button>
                     </div>
