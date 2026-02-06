@@ -1961,10 +1961,10 @@
                                     </div>
                                 </td>
                                 <td class="border border-gray-200 px-4 py-3 text-sm text-gray-700">{{ task.module }}</td>
-                            <td class="border border-gray-200 px-4 py-3">
-                                <span :class="getStatusBadgeClass(task.status)" class="px-2 py-1 rounded-full text-xs font-medium">
+                                <td class="border border-gray-200 px-4 py-3">
+                                    <span :class="getStatusBadgeClass(task.status)" class="px-2 py-1 rounded-full text-xs font-medium">
                                         <i :class="getStatusIcon(task.status)" class="mr-1"></i>
-                                        {{ getDownloadStatusLabel(task.status) }}
+                                        {{ getStatusLabel(task.status) }}
                                     </span>
                                 </td>
                                 <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">{{ formatDateTime(task.createTime) }}</td>
@@ -3195,7 +3195,7 @@
                     };
                     return icons[status] || 'fas fa-question-circle';
                 },
-                getDownloadStatusLabel(status) {
+                getStatusLabel(status) {
                     const labels = {
                         'COMPLETED': '已完成',
                         'PROCESSING': '处理中',
