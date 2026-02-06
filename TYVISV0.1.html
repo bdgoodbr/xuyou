@@ -1932,12 +1932,13 @@
                                 <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 100px;">状态</th>
                                 <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 150px;">创建时间</th>
                                 <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 100px;">文件大小</th>
+                                <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 90px;">详情</th>
                                 <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 150px;">操作</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-if="filteredDownloadTasks.length === 0">
-                                <td colspan="7" class="border border-gray-200 px-4 py-12 text-center text-gray-500">
+                                <td colspan="8" class="border border-gray-200 px-4 py-12 text-center text-gray-500">
                                     <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
                                     <p class="text-sm">暂无导出任务</p>
                                     <p class="text-xs text-gray-400 mt-1">点击页面上的"导出"按钮创建导出任务</p>
@@ -1981,6 +1982,11 @@
                                 <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
                                     <span v-if="task.fileSize">{{ formatFileSize(task.fileSize) }}</span>
                                     <span v-else class="text-gray-400">-</span>
+                                </td>
+                                <td class="border border-gray-200 px-4 py-3 text-sm text-blue-600 text-center">
+                                    <button @click="showTaskDetail(task)" class="hover:text-blue-800">
+                                        详情
+                                    </button>
                                 </td>
                                 <td class="border border-gray-200 px-4 py-3">
                                     <div class="flex items-center space-x-2">
