@@ -1964,7 +1964,16 @@
                                 <td class="border border-gray-200 px-4 py-3">
                                     <span :class="getStatusBadgeClass(task.status)" class="px-2 py-1 rounded-full text-xs font-medium">
                                         <i :class="getStatusIcon(task.status)" class="mr-1"></i>
-                                        {{ getStatusLabel(task.status) }}
+                                        {{
+                                            {
+                                                COMPLETED: '已完成',
+                                                PROCESSING: '处理中',
+                                                QUEUED: '排队中',
+                                                FAILED: '失败',
+                                                EXPIRED: '已过期',
+                                                CANCELLED: '已取消'
+                                            }[task.status] || task.status
+                                        }}
                                     </span>
                                 </td>
                                 <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">{{ formatDateTime(task.createTime) }}</td>
@@ -4003,8 +4012,8 @@
                     };
                 },
                 exportData() {
-                    // 模拟导出数据
-                    this.showToast('数据导出功能待实现', 'success');
+                    // 原型：点击导出后模拟创建异步导出任务，并用 Toast 告知用户
+                    this.showToast('导出任务已创建，文件准备好后将自动在“我的下载”中提供下载', 'success');
                 },
                 jumpToPage() {
                     if (this.jumpPage >= 1 && this.jumpPage <= this.pagination.pages) {
