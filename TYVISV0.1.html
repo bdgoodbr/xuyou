@@ -2117,7 +2117,32 @@
                             </button>
                         </div>
                         <div v-if="downloadConditionsExpanded" class="bg-gray-50 p-3 rounded border border-gray-200">
-                            <pre class="text-xs text-gray-700 whitespace-pre-wrap">{{ JSON.stringify(selectedTaskDetail.queryConditions, null, 2) }}</pre>
+                            <div v-if="selectedTaskDetail.queryConditions && Object.keys(selectedTaskDetail.queryConditions).length > 0" class="space-y-1">
+                                <div v-for="(value, key) in selectedTaskDetail.queryConditions"
+                                     :key="key"
+                                     class="flex text-xs text-gray-700">
+                                    <span class="w-28 text-gray-500">
+                                        {{ conditionKeyLabelMap[key] || key }}：
+                                    </span>
+                                    <span class="flex-1">
+                                        <template v-if="Array.isArray(value)">
+                                            <span v-for="(v, idx) in value"
+                                                  :key="idx"
+                                                  class="inline-flex items-center px-2 py-0.5 mr-1 mb-1 rounded-full bg-white border border-gray-200">
+                                                <span class="text-[11px] text-gray-700">{{ v }}</span>
+                                            </span>
+                                        </template>
+                                        <template v-else>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-white border border-gray-200 text-[11px] text-gray-700">
+                                                {{ value || '-' }}
+                                            </span>
+                                        </template>
+                                    </span>
+                                </div>
+                            </div>
+                            <div v-else class="text-xs text-gray-400">
+                                无额外筛选条件（等同于当前列表筛选条件）
+                            </div>
                         </div>
                     </div>
                     <!-- 处理日志 -->
@@ -2218,6 +2243,24 @@
                         timeRange: 'week'
                     },
                     // 下载中心示例任务数据（覆盖常见状态：排队中、处理中、已完成、失败、已取消、已过期）
+                    // 查询条件字段 -> 友好标签映射（任务详情「导出条件」展示用，仅用于原型）
+                    conditionKeyLabelMap: {
+                        so_no: 'SO号',
+                        lhz_order: '订舱号',
+                        booking_no: '订舱号',
+                        container_no: '箱号',
+                        containerNos: '箱号',
+                        country: '国家',
+                        countries: '国家',
+                        pol: '起运港',
+                        pod: '目的港',
+                        date_range: '时间范围',
+                        eta_range: 'ETA时间',
+                        atd_range: 'ATD时间',
+                        created_by: '创建人',
+                        module: '模块',
+                        tenant: '租户'
+                    },
                     downloadTasks: [
                         {
                             taskId: 'task_001',
@@ -2239,7 +2282,7 @@
                         },
                         {
                             taskId: 'task_002',
-                            fileName: '可视化查询_MXFCTR_20260205_090123_4567.xlsx',
+                            fileName: '可视化查询_MXFCTR_单箱_20260205_090123_4567.xlsx',
                             module: '可视化查询',
                             status: 'PROCESSING',
                             createTime: '2026-02-05 09:01:23',
@@ -2247,7 +2290,10 @@
                             fileSize: null,
                             progress: 65,
                             downloadCount: 0,
-                            queryConditions: { container_no: 'CONT001' },
+                            // 示例1：按单个箱号导出
+                            queryConditions: {
+                                container_no: 'CONT001'
+                            },
                             logs: [
                                 { time: '2026-02-05 09:01:23', message: '任务已创建' },
                                 { time: '2026-02-05 09:01:24', message: '任务已入队' },
@@ -2256,8 +2302,8 @@
                         },
                         {
                             taskId: 'task_003',
-                            fileName: '订舱管理_GORFAC_20260205_091500_7890.xlsx',
-                            module: '订舱管理',
+                            fileName: '可视化查询_MXFCTR_多条件_20260205_091500_7890.xlsx',
+                            module: '可视化查询',
                             status: 'FAILED',
                             createTime: '2026-02-05 09:15:00',
                             completeTime: null,
@@ -2265,7 +2311,13 @@
                             progress: 0,
                             downloadCount: 0,
                             errorMessage: '数据查询超时，请缩小查询范围后重试',
-                            queryConditions: { booking_no: 'BK001' },
+                            // 示例2：SO号 + 多个箱号 + 国家 + 时间范围
+                            queryConditions: {
+                                so_no: 'LHZ20250205001',
+                                containerNos: ['CONT001', 'CONT005', 'CONT006'],
+                                country: 'DE',
+                                date_range: '2026-02-01 ~ 2026-02-05'
+                            },
                             logs: [
                                 { time: '2026-02-05 09:15:00', message: '任务已创建' },
                                 { time: '2026-02-05 09:15:01', message: '任务已入队' },
@@ -2307,7 +2359,7 @@
                         },
                         {
                             taskId: 'task_006',
-                            fileName: '可视化查询_GORFAC_20260120_093000_5566.xlsx',
+                            fileName: '可视化查询_GORFAC_历史_20260120_093000_5566.xlsx',
                             module: '可视化查询',
                             status: 'EXPIRED',
                             createTime: '2026-01-20 09:30:00',
@@ -2315,7 +2367,11 @@
                             fileSize: 5242880,
                             progress: 100,
                             downloadCount: 5,
-                            queryConditions: { so_no: 'LHZ20241231001' },
+                            // 示例3：多个国家 + ETA时间范围
+                            queryConditions: {
+                                countries: ['DE', 'PL'],
+                                eta_range: '2026-01-15 ~ 2026-02-15'
+                            },
                             logs: [
                                 { time: '2026-01-20 09:30:00', message: '任务已创建' },
                                 { time: '2026-01-20 09:30:01', message: '任务已入队' },
