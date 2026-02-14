@@ -1903,14 +1903,13 @@
                         </span>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <button
-                                @click="selectedDownloadTasks.length > 0 && batchDeleteDownloadTasks()"
-                                class="text-xs px-4 h-9 rounded shadow-sm transition-colors flex items-center border"
-                                :class="selectedDownloadTasks.length > 0 ? 'bg-white border-red-300 text-red-600 hover:bg-red-50 cursor-pointer' : 'bg-white border-gray-200 text-gray-300 cursor-not-allowed'">
+                        <button v-if="selectedDownloadTasks.length > 0" 
+                                @click="batchDeleteDownloadTasks"
+                                class="bg-red-600 hover:bg-red-700 text-white text-xs px-4 h-9 rounded shadow-sm transition-colors">
                             <i class="fas fa-trash mr-1"></i> 批量删除
                         </button>
                         <button @click="clearExpiredTasks" 
-                                class="bg-white border border-gray-300 text-gray-700 text-xs px-4 h-9 rounded hover:bg-gray-50 shadow-sm transition-colors flex items-center">
+                                class="bg-gray-600 hover:bg-gray-700 text-white text-xs px-4 h-9 rounded shadow-sm transition-colors">
                             <i class="fas fa-broom mr-1"></i> 清空已过期
                         </button>
                     </div>
@@ -1932,7 +1931,7 @@
                                 <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 100px;">状态</th>
                                 <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 150px;">创建时间</th>
                                 <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 100px;">文件大小</th>
-                                <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 90px;">详情</th>
+                                <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 120px;">进度</th>
                                 <th class="border border-gray-200 px-4 py-3 text-left bg-gray-50" style="width: 150px;">操作</th>
                             </tr>
                         </thead>
@@ -1966,27 +1965,22 @@
                                 <td class="border border-gray-200 px-4 py-3">
                                     <span :class="getStatusBadgeClass(task.status)" class="px-2 py-1 rounded-full text-xs font-medium">
                                         <i :class="getStatusIcon(task.status)" class="mr-1"></i>
-                                        {{
-                                            {
-                                                COMPLETED: '已完成',
-                                                PROCESSING: '处理中',
-                                                QUEUED: '排队中',
-                                                FAILED: '失败',
-                                                EXPIRED: '已过期',
-                                                CANCELLED: '已取消'
-                                            }[task.status] || task.status
-                                        }}
+                                        {{ getStatusLabel(task.status) }}
                                     </span>
                                 </td>
-                                <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">{{ formatDateTime(task.createTime) }}</td>
+                                <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">{{ formatRelativeTime(task.createTime) }}</td>
                                 <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">
                                     <span v-if="task.fileSize">{{ formatFileSize(task.fileSize) }}</span>
                                     <span v-else class="text-gray-400">-</span>
                                 </td>
-                                <td class="border border-gray-200 px-4 py-3 text-sm text-blue-600 text-center">
-                                    <button @click="showTaskDetail(task)" class="hover:text-blue-800">
-                                        详情
-                                    </button>
+                                <td class="border border-gray-200 px-4 py-3">
+                                    <div v-if="task.status === 'PROCESSING' && task.progress > 0" class="flex items-center space-x-2">
+                                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" :style="{width: task.progress + '%'}"></div>
+                                        </div>
+                                        <span class="text-xs text-gray-600 w-10 text-right">{{ task.progress }}%</span>
+                                    </div>
+                                    <span v-else class="text-sm text-gray-400">-</span>
                                 </td>
                                 <td class="border border-gray-200 px-4 py-3">
                                     <div class="flex items-center space-x-2">
@@ -2117,32 +2111,7 @@
                             </button>
                         </div>
                         <div v-if="downloadConditionsExpanded" class="bg-gray-50 p-3 rounded border border-gray-200">
-                            <div v-if="selectedTaskDetail.queryConditions && Object.keys(selectedTaskDetail.queryConditions).length > 0" class="space-y-1">
-                                <div v-for="(value, key) in selectedTaskDetail.queryConditions"
-                                     :key="key"
-                                     class="flex text-xs text-gray-700">
-                                    <span class="w-28 text-gray-500">
-                                        {{ conditionKeyLabelMap[key] || key }}：
-                                    </span>
-                                    <span class="flex-1">
-                                        <template v-if="Array.isArray(value)">
-                                            <span v-for="(v, idx) in value"
-                                                  :key="idx"
-                                                  class="inline-flex items-center px-2 py-0.5 mr-1 mb-1 rounded-full bg-white border border-gray-200">
-                                                <span class="text-[11px] text-gray-700">{{ v }}</span>
-                                            </span>
-                                        </template>
-                                        <template v-else>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-white border border-gray-200 text-[11px] text-gray-700">
-                                                {{ value || '-' }}
-                                            </span>
-                                        </template>
-                                    </span>
-                                </div>
-                            </div>
-                            <div v-else class="text-xs text-gray-400">
-                                无额外筛选条件（等同于当前列表筛选条件）
-                            </div>
+                            <pre class="text-xs text-gray-700 whitespace-pre-wrap">{{ JSON.stringify(selectedTaskDetail.queryConditions, null, 2) }}</pre>
                         </div>
                     </div>
                     <!-- 处理日志 -->
@@ -2242,47 +2211,28 @@
                         module: [],
                         timeRange: 'week'
                     },
-                    // 下载中心示例任务数据（覆盖常见状态：排队中、处理中、已完成、失败、已取消、已过期）
-                    // 查询条件字段 -> 友好标签映射（任务详情「导出条件」展示用，仅用于原型）
-                    conditionKeyLabelMap: {
-                        so_no: 'SO号',
-                        lhz_order: '订舱号',
-                        booking_no: '订舱号',
-                        container_no: '箱号',
-                        containerNos: '箱号',
-                        country: '国家',
-                        countries: '国家',
-                        pol: '起运港',
-                        pod: '目的港',
-                        date_range: '时间范围',
-                        eta_range: 'ETA时间',
-                        atd_range: 'ATD时间',
-                        created_by: '创建人',
-                        module: '模块',
-                        tenant: '租户'
-                    },
                     downloadTasks: [
                         {
                             taskId: 'task_001',
-                            fileName: '物流台账_HGCC_20260205_085456_8829.xlsx',
+                            fileName: 'Logistics_Orders_HGCC_20260205_085456_8829.xlsx',
                             module: '物流台账',
                             status: 'COMPLETED',
                             createTime: '2026-02-05 08:54:56',
                             completeTime: '2026-02-05 08:55:12',
                             fileSize: 2621440,
                             progress: 100,
-                            downloadCount: 3,
+                            downloadCount: 0,
                             queryConditions: { so_no: 'LHZ20250126001' },
                             logs: [
-                                { time: '2026-02-05 08:54:56', message: '任务已创建' },
-                                { time: '2026-02-05 08:54:57', message: '任务已入队' },
-                                { time: '2026-02-05 08:55:00', message: '开始处理' },
-                                { time: '2026-02-05 08:55:12', message: '处理完成' }
+                                { time: '08:54:56', message: '任务已创建' },
+                                { time: '08:54:57', message: '任务已入队' },
+                                { time: '08:55:00', message: '开始处理' },
+                                { time: '08:55:12', message: '处理完成' }
                             ]
                         },
                         {
                             taskId: 'task_002',
-                            fileName: '可视化查询_MXFCTR_单箱_20260205_090123_4567.xlsx',
+                            fileName: 'Visualization_Query_MXFCTR_20260205_090123_4567.xlsx',
                             module: '可视化查询',
                             status: 'PROCESSING',
                             createTime: '2026-02-05 09:01:23',
@@ -2290,20 +2240,17 @@
                             fileSize: null,
                             progress: 65,
                             downloadCount: 0,
-                            // 示例1：按单个箱号导出
-                            queryConditions: {
-                                container_no: 'CONT001'
-                            },
+                            queryConditions: { container_no: 'CONT001' },
                             logs: [
-                                { time: '2026-02-05 09:01:23', message: '任务已创建' },
-                                { time: '2026-02-05 09:01:24', message: '任务已入队' },
-                                { time: '2026-02-05 09:01:30', message: '开始处理' }
+                                { time: '09:01:23', message: '任务已创建' },
+                                { time: '09:01:24', message: '任务已入队' },
+                                { time: '09:01:30', message: '开始处理' }
                             ]
                         },
                         {
                             taskId: 'task_003',
-                            fileName: '可视化查询_MXFCTR_多条件_20260205_091500_7890.xlsx',
-                            module: '可视化查询',
+                            fileName: 'Booking_Manage_GORFAC_20260205_091500_7890.xlsx',
+                            module: '订舱管理',
                             status: 'FAILED',
                             createTime: '2026-02-05 09:15:00',
                             completeTime: null,
@@ -2311,73 +2258,12 @@
                             progress: 0,
                             downloadCount: 0,
                             errorMessage: '数据查询超时，请缩小查询范围后重试',
-                            // 示例2：SO号 + 多个箱号 + 国家 + 时间范围
-                            queryConditions: {
-                                so_no: 'LHZ20250205001',
-                                containerNos: ['CONT001', 'CONT005', 'CONT006'],
-                                country: 'DE',
-                                date_range: '2026-02-01 ~ 2026-02-05'
-                            },
+                            queryConditions: { booking_no: 'BK001' },
                             logs: [
-                                { time: '2026-02-05 09:15:00', message: '任务已创建' },
-                                { time: '2026-02-05 09:15:01', message: '任务已入队' },
-                                { time: '2026-02-05 09:15:05', message: '开始处理' },
-                                { time: '2026-02-05 09:15:30', message: '处理失败：数据查询超时' }
-                            ]
-                        },
-                        {
-                            taskId: 'task_004',
-                            fileName: '物流台账_MXFCTR_20260204_201000_1122.xlsx',
-                            module: '物流台账',
-                            status: 'QUEUED',
-                            createTime: '2026-02-04 20:10:00',
-                            completeTime: null,
-                            fileSize: null,
-                            progress: 0,
-                            downloadCount: 0,
-                            queryConditions: { tenant: 'MXFCTR' },
-                            logs: [
-                                { time: '2026-02-04 20:10:00', message: '任务已创建，等待处理' }
-                            ]
-                        },
-                        {
-                            taskId: 'task_005',
-                            fileName: '落货纸管理_HGCC_20260203_101500_3344.xlsx',
-                            module: '落货纸管理',
-                            status: 'CANCELLED',
-                            createTime: '2026-02-03 10:15:00',
-                            completeTime: '2026-02-03 10:16:30',
-                            fileSize: null,
-                            progress: 0,
-                            downloadCount: 0,
-                            errorMessage: '用户主动取消任务',
-                            queryConditions: { tenant: 'HGCC' },
-                            logs: [
-                                { time: '2026-02-03 10:15:00', message: '任务已创建' },
-                                { time: '2026-02-03 10:16:30', message: '用户取消任务' }
-                            ]
-                        },
-                        {
-                            taskId: 'task_006',
-                            fileName: '可视化查询_GORFAC_历史_20260120_093000_5566.xlsx',
-                            module: '可视化查询',
-                            status: 'EXPIRED',
-                            createTime: '2026-01-20 09:30:00',
-                            completeTime: '2026-01-20 09:31:10',
-                            fileSize: 5242880,
-                            progress: 100,
-                            downloadCount: 5,
-                            // 示例3：多个国家 + ETA时间范围
-                            queryConditions: {
-                                countries: ['DE', 'PL'],
-                                eta_range: '2026-01-15 ~ 2026-02-15'
-                            },
-                            logs: [
-                                { time: '2026-01-20 09:30:00', message: '任务已创建' },
-                                { time: '2026-01-20 09:30:01', message: '任务已入队' },
-                                { time: '2026-01-20 09:30:05', message: '开始处理' },
-                                { time: '2026-01-20 09:31:10', message: '处理完成，文件已生成' },
-                                { time: '2026-01-27 02:00:00', message: '文件已过期并清理' }
+                                { time: '09:15:00', message: '任务已创建' },
+                                { time: '09:15:01', message: '任务已入队' },
+                                { time: '09:15:05', message: '开始处理' },
+                                { time: '09:15:30', message: '处理失败：数据查询超时' }
                             ]
                         }
                     ],
@@ -2392,11 +2278,11 @@
                     downloadConditionsExpanded: false,
                     downloadLogsExpanded: false,
                     downloadStatusOptions: [
+                        { value: 'PENDING', label: '待处理' },
                         { value: 'QUEUED', label: '排队中' },
                         { value: 'PROCESSING', label: '处理中' },
                         { value: 'COMPLETED', label: '已完成' },
                         { value: 'FAILED', label: '失败' },
-                        { value: 'CANCELLED', label: '已取消' },
                         { value: 'EXPIRED', label: '已过期' }
                     ],
                     downloadModuleOptions: [
@@ -3251,6 +3137,7 @@
                         'PROCESSING': 'bg-blue-100 text-blue-700',
                         'QUEUED': 'bg-gray-100 text-gray-700',
                         'FAILED': 'bg-red-100 text-red-700',
+                        'PENDING': 'bg-yellow-100 text-yellow-700',
                         'EXPIRED': 'bg-gray-50 text-gray-500',
                         'CANCELLED': 'bg-gray-50 text-gray-500'
                     };
@@ -3262,6 +3149,7 @@
                         'PROCESSING': 'fas fa-spinner fa-spin',
                         'QUEUED': 'fas fa-clock',
                         'FAILED': 'fas fa-times-circle',
+                        'PENDING': 'fas fa-hourglass-half',
                         'EXPIRED': 'fas fa-clock',
                         'CANCELLED': 'fas fa-ban'
                     };
@@ -3273,6 +3161,7 @@
                         'PROCESSING': '处理中',
                         'QUEUED': '排队中',
                         'FAILED': '失败',
+                        'PENDING': '待处理',
                         'EXPIRED': '已过期',
                         'CANCELLED': '已取消'
                     };
@@ -3293,8 +3182,18 @@
                     if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
                     return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
                 },
-                // 如需相对时间可在后续版本启用，目前统一使用绝对时间 formatDateTime
                 formatRelativeTime(timeStr) {
+                    if (!timeStr) return '-';
+                    const now = new Date();
+                    const time = new Date(timeStr);
+                    const diff = now - time;
+                    const minutes = Math.floor(diff / 60000);
+                    const hours = Math.floor(diff / 3600000);
+                    const days = Math.floor(diff / 86400000);
+                    if (minutes < 1) return '刚刚';
+                    if (minutes < 60) return minutes + '分钟前';
+                    if (hours < 24) return hours + '小时前';
+                    if (days < 7) return days + '天前';
                     return this.formatDateTime(timeStr);
                 },
                 formatDateTime(timeStr) {
@@ -4075,8 +3974,8 @@
                     };
                 },
                 exportData() {
-                    // 原型：点击导出后模拟创建异步导出任务，并用 Toast 告知用户
-                    this.showToast('导出任务已创建，文件准备好后将自动在“我的下载”中提供下载', 'success');
+                    // 模拟导出数据
+                    this.showToast('数据导出功能待实现', 'success');
                 },
                 jumpToPage() {
                     if (this.jumpPage >= 1 && this.jumpPage <= this.pagination.pages) {
