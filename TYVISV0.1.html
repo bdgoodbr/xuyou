@@ -2265,6 +2265,72 @@
                                 { time: '09:15:05', message: '开始处理' },
                                 { time: '09:15:30', message: '处理失败：数据查询超时' }
                             ]
+                        },
+                        {
+                            taskId: 'task_004',
+                            fileName: '落货纸管理_VITFAC_20260205_092000_1234.xlsx',
+                            module: '落货纸管理',
+                            status: 'QUEUED',
+                            createTime: '2026-02-05 09:20:00',
+                            completeTime: null,
+                            fileSize: null,
+                            progress: 0,
+                            downloadCount: 0,
+                            queryConditions: {
+                                lhz_order: 'LR250101001,LR250101002',
+                                status: '已订舱',
+                                date_range: '2026-01-01 to 2026-02-05'
+                            },
+                            logs: [
+                                { time: '09:20:00', message: '任务已创建' },
+                                { time: '09:20:01', message: '任务已入队' }
+                            ]
+                        },
+                        {
+                            taskId: 'task_005',
+                            fileName: '铁运可视化信息上报_HGCC_20260205_093000_5678.xlsx',
+                            module: '铁运可视化信息上报',
+                            status: 'COMPLETED',
+                            createTime: '2026-02-05 09:30:00',
+                            completeTime: '2026-02-05 09:30:45',
+                            fileSize: 1536000,
+                            progress: 100,
+                            downloadCount: 1,
+                            queryConditions: {
+                                booking_no: 'BK20250126003',
+                                container_no: 'CONT002,CONT003',
+                                carrier: '青岛经汉物流服务有限公司',
+                                upload_time_range: '2026-01-20 to 2026-02-05'
+                            },
+                            logs: [
+                                { time: '09:30:00', message: '任务已创建' },
+                                { time: '09:30:01', message: '任务已入队' },
+                                { time: '09:30:05', message: '开始处理' },
+                                { time: '09:30:45', message: '处理完成' }
+                            ]
+                        },
+                        {
+                            taskId: 'task_006',
+                            fileName: '订舱管理_SANFAC_20260120_100000_9999.xlsx',
+                            module: '订舱管理',
+                            status: 'EXPIRED',
+                            createTime: '2026-01-20 10:00:00',
+                            completeTime: '2026-01-20 10:00:30',
+                            fileSize: 2048000,
+                            progress: 100,
+                            downloadCount: 0,
+                            queryConditions: {
+                                booking_no: 'BK20250120001',
+                                date_range: '2025-12-01 to 2026-01-20',
+                                transport_mode: '铁运'
+                            },
+                            logs: [
+                                { time: '10:00:00', message: '任务已创建' },
+                                { time: '10:00:01', message: '任务已入队' },
+                                { time: '10:00:05', message: '开始处理' },
+                                { time: '10:00:30', message: '处理完成' },
+                                { time: '2026-01-27 10:00:00', message: '文件已过期' }
+                            ]
                         }
                     ],
                     selectedDownloadTasks: [],
@@ -2289,7 +2355,8 @@
                         { value: '物流台账', label: '物流台账' },
                         { value: '可视化查询', label: '可视化查询' },
                         { value: '订舱管理', label: '订舱管理' },
-                        { value: '落货纸管理', label: '落货纸管理' }
+                        { value: '落货纸管理', label: '落货纸管理' },
+                        { value: '铁运可视化信息上报', label: '铁运可视化信息上报' }
                     ],
                     
                     // Collapse states
