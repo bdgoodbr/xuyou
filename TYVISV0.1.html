@@ -2338,6 +2338,10 @@
                                         </td>
                                         <td class="border border-gray-200 px-4 py-3">
                                             <div class="flex items-center space-x-2">
+                                                <button @click="showTaskDetail(task)"
+                                                    class="text-gray-600 hover:text-gray-800 text-sm">
+                                                    <i class="fas fa-eye mr-1"></i> 查看
+                                                </button>
                                                 <button v-if="task.status === 'COMPLETED'" @click="downloadFile(task)"
                                                     class="text-blue-600 hover:text-blue-800 text-sm">
                                                     <i class="fas fa-download mr-1"></i> 下载
@@ -2450,10 +2454,6 @@
                                         <span class="text-gray-500">文件大小：</span>
                                         <span class="text-gray-700">{{ selectedTaskDetail.fileSize ?
                                             formatFileSize(selectedTaskDetail.fileSize) : '-' }}</span>
-                                    </div>
-                                    <div>
-                                        <span class="text-gray-500">下载次数：</span>
-                                        <span class="text-gray-700">{{ selectedTaskDetail.downloadCount || 0 }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -2585,7 +2585,6 @@
                                 completeTime: '2026-02-05 08:55:12',
                                 fileSize: 2621440,
                                 progress: 100,
-                                downloadCount: 3,
                                 queryConditions: { so_no: 'LHZ20250126001' },
                                 logs: [
                                     { time: '2026-02-05 08:54:56', message: '任务已创建' },
@@ -2603,7 +2602,6 @@
                                 completeTime: null,
                                 fileSize: null,
                                 progress: 65,
-                                downloadCount: 0,
                                 queryConditions: { container_no: 'CONT001' },
                                 logs: [
                                     { time: '2026-02-05 09:01:23', message: '任务已创建' },
@@ -2620,7 +2618,6 @@
                                 completeTime: null,
                                 fileSize: null,
                                 progress: 0,
-                                downloadCount: 0,
                                 errorMessage: '数据查询超时，请缩小查询范围后重试',
                                 queryConditions: { booking_no: 'BK001' },
                                 logs: [
@@ -2639,7 +2636,6 @@
                                 completeTime: null,
                                 fileSize: null,
                                 progress: 0,
-                                downloadCount: 0,
                                 queryConditions: { tenant: 'MXFCTR' },
                                 logs: [
                                     { time: '2026-02-04 20:10:00', message: '任务已创建，等待处理' }
@@ -2671,7 +2667,6 @@
                                 completeTime: '2026-01-20 09:31:10',
                                 fileSize: 5242880,
                                 progress: 100,
-                                downloadCount: 5,
                                 queryConditions: { so_no: 'LHZ20241231001' },
                                 logs: [
                                     { time: '2026-01-20 09:30:00', message: '任务已创建' },
@@ -3352,8 +3347,8 @@
                             container.containerNo && container.containerNo.toLowerCase().includes(query)
                         );
                     },
-                    // Download Center Computed
-                    filteredDownloadStatusOptions() {
+                        // Download Center Computed
+                        filteredDownloadStatusOptions() {
                         if (!this.downloadStatusSearch) return this.downloadStatusOptions;
                         const search = this.downloadStatusSearch.toLowerCase();
                         return this.downloadStatusOptions.filter(option =>
@@ -3368,7 +3363,8 @@
                         );
                     },
                     unreadDownloadCount() {
-                        return this.downloadTasks.filter(task => task.status === 'COMPLETED' && task.downloadCount === 0).length;
+                        // 简化为统计已完成任务数量（示例数据），真实实现可根据“未读/未下载”规则调整
+                        return this.downloadTasks.filter(task => task.status === 'COMPLETED').length;
                     },
                     filteredDownloadTasks() {
                         let tasks = [...this.downloadTasks];
