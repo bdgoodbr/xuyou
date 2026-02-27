@@ -2318,16 +2318,7 @@
                                             <span :class="getStatusBadgeClass(task.status)"
                                                 class="px-2 py-1 rounded-full text-xs font-medium">
                                                 <i :class="getStatusIcon(task.status)" class="mr-1"></i>
-                                                {{
-                                                {
-                                                COMPLETED: '已完成',
-                                                PROCESSING: '处理中',
-                                                QUEUED: '排队中',
-                                                FAILED: '失败',
-                                                EXPIRED: '已过期',
-                                                CANCELLED: '已取消'
-                                                }[task.status] || task.status
-                                                }}
+                                                {{ getStatusLabel(task.status) }}
                                             </span>
                                         </td>
                                         <td class="border border-gray-200 px-4 py-3 text-sm text-gray-600">{{
