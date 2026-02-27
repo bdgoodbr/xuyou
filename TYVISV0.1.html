@@ -2686,6 +2686,135 @@
                                     { time: '2026-01-20 09:31:10', message: '处理完成，文件已生成' },
                                     { time: '2026-01-27 02:00:00', message: '文件已过期并清理' }
                                 ]
+                            },
+                            // ====== 追加样例任务（用于演示列表更丰富的状态/条件组合） ======
+                            {
+                                taskId: 'task_007',
+                                fileName: '订舱管理_HGCC_20260226_142000_9012.xlsx',
+                                module: '订舱管理',
+                                status: 'COMPLETED',
+                                createTime: '2026-02-26 14:20:00',
+                                completeTime: '2026-02-26 14:20:40',
+                                fileSize: 1048576,
+                                progress: 100,
+                                queryConditions: {
+                                    booking_no: 'BK20260226001',
+                                    so_no: 'SO20260226A',
+                                    transport_mode: '海运',
+                                    carrier: 'HGCC',
+                                    etd_start: '2026-03-05',
+                                    etd_end: '2026-03-20'
+                                },
+                                logs: [
+                                    { time: '2026-02-26 14:20:00', message: '任务已创建' },
+                                    { time: '2026-02-26 14:20:02', message: '任务已入队' },
+                                    { time: '2026-02-26 14:20:08', message: '开始处理' },
+                                    { time: '2026-02-26 14:20:40', message: '处理完成' }
+                                ]
+                            },
+                            {
+                                taskId: 'task_008',
+                                fileName: '落货纸管理_HGCC_20260226_150510_6731.xlsx',
+                                module: '落货纸管理',
+                                status: 'QUEUED',
+                                createTime: '2026-02-26 15:05:10',
+                                completeTime: null,
+                                fileSize: null,
+                                progress: 0,
+                                queryConditions: {
+                                    lhz_order: 'LHZ20260226005',
+                                    container_no: 'MSCU1234567',
+                                    export_countries: ['越南']
+                                },
+                                logs: [
+                                    { time: '2026-02-26 15:05:10', message: '任务已创建，等待处理' }
+                                ]
+                            },
+                            {
+                                taskId: 'task_009',
+                                fileName: '物流台账_MXFCTR_20260227_091200_2204.xlsx',
+                                module: '物流台账',
+                                status: 'PROCESSING',
+                                createTime: '2026-02-27 09:12:00',
+                                completeTime: null,
+                                fileSize: null,
+                                progress: 30,
+                                queryConditions: {
+                                    so_no: 'LHZ20260227002',
+                                    export_countries: ['美国'],
+                                    etd_start: '2026-03-01',
+                                    etd_end: '2026-03-15'
+                                },
+                                logs: [
+                                    { time: '2026-02-27 09:12:00', message: '任务已创建' },
+                                    { time: '2026-02-27 09:12:01', message: '任务已入队' },
+                                    { time: '2026-02-27 09:12:10', message: '开始处理' }
+                                ]
+                            },
+                            {
+                                taskId: 'task_010',
+                                fileName: '可视化查询_GORFAC_20260225_114500_8088.xlsx',
+                                module: '可视化查询',
+                                status: 'FAILED',
+                                createTime: '2026-02-25 11:45:00',
+                                completeTime: null,
+                                fileSize: null,
+                                progress: 0,
+                                errorMessage: '导出字段过多，请减少字段数量后重试',
+                                queryConditions: {
+                                    booking_no: 'BK20260225009',
+                                    export_countries: ['德国', '法国', '意大利'],
+                                    etd_start: '2026-02-01',
+                                    etd_end: '2026-02-28'
+                                },
+                                logs: [
+                                    { time: '2026-02-25 11:45:00', message: '任务已创建' },
+                                    { time: '2026-02-25 11:45:01', message: '任务已入队' },
+                                    { time: '2026-02-25 11:45:06', message: '开始处理' },
+                                    { time: '2026-02-25 11:45:25', message: '处理失败：导出字段过多' }
+                                ]
+                            },
+                            {
+                                taskId: 'task_011',
+                                fileName: '订舱管理_HGCC_20260224_173000_7781.xlsx',
+                                module: '订舱管理',
+                                status: 'CANCELLED',
+                                createTime: '2026-02-24 17:30:00',
+                                completeTime: '2026-02-24 17:31:05',
+                                fileSize: null,
+                                progress: 0,
+                                errorMessage: '用户主动取消任务',
+                                queryConditions: {
+                                    booking_no: 'BK20260224003',
+                                    so_no: 'SO20260224B'
+                                },
+                                logs: [
+                                    { time: '2026-02-24 17:30:00', message: '任务已创建' },
+                                    { time: '2026-02-24 17:31:05', message: '用户取消任务' }
+                                ]
+                            },
+                            {
+                                taskId: 'task_012',
+                                fileName: '物流台账_SANFAC_20260223_081020_4450.xlsx',
+                                module: '物流台账',
+                                status: 'COMPLETED',
+                                createTime: '2026-02-23 08:10:20',
+                                completeTime: '2026-02-23 08:11:55',
+                                fileSize: 7340032,
+                                progress: 100,
+                                queryConditions: {
+                                    carrier: 'SANFAC',
+                                    transport_mode: '铁运',
+                                    export_countries: ['美国', '德国'],
+                                    etd_start: '2026-03-10',
+                                    etd_end: '2026-03-25'
+                                },
+                                logs: [
+                                    { time: '2026-02-23 08:10:20', message: '任务已创建' },
+                                    { time: '2026-02-23 08:10:21', message: '任务已入队' },
+                                    { time: '2026-02-23 08:10:30', message: '开始处理' },
+                                    { time: '2026-02-23 08:11:55', message: '处理完成' }
+                                ]
                             }
                         ],
                         selectedDownloadTasks: [],
