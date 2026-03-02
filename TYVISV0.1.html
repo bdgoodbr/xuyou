@@ -1679,9 +1679,9 @@
                                             <p v-if="language === 'en'">Multi-container rule: as long as one container has reached a node, all previous nodes are marked as completed (green), and the highest node reached is also shown in green.</p>
                                             <p v-else><strong>多箱子规则：</strong>只要有一个箱子到达了某个节点，所有前面的节点都应该显示为已完成（绿色），当前最高节点也显示为绿色。
                                             </p>
-                                            <p v-if="language === 'en'">Example: if 1 out of 6 containers is at "Overseas Reloading (30)", nodes 00, 10, 20 and 30 are shown as completed / active (green), while nodes 40 and 50 are shown as not reached (gray with dashed connections).
+                                            <p v-if="language === 'en'">Example: if 1 out of 6 containers is at "Overseas Reloading", the nodes Gate In, Domestic Departure, Arrived at Border and Overseas Reloading are shown as completed / active (green), while the nodes Overseas Transit and Arrived at Destination are shown as not reached (gray with dashed connections).
                                             </p>
-                                            <p v-else><strong>示例：</strong>如果6个箱子中，有1个箱子在"境外换装"（30），则00、10、20、30节点都显示为已完成/激活（绿色），40、50节点显示为未到达（灰色，虚线连接）。
+                                            <p v-else><strong>示例：</strong>如果6个箱子中，有1个箱子在"境外换装"节点，则已提柜、国内已出发、抵达口岸、境外换装节点都显示为已完成/激活（绿色），境外在途、已抵达节点显示为未到达（灰色，虚线连接）。
                                             </p>
                                         </div>
                                     </div>
