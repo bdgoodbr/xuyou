@@ -1620,7 +1620,7 @@
                                     <div class="flex flex-wrap gap-2">
                                         <div v-for="(node, idx) in progressNodes.filter(n => n.count > 0)"
                                             :key="node.code" class="status-badge">
-                                            <span class="font-semibold">{{ node.code }}-{{ node.label }}:</span>
+                                            <span class="font-semibold">{{ node.label }}:</span>
                                             <span class="ml-1">{{ node.count }}箱</span>
                                         </div>
                                         <div v-if="progressNodes.filter(n => n.count > 0).length === 0"
@@ -3462,6 +3462,21 @@
                             return maxStatusCode >= 50 ? '实际到站' : '预计到站';
                         };
 
+                        // 获取各节点对应的最新时间（按订舱号下所有箱子取该字段的最大值）
+                        const getLatestDateByField = (field) => {
+                            const values = containers
+                                .map(c => c[field])
+                                .filter(v => v)
+                                .sort();
+                            if (values.length === 0) return null;
+                            return formatDateOnly(values[values.length - 1]);
+                        };
+
+                        const pickupTime = getLatestDateByField('pickupTimeDomestic'); // 已提柜-境内提柜时间
+                        const arrivedBorderTime = getLatestDateByField('arrivedBorderTime'); // 抵达口岸-抵达边境时间
+                        const reloadingCompletedTime = getLatestDateByField('reloadingCompletedTime'); // 境外换装-完成换装时间
+                        const overseasDepartureTime = getLatestDateByField('overseasDepartureTime'); // 境外在途-境外发车时间
+
                         return [
                             {
                                 code: '00',
@@ -3469,7 +3484,8 @@
                                 icon: 'fas fa-warehouse',
                                 count: summary.byStatus['00'] || 0,
                                 total: total,
-                                time: null
+                                time: pickupTime || null,
+                                timeLabel: pickupTime ? '境内提柜时间' : ''
                             },
                             {
                                 code: '10',
@@ -3486,7 +3502,8 @@
                                 icon: 'fas fa-border-all',
                                 count: summary.byStatus['20'] || 0,
                                 total: total,
-                                time: null
+                                time: arrivedBorderTime || null,
+                                timeLabel: arrivedBorderTime ? '抵达边境时间' : ''
                             },
                             {
                                 code: '30',
@@ -3494,7 +3511,8 @@
                                 icon: 'fas fa-exchange-alt',
                                 count: summary.byStatus['30'] || 0,
                                 total: total,
-                                time: null
+                                time: reloadingCompletedTime || null,
+                                timeLabel: reloadingCompletedTime ? '完成换装时间' : ''
                             },
                             {
                                 code: '40',
@@ -3502,7 +3520,8 @@
                                 icon: 'fas fa-train',
                                 count: summary.byStatus['40'] || 0,
                                 total: total,
-                                time: null
+                                time: overseasDepartureTime || null,
+                                timeLabel: overseasDepartureTime ? '境外发车时间' : ''
                             },
                             {
                                 code: '50',
