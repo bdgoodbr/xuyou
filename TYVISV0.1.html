@@ -1176,7 +1176,7 @@
                     <!-- Data Table -->
                     <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                         <div class="overflow-x-auto custom-scroll">
-                            <table class="w-full htm-table" style="min-width: 1800px;">
+                            <table class="w-full htm-table" style="min-width: 2300px;">
                                 <thead class="bg-gray-50 sticky top-0 z-50">
                                     <tr>
                                         <th class="w-10 text-center sticky-col-left border-r border-gray-200">
@@ -1237,6 +1237,10 @@
                                                 <i class="fas fa-sort-down"></i>
                                             </span>
                                         </th>
+                                        <th>境内提柜时间</th>
+                                        <th>抵达边境时间</th>
+                                        <th>完成换装时间</th>
+                                        <th>境外发车时间</th>
                                         <th class="sortable-header" @click="handleSort('uploadTime')">
                                             <span>上传时间</span>
                                             <span class="sort-icon" :class="getSortIconClass('uploadTime')">
@@ -1279,6 +1283,10 @@
                                         <td class="font-mono text-xs">{{ formatDateOnly(item.ata) }}</td>
                                         <td>{{ item.kmToBorder }}</td>
                                         <td>{{ item.kmToDestination || '-' }}</td>
+                                        <td class="font-mono text-xs">{{ formatDateOnly(item.pickupTimeDomestic) }}</td>
+                                        <td class="font-mono text-xs">{{ formatDateOnly(item.arrivedBorderTime) }}</td>
+                                        <td class="font-mono text-xs">{{ formatDateOnly(item.reloadingCompletedTime) }}</td>
+                                        <td class="font-mono text-xs">{{ formatDateOnly(item.overseasDepartureTime) }}</td>
                                         <td class="font-mono text-xs text-gray-500">{{ item.uploadTime }}</td>
                                         <td class="font-mono text-xs text-gray-500">{{ item.modifyTime ||
                                             item.uploadTime }}</td>
@@ -1966,6 +1974,26 @@
                                             @blur="validateField('currentLocation')">
                                         <span v-if="errors.currentLocation" class="error-message">{{
                                             errors.currentLocation }}</span>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1.5">境内提柜时间</label>
+                                        <input v-model="form.pickupTimeDomestic" type="date" class="htm-input"
+                                            placeholder="YYYY-MM-DD">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1.5">抵达边境时间</label>
+                                        <input v-model="form.arrivedBorderTime" type="date" class="htm-input"
+                                            placeholder="YYYY-MM-DD">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1.5">完成换装时间</label>
+                                        <input v-model="form.reloadingCompletedTime" type="date" class="htm-input"
+                                            placeholder="YYYY-MM-DD">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1.5">境外发车时间</label>
+                                        <input v-model="form.overseasDepartureTime" type="date" class="htm-input"
+                                            placeholder="YYYY-MM-DD">
                                     </div>
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1.5 required">距离始发站口岸(KM)</label>
@@ -2903,6 +2931,10 @@
                                 atd: '2025-01-28',
                                 realETA: '2025-02-15',
                                 ata: null,
+                                pickupTimeDomestic: '2025-01-27',
+                                arrivedBorderTime: '2025-02-03',
+                                reloadingCompletedTime: null,
+                                overseasDepartureTime: null,
                                 uploadTime: '2025-01-26 09:30:00',
                                 modifyTime: '2025-01-26 09:30:00',
                                 uploadUser: '用户A'
@@ -2945,6 +2977,10 @@
                                 atd: '2025-01-30',
                                 realETA: '2025-02-18',
                                 ata: null,
+                                pickupTimeDomestic: '2025-01-29',
+                                arrivedBorderTime: '2025-02-02',
+                                reloadingCompletedTime: '2025-02-05',
+                                overseasDepartureTime: null,
                                 uploadTime: '2025-01-26 11:20:00',
                                 modifyTime: '2025-01-26 11:20:00',
                                 uploadUser: '用户B'
@@ -3175,6 +3211,10 @@
                             containerSize: '',
                             currentStatus: '',
                             currentLocation: '',
+                            pickupTimeDomestic: '',
+                            arrivedBorderTime: '',
+                            reloadingCompletedTime: '',
+                            overseasDepartureTime: '',
                             kmToBorder: null,
                             kmToDestination: null,
                             realETD: '',
@@ -4282,6 +4322,10 @@
                             containerSize: '',
                             currentStatus: '',
                             currentLocation: '',
+                            pickupTimeDomestic: '',
+                            arrivedBorderTime: '',
+                            reloadingCompletedTime: '',
+                            overseasDepartureTime: '',
                             kmToBorder: null,
                             kmToDestination: null,
                             realETD: '',
@@ -4305,6 +4349,10 @@
                             containerSize: item.containerSize || '',
                             currentStatus: item.currentStatus || '',
                             currentLocation: item.currentLocation || '',
+                            pickupTimeDomestic: item.pickupTimeDomestic || '',
+                            arrivedBorderTime: item.arrivedBorderTime || '',
+                            reloadingCompletedTime: item.reloadingCompletedTime || '',
+                            overseasDepartureTime: item.overseasDepartureTime || '',
                             kmToBorder: item.kmToBorder != null ? item.kmToBorder : null,
                             kmToDestination: item.kmToDestination != null ? item.kmToDestination : null,
                             realETD: this.toDateTimeLocal(item.realETD),
@@ -4335,6 +4383,10 @@
                                     pod: this.form.pod,
                                     currentStatus: this.form.currentStatus,
                                     currentLocation: this.form.currentLocation,
+                                    pickupTimeDomestic: this.form.pickupTimeDomestic || null,
+                                    arrivedBorderTime: this.form.arrivedBorderTime || null,
+                                    reloadingCompletedTime: this.form.reloadingCompletedTime || null,
+                                    overseasDepartureTime: this.form.overseasDepartureTime || null,
                                     kmToBorder: this.form.kmToBorder,
                                     kmToDestination: this.form.kmToDestination,
                                     realETD: this.formatDateOnly(this.formatDateTime(this.form.realETD)),
@@ -4361,6 +4413,10 @@
                                 pod: this.form.pod,
                                 currentStatus: this.form.currentStatus,
                                 currentLocation: this.form.currentLocation,
+                                pickupTimeDomestic: this.form.pickupTimeDomestic || null,
+                                arrivedBorderTime: this.form.arrivedBorderTime || null,
+                                reloadingCompletedTime: this.form.reloadingCompletedTime || null,
+                                overseasDepartureTime: this.form.overseasDepartureTime || null,
                                 kmToBorder: this.form.kmToBorder,
                                 kmToDestination: this.form.kmToDestination,
                                 realETD: this.formatDateOnly(this.formatDateTime(this.form.realETD)),
@@ -4408,6 +4464,10 @@
                             containerSize: '',
                             currentStatus: '',
                             currentLocation: '',
+                            pickupTimeDomestic: '',
+                            arrivedBorderTime: '',
+                            reloadingCompletedTime: '',
+                            overseasDepartureTime: '',
                             kmToBorder: null,
                             kmToDestination: null,
                             realETD: '',
