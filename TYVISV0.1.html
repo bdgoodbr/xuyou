@@ -2931,7 +2931,7 @@
                                 atd: '2025-01-28',
                                 realETA: '2025-02-15',
                                 ata: null,
-                                pickupTimeDomestic: '2025-01-27',
+                                pickupTimeDomestic: null,
                                 arrivedBorderTime: '2025-02-03',
                                 reloadingCompletedTime: null,
                                 overseasDepartureTime: null,
@@ -2977,7 +2977,7 @@
                                 atd: '2025-01-30',
                                 realETA: '2025-02-18',
                                 ata: null,
-                                pickupTimeDomestic: '2025-01-29',
+                                pickupTimeDomestic: null,
                                 arrivedBorderTime: '2025-02-02',
                                 reloadingCompletedTime: '2025-02-05',
                                 overseasDepartureTime: null,
@@ -3135,7 +3135,7 @@
                                 statusCode: '20', // 状态代码
                                 updateTime: '2026-01-17 10:00:00',
                                 currentLocation: '二连浩特',
-                                pickupTimeDomestic: '2025-10-29',
+                                pickupTimeDomestic: null,
                                 arrivedBorderTime: '2025-11-02',
                                 reloadingCompletedTime: null,
                                 overseasDepartureTime: null
@@ -3150,7 +3150,7 @@
                                 statusCode: '10', // 状态代码
                                 updateTime: '2026-01-18 08:45:00',
                                 currentLocation: '霍尔果斯',
-                                pickupTimeDomestic: '2025-10-30',
+                                pickupTimeDomestic: null,
                                 arrivedBorderTime: null,
                                 reloadingCompletedTime: null,
                                 overseasDepartureTime: null
@@ -3165,7 +3165,7 @@
                                 statusCode: '30', // 状态代码 - 最新节点
                                 updateTime: '2026-01-19 19:20:00',
                                 currentLocation: '阿拉山口',
-                                pickupTimeDomestic: '2025-10-31',
+                                pickupTimeDomestic: null,
                                 arrivedBorderTime: '2025-11-03',
                                 reloadingCompletedTime: '2025-11-05',
                                 overseasDepartureTime: null
@@ -3180,7 +3180,7 @@
                                 statusCode: '20', // 状态代码
                                 updateTime: '2025-11-02 14:05:00',
                                 currentLocation: '二连浩特',
-                                pickupTimeDomestic: '2025-10-30',
+                                pickupTimeDomestic: null,
                                 arrivedBorderTime: '2025-11-02',
                                 reloadingCompletedTime: null,
                                 overseasDepartureTime: null
@@ -3195,7 +3195,7 @@
                                 statusCode: '30', // 状态代码
                                 updateTime: '2026-01-19 09:10:00',
                                 currentLocation: '阿拉山口',
-                                pickupTimeDomestic: '2025-11-01',
+                                pickupTimeDomestic: null,
                                 arrivedBorderTime: '2025-11-04',
                                 reloadingCompletedTime: '2025-11-06',
                                 overseasDepartureTime: null
@@ -3210,7 +3210,7 @@
                                 statusCode: '30', // 状态代码
                                 updateTime: '2026-01-20 11:00:00',
                                 currentLocation: '阿拉山口',
-                                pickupTimeDomestic: '2025-11-02',
+                                pickupTimeDomestic: null,
                                 arrivedBorderTime: '2025-11-05',
                                 reloadingCompletedTime: '2025-11-07',
                                 overseasDepartureTime: null
@@ -3496,7 +3496,7 @@
                             return formatDateOnly(values[values.length - 1]);
                         };
 
-                        const pickupTime = getLatestDateByField('pickupTimeDomestic'); // 已提柜-境内提柜时间
+                        const pickupTime = null; // 已提柜节点当前不展示时间
                         const arrivedBorderTime = getLatestDateByField('arrivedBorderTime'); // 抵达口岸-抵达边境时间
                         const reloadingCompletedTime = getLatestDateByField('reloadingCompletedTime'); // 境外换装-完成换装时间
                         const overseasDepartureTime = getLatestDateByField('overseasDepartureTime'); // 境外在途-境外发车时间
@@ -3508,8 +3508,7 @@
                                 icon: 'fas fa-warehouse',
                                 count: summary.byStatus['00'] || 0,
                                 total: total,
-                                time: pickupTime || null,
-                                timeLabel: pickupTime ? '境内提柜时间' : ''
+                                time: null
                             },
                             {
                                 code: '10',
