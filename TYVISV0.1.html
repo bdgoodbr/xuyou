@@ -1429,7 +1429,8 @@
                                 <div class="q-status-line"></div>
                             </div>
                             <div class="text-xs text-slate-500 mt-2">
-                                - 海运：订阅方显示船公司/数据源，逻辑不变；铁运：订阅方显示具体货代名称，完成订舱后默认订阅成功。
+                                <span v-if="language === 'en'">Sea: the subscriber shows the ocean carrier / data source, logic unchanged. Rail: the subscriber shows the actual forwarding agent; once the booking is confirmed, the subscription is treated as successful by default.</span>
+                                <span v-else>- 海运：订阅方显示船公司/数据源，逻辑不变；铁运：订阅方显示具体货代名称，完成订舱后默认订阅成功。</span>
                             </div>
                         </div>
 
@@ -1443,7 +1444,12 @@
                                     基本信息 <span class="text-slate-400 text-xs font-normal">Basic information</span>
                                 </div>
                                 <div class="text-xs text-slate-500">
-                                    运输方式：<span class="font-semibold text-slate-800">{{ qBasic.transport }}</span>
+                                    <template v-if="language === 'en'">
+                                        Transport mode: <span class="font-semibold text-slate-800">{{ qBasic.transport === '铁运' ? 'Rail' : qBasic.transport }}</span>
+                                    </template>
+                                    <template v-else>
+                                        运输方式：<span class="font-semibold text-slate-800">{{ qBasic.transport }}</span>
+                                    </template>
                                 </div>
                             </div>
                             <div class="p-4" v-show="!basicInfoCollapsed">
@@ -1632,8 +1638,15 @@
                                     <div class="flex flex-wrap gap-2">
                                         <div v-for="(node, idx) in progressNodes.filter(n => n.count > 0)"
                                             :key="node.code" class="status-badge">
-                                            <span class="font-semibold">{{ node.label }}:</span>
-                                            <span class="ml-1">{{ node.count }}箱</span>
+                                            <span class="font-semibold">{{ getNodeDisplayLabel(node) }}:</span>
+                                            <span class="ml-1">
+                                                <template v-if="language === 'en'">
+                                                    {{ node.count }} {{ node.count === 1 ? 'container' : 'containers' }}
+                                                </template>
+                                                <template v-else>
+                                                    {{ node.count }}箱
+                                                </template>
+                                            </span>
                                         </div>
                                         <div v-if="progressNodes.filter(n => n.count > 0).length === 0"
                                             class="text-slate-400 text-xs">
@@ -4250,6 +4263,20 @@
                             this.selectedIds = this.paginatedData.map(item => item.id);
                         }
                     },
+                    getNodeDisplayLabel(node) {
+                        const labelZh = node && node.label ? node.label : '';
+                        if (this.language !== 'en') return labelZh;
+                        switch (node && node.code) {
+                            case '00': return 'Gate In';
+                            case '10': return 'Domestic Departure';
+                            case '20': return 'Arrived at Border';
+                            case '30': return 'Overseas Reloading';
+                            case '40': return 'Overseas Transit';
+                            case '50': return 'Arrived at Destination';
+                            default: return labelZh;
+                        }
+                    },
+
                     getStatusLabel(code) {
                         if (!code) return '-';
                         const matched = this.statusOptions.find(s => s.code === code);
