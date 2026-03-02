@@ -960,6 +960,13 @@
                             '铁运可视化信息上报' : currentView === 'query' ? '铁运可视化查询' : '下载中心' }}</span>
                     </div>
                     <div class="flex items-center space-x-4">
+                        <!-- Language Switch (only affects query view texts) -->
+                        <div class="flex items-center space-x-1 text-xs">
+                            <button @click="switchLanguage('zh')"
+                                :class="['px-2 py-1 rounded-l border border-slate-300', language === 'zh' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 hover:bg-slate-50']">中</button>
+                            <button @click="switchLanguage('en')"
+                                :class="['px-2 py-1 rounded-r border border-slate-300 border-l-0', language === 'en' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 hover:bg-slate-50']">EN</button>
+                        </div>
                         <!-- 我的下载按钮（独立） -->
                         <button @click="goToDownloadCenter"
                             class="relative flex items-center space-x-2 px-3 py-1.5 text-sm text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors border border-slate-200 hover:border-blue-300">
@@ -1568,20 +1575,25 @@
                                     <div class="font-bold text-slate-900 flex items-center gap-2">
                                         <i :class="currentStatusCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'"
                                             class="text-slate-400 text-sm transition-transform"></i>
-                                        当前状态可视化 <span class="text-slate-400 text-xs font-normal">Current Status
-                                            Visualization</span>
+                                        <template v-if="language === 'en'">
+                                            Current Status Visualization
+                                        </template>
+                                        <template v-else>
+                                            当前状态可视化 <span class="text-slate-400 text-xs font-normal">Current Status
+                                                Visualization</span>
+                                        </template>
                                     </div>
                                     <!-- 距离信息（按最新 update_time 的记录，一行展示，与标题同一行居中对齐） -->
                                     <div class="flex items-baseline gap-10 text-sm text-slate-600">
                                         <div class="flex items-baseline gap-1">
-                                            <span class="text-xs text-slate-500">距离始发站口岸(KM)</span>
+                                            <span class="text-xs text-slate-500">{{ language === 'en' ? 'Distance from origin border (KM)' : '距离始发站口岸(KM)' }}</span>
                                             <span class="text-lg font-semibold text-slate-900">
                                                 {{ qLatestDistances.kmFromOverseasOrigin != null ?
                                                 qLatestDistances.kmFromOverseasOrigin : '-' }}
                                             </span>
                                         </div>
                                         <div class="flex items-baseline gap-1">
-                                            <span class="text-xs text-slate-500">距离目的地(KM)</span>
+                                            <span class="text-xs text-slate-500">{{ language === 'en' ? 'Distance to destination (KM)' : '距离目的地(KM)' }}</span>
                                             <span class="text-lg font-semibold text-slate-900">
                                                 {{ qLatestDistances.kmToDestinationStation != null ?
                                                 qLatestDistances.kmToDestinationStation : '-' }}
@@ -1616,7 +1628,7 @@
 
                                 <!-- 状态分布 -->
                                 <div class="border-t border-gray-200 pt-4">
-                                    <div class="text-xs text-slate-500 mb-2">状态分布</div>
+                                    <div class="text-xs text-slate-500 mb-2">{{ language === 'en' ? 'Status Distribution' : '状态分布' }}</div>
                                     <div class="flex flex-wrap gap-2">
                                         <div v-for="(node, idx) in progressNodes.filter(n => n.count > 0)"
                                             :key="node.code" class="status-badge">
@@ -1633,27 +1645,30 @@
                                 <!-- 颜色说明和业务逻辑说明 -->
                                 <div class="border-t border-gray-200 pt-4 mt-4">
                                     <div class="bg-slate-50 rounded-lg p-4">
-                                        <div class="text-xs font-semibold text-slate-700 mb-3">颜色说明 Color Legend</div>
+                                        <div class="text-xs font-semibold text-slate-700 mb-3">{{ language === 'en' ? 'Color Legend' : '颜色说明 Color Legend' }}</div>
                                         <div class="grid grid-cols-2 gap-4 mb-4">
                                             <div class="flex items-center gap-2">
                                                 <div
                                                     class="w-4 h-4 rounded-full bg-green-500 border-2 border-green-500">
                                                 </div>
-                                                <span class="text-xs text-slate-600">绿色：已完成/当前激活节点</span>
+                                                <span class="text-xs text-slate-600">{{ language === 'en' ? 'Green: completed / active node' : '绿色：已完成/当前激活节点' }}</span>
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <div class="w-4 h-4 rounded-full bg-gray-300 border-2 border-gray-300">
                                                 </div>
-                                                <span class="text-xs text-slate-600">灰色：未到达节点（虚线连接）</span>
+                                                <span class="text-xs text-slate-600">{{ language === 'en' ? 'Gray: not reached (dashed connection)' : '灰色：未到达节点（虚线连接）' }}</span>
                                             </div>
                                         </div>
-                                        <div class="text-xs font-semibold text-slate-700 mb-2">业务逻辑说明 Business Logic
-                                        </div>
+                                        <div class="text-xs font-semibold text-slate-700 mb-2">{{ language === 'en' ? 'Business Logic' : '业务逻辑说明 Business Logic' }}</div>
                                         <div class="text-xs text-slate-600 space-y-1">
-                                            <p><strong>状态推断规则：</strong>如果某个订舱号有箱子传了某个状态，系统认为前面的所有节点也已经完成。</p>
-                                            <p><strong>多箱子规则：</strong>只要有一个箱子到达了某个节点，所有前面的节点都应该显示为已完成（绿色），当前最高节点也显示为绿色。
+                                            <p v-if="language === 'en'">Status inference rule: if any container under a booking has reported a given status, the system assumes that all previous nodes have already been completed.</p>
+                                            <p v-else><strong>状态推断规则：</strong>如果某个订舱号有箱子传了某个状态，系统认为前面的所有节点也已经完成。</p>
+                                            <p v-if="language === 'en'">Multi-container rule: as long as one container has reached a node, all previous nodes are marked as completed (green), and the highest node reached is also shown in green.</p>
+                                            <p v-else><strong>多箱子规则：</strong>只要有一个箱子到达了某个节点，所有前面的节点都应该显示为已完成（绿色），当前最高节点也显示为绿色。
                                             </p>
-                                            <p><strong>示例：</strong>如果6个箱子中，有1个箱子在"境外换装"（30），则00、10、20、30节点都显示为已完成/激活（绿色），40、50节点显示为未到达（灰色，虚线连接）。
+                                            <p v-if="language === 'en'">Example: if 1 out of 6 containers is at "Overseas Reloading (30)", nodes 00, 10, 20 and 30 are shown as completed / active (green), while nodes 40 and 50 are shown as not reached (gray with dashed connections).
+                                            </p>
+                                            <p v-else><strong>示例：</strong>如果6个箱子中，有1个箱子在"境外换装"（30），则00、10、20、30节点都显示为已完成/激活（绿色），40、50节点显示为未到达（灰色，虚线连接）。
                                             </p>
                                         </div>
                                     </div>
@@ -2870,6 +2885,9 @@
                             { value: '落货纸管理', label: '落货纸管理' }
                         ],
 
+                        // UI language (only affects query view texts)
+                        language: 'zh', // 'zh' | 'en'
+
                         // Collapse states
                         basicInfoCollapsed: false,
                         currentStatusCollapsed: false,
@@ -3644,6 +3662,14 @@
                     } catch (e) {
                         // ignore
                     }
+                    // Initialize language from localStorage (only for query view texts)
+                    try {
+                        const savedLang = window.localStorage.getItem('tyvis_language');
+                        if (savedLang === 'zh' || savedLang === 'en') {
+                            this.language = savedLang;
+                        }
+                    } catch (e) { }
+
                     this.updateUploadTime();
                     this.filteredData = this.tableData;
                     this.search();
@@ -3659,6 +3685,14 @@
                     });
                 },
                 methods: {
+                    switchLanguage(lang) {
+                        if (lang !== 'zh' && lang !== 'en') return;
+                        this.language = lang;
+                        try {
+                            window.localStorage.setItem('tyvis_language', lang);
+                        } catch (e) { }
+                    },
+
                     selectTenant(tenant) {
                         this.selectedTenant = tenant;
                         this.showTenantDropdown = false;
