@@ -1683,19 +1683,24 @@
                                         </div>
                                         <div class="col-span-2">
                                             <label class="block text-[11px] text-slate-500 mb-1.5">状态</label>
-                                            <div class="flex items-center h-9">
-                                                <button type="button"
-                                                    class="inline-flex items-center h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
-                                                    :class="warningForm.status === 'enabled'
-                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                        : 'bg-slate-50 text-slate-500 border border-slate-200'"
-                                                    :disabled="isWarningViewMode"
-                                                    @click="toggleWarningFormStatus">
-                                                    <span
-                                                        class="w-1.5 h-1.5 rounded-full mr-1.5"
-                                                        :class="warningForm.status === 'enabled' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
-                                                    {{ warningForm.status === 'enabled' ? '启用' : '停用' }}
-                                                </button>
+                                            <div class="flex flex-col h-9 space-y-1">
+                                                <div class="flex items-center">
+                                                    <button type="button"
+                                                        class="inline-flex items-center h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
+                                                        :class="warningForm.status === 'enabled'
+                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                            : 'bg-slate-50 text-slate-500 border border-slate-200'"
+                                                        :disabled="isWarningViewMode || warningForm.isDefault"
+                                                        @click="toggleWarningFormStatus">
+                                                        <span
+                                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                                            :class="warningForm.status === 'enabled' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                                                        {{ warningForm.status === 'enabled' ? '启用' : '停用' }}
+                                                    </button>
+                                                </div>
+                                                <div class="text-[11px] text-slate-400 leading-tight">
+                                                    注：设为默认时，状态将强制启用且不可停用。
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
