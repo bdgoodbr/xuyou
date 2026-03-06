@@ -1500,8 +1500,8 @@
                                         <th class="min-w-[160px]">规则集名称</th>
                                         <th class="min-w-[80px]">是否默认</th>
                                         <th class="min-w-[200px]">适用目的地</th>
-                                        <th class="min-w-[80px] text-center">状态</th>
                                         <th class="min-w-[160px]">更新时间</th>
+                                        <th class="min-w-[80px] text-center">状态</th>
                                         <th class="min-w-[120px] text-center">操作</th>
                                     </tr>
                                 </thead>
@@ -1529,6 +1529,7 @@
                                             </span>
                                             <span v-else class="text-[11px] text-slate-400">（默认规则集适用未绑定目的地）</span>
                                         </td>
+                                        <td class="font-mono text-[12px] text-slate-500">{{ rule.updatedAt }}</td>
                                         <td class="text-center">
                                             <div class="inline-flex items-center justify-center gap-2">
                                                 <button type="button"
@@ -1543,7 +1544,6 @@
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="font-mono text-[12px] text-slate-500">{{ rule.updatedAt }}</td>
                                         <td class="text-center space-x-2">
                                             <button @click="openWarningModal('view', rule)"
                                                 class="text-blue-600 hover:text-blue-800 font-medium">
