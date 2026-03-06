@@ -228,6 +228,57 @@
             margin-right: 4px;
         }
 
+        .multiselect-option.disabled {
+            background-color: #F9FAFB;
+            color: #9CA3AF;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .multiselect-option.disabled:hover {
+            background-color: #F9FAFB;
+        }
+
+        /* Feishu-like switch */
+        .htm-switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 34px;
+            height: 18px;
+            border-radius: 9999px;
+            background-color: #E5E7EB;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.8);
+            transition: background-color 0.18s ease, box-shadow 0.18s ease;
+            cursor: pointer;
+        }
+
+        .htm-switch-handle {
+            position: absolute;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 9999px;
+            background-color: #FFFFFF;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+            transition: transform 0.18s ease;
+        }
+
+        .htm-switch-on {
+            background-color: #22C55E;
+            box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.75);
+        }
+
+        .htm-switch-on .htm-switch-handle {
+            transform: translateX(14px);
+        }
+
+        .htm-switch.htm-switch-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         /* Table & sticky columns */
         .htm-table {
             border-collapse: separate;
@@ -937,6 +988,20 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 预警管理模块（与业务操作模块平级） -->
+                    <div class="mt-6">
+                        <div
+                            class="px-6 py-2 text-sm font-semibold text-gray-700 flex items-center bg-gray-200 border-b border-gray-300">
+                            <i class="fas fa-bell mr-2 text-amber-500"></i> 预警管理
+                        </div>
+                        <div class="mt-1 space-y-1">
+                            <div @click="switchView('warning-config')"
+                                :class="['nav-item px-10 py-2.5 text-compact cursor-pointer flex items-center transition-colors', currentView==='warning-config' ? 'active' : '']">
+                                <span>铁路预警管理 - 预警配置</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- User Info -->
@@ -956,10 +1021,29 @@
                 <div
                     class="h-14 bg-white border-b border-slate-200 flex justify-between items-center px-6 shrink-0 z-20">
                     <div class="text-compact text-slate-500">
-                        HTM / 业务操作模块 / <span class="text-slate-900 font-semibold">{{ currentView === 'upload' ?
-                            '铁运可视化信息上报' : currentView === 'query' ? '铁运可视化查询' : '下载中心' }}</span>
+                        <template v-if="currentView === 'upload' || currentView === 'query' || currentView === 'downloadCenter'">
+                            HTM / 业务操作模块 /
+                            <span class="text-slate-900 font-semibold">
+                                {{ currentView === 'upload'
+                                    ? '铁运可视化信息上报'
+                                    : currentView === 'query'
+                                        ? '铁运可视化查询'
+                                        : '下载中心' }}
+                            </span>
+                        </template>
+                        <template v-else-if="currentView === 'warning-config'">
+                            HTM / 预警管理 /
+                            <span class="text-slate-900 font-semibold">铁路预警管理 - 预警配置</span>
+                        </template>
                     </div>
                     <div class="flex items-center space-x-4">
+                        <!-- Language Switch (only affects query view texts) -->
+                        <div class="flex items-center space-x-1 text-xs">
+                            <button @click="switchLanguage('zh')"
+                                :class="['px-2 py-1 rounded-l border border-slate-300', language === 'zh' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 hover:bg-slate-50']">中</button>
+                            <button @click="switchLanguage('en')"
+                                :class="['px-2 py-1 rounded-r border border-slate-300 border-l-0', language === 'en' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 hover:bg-slate-50']">EN</button>
+                        </div>
                         <!-- 我的下载按钮（独立） -->
                         <button @click="goToDownloadCenter"
                             class="relative flex items-center space-x-2 px-3 py-1.5 text-sm text-slate-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors border border-slate-200 hover:border-blue-300">
@@ -1003,6 +1087,7 @@
                 </div>
 
                 <!-- Main Content -->
+                <!-- 铁运可视化信息上报 -->
                 <div v-if="currentView === 'upload'"
                     class="flex-1 p-6 overflow-y-auto overflow-x-hidden flex flex-col custom-scroll min-w-0 w-full">
                     <!-- Filter Section -->
@@ -1176,7 +1261,7 @@
                     <!-- Data Table -->
                     <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                         <div class="overflow-x-auto custom-scroll">
-                            <table class="w-full htm-table" style="min-width: 1800px;">
+                            <table class="w-full htm-table" style="min-width: 2300px;">
                                 <thead class="bg-gray-50 sticky top-0 z-50">
                                     <tr>
                                         <th class="w-10 text-center sticky-col-left border-r border-gray-200">
@@ -1237,6 +1322,10 @@
                                                 <i class="fas fa-sort-down"></i>
                                             </span>
                                         </th>
+                                        <th>境内提柜时间</th>
+                                        <th>抵达边境时间</th>
+                                        <th>完成换装时间</th>
+                                        <th>境外发车时间</th>
                                         <th class="sortable-header" @click="handleSort('uploadTime')">
                                             <span>上传时间</span>
                                             <span class="sort-icon" :class="getSortIconClass('uploadTime')">
@@ -1279,6 +1368,10 @@
                                         <td class="font-mono text-xs">{{ formatDateOnly(item.ata) }}</td>
                                         <td>{{ item.kmToBorder }}</td>
                                         <td>{{ item.kmToDestination || '-' }}</td>
+                                        <td class="font-mono text-xs">{{ formatDateOnly(item.pickupTimeDomestic) }}</td>
+                                        <td class="font-mono text-xs">{{ formatDateOnly(item.arrivedBorderTime) }}</td>
+                                        <td class="font-mono text-xs">{{ formatDateOnly(item.reloadingCompletedTime) }}</td>
+                                        <td class="font-mono text-xs">{{ formatDateOnly(item.overseasDepartureTime) }}</td>
                                         <td class="font-mono text-xs text-gray-500">{{ item.uploadTime }}</td>
                                         <td class="font-mono text-xs text-gray-500">{{ item.modifyTime ||
                                             item.uploadTime }}</td>
@@ -1329,6 +1422,485 @@
                                 <input v-model.number="jumpPage" @keyup.enter="jumpToPage" type="number"
                                     class="htm-input w-16 h-8 text-xs" :min="1" :max="pagination.pages">
                                 <span>页</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 预警配置：铁路预警管理 -->
+                <div v-if="currentView === 'warning-config'"
+                    class="flex-1 p-6 overflow-y-auto overflow-x-hidden flex flex-col custom-scroll min-w-0 w-full">
+                    <!-- 顶部说明与搜索 -->
+                    <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-4">
+                        <div class="flex items-start justify-between gap-6">
+                            <div class="space-y-4 flex-1">
+                                <div>
+                                    <div class="text-base font-semibold text-slate-800 mb-1.5">预警规则配置中心</div>
+                                    <div class="text-xs text-slate-500 leading-relaxed">
+                                        按照PRD第4章预警模块要求，对应<strong class="font-semibold">“节点状态缺失预警”</strong>的规则集维护入口。
+                                        仅维护各节点的目标偏移量（N±X），升级阶梯与定时任务参数为系统固化策略，不在此页面配置。
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-12 gap-4">
+                                    <div class="col-span-4">
+                                        <label class="block text-xs text-gray-500 mb-1.5">规则集名称</label>
+                                        <input v-model="warningFilters.name" type="text" class="htm-input"
+                                            placeholder="请输入规则集名称关键字">
+                                    </div>
+                                    <div class="col-span-3">
+                                        <label class="block text-xs text-gray-500 mb-1.5">状态</label>
+                                        <select v-model="warningFilters.status" class="htm-input">
+                                            <option value="all">全部</option>
+                                            <option value="enabled">启用</option>
+                                            <option value="disabled">停用</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-2 shrink-0">
+                                <div class="flex gap-2">
+                                    <button @click="resetWarningFilters"
+                                        class="bg-white text-gray-600 text-xs px-4 h-9 rounded hover:bg-gray-50 border border-gray-300 font-medium transition-colors">
+                                        重置
+                                    </button>
+                                    <button @click="searchWarningRuleSets"
+                                        class="bg-blue-600 text-white text-xs px-5 h-9 rounded hover:bg-blue-700 font-medium shadow-sm transition-colors">
+                                        <i class="fas fa-search mr-1"></i> 搜索
+                                    </button>
+                                    <button @click="openWarningModal('create')"
+                                        class="bg-emerald-600 text-white text-xs px-5 h-9 rounded hover:bg-emerald-700 font-medium shadow-sm transition-colors">
+                                        <i class="fas fa-plus mr-1"></i> 新建规则集
+                                    </button>
+                                </div>
+                                <div class="text-[11px] text-slate-400">
+                                    基准时间N = 订舱ETD（来自 tms.DC_SO_INFO.ETD），仅扫描ETD位于[当前日期-90天, 当前日期+30天]范围内的记录。
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 规则集列表 -->
+                    <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
+                        <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
+                            <div class="text-sm font-semibold text-slate-800">
+                                规则集列表
+                                <span class="ml-2 text-xs text-slate-500 font-normal">
+                                    （点击行尾操作进入查看 / 编辑 / 复制）
+                                </span>
+                            </div>
+                            <div class="text-xs text-slate-500">
+                                共 <span class="font-semibold">{{ filteredWarningRuleSets.length }}</span> 条
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto custom-scroll">
+                            <table class="w-full htm-table text-xs">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="min-w-[120px]">规则集编码</th>
+                                        <th class="min-w-[160px]">规则集名称</th>
+                                        <th class="min-w-[80px]">是否默认</th>
+                                        <th class="min-w-[200px]">适用目的地</th>
+                                        <th class="min-w-[160px]">更新时间</th>
+                                        <th class="min-w-[80px] text-center">状态</th>
+                                        <th class="min-w-[120px] text-center">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="rule in pagedWarningRuleSets" :key="rule.code">
+                                        <td class="font-mono text-[12px] text-slate-700">{{ rule.code }}</td>
+                                        <td class="text-slate-800">{{ rule.name }}</td>
+                                        <td>
+                                            <span v-if="rule.isDefault"
+                                                class="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[11px]">
+                                                默认
+                                            </span>
+                                            <span v-else class="text-[11px] text-slate-400">—</span>
+                                        </td>
+                                        <td>
+                                            <span v-if="rule.destinations && rule.destinations.length"
+                                                class="inline-flex items-center gap-1 max-w-xs">
+                                                <span class="truncate">
+                                                    {{ rule.destinations.join('、') }}
+                                                </span>
+                                                <span v-if="rule.destinations.length > 2"
+                                                    class="text-[11px] text-slate-400">
+                                                    (+{{ rule.destinations.length - 2 }})
+                                                </span>
+                                            </span>
+                                            <span v-else class="text-[11px] text-slate-400">（默认规则集适用未绑定目的地）</span>
+                                        </td>
+                                        <td class="font-mono text-[12px] text-slate-500">{{ rule.updatedAt }}</td>
+                                        <td class="text-center">
+                                            <div class="inline-flex items-center justify-center gap-2">
+                                                <button type="button"
+                                                    class="htm-switch"
+                                                    :class="{ 'htm-switch-on': rule.status === 'enabled' }"
+                                                    @click="toggleWarningStatus(rule)">
+                                                    <span class="htm-switch-handle"></span>
+                                                </button>
+                                                <span class="text-[11px]"
+                                                    :class="rule.status === 'enabled' ? 'text-emerald-600' : 'text-slate-400'">
+                                                    {{ rule.status === 'enabled' ? '启用' : '停用' }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center space-x-2">
+                                            <button @click="openWarningModal('view', rule)"
+                                                class="text-blue-600 hover:text-blue-800 font-medium">
+                                                查看
+                                            </button>
+                                            <button @click="openWarningModal('edit', rule)"
+                                                class="text-amber-600 hover:text-amber-800 font-medium">
+                                                编辑
+                                            </button>
+                                            <button @click="openWarningModal('copy', rule)"
+                                                class="text-emerald-600 hover:text-emerald-800 font-medium">
+                                                复制
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="filteredWarningRuleSets.length === 0">
+                                        <td colspan="7" class="py-10 text-center text-slate-400 text-xs">
+                                            暂无规则集，请点击右上角“新建规则集”进行配置。
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- 分页 -->
+                        <div class="px-4 py-3 border-t border-gray-100 bg-white text-xs flex items-center justify-between">
+                            <div class="text-slate-500">
+                                显示第 {{ warningPageStart }} 到 {{ warningPageEnd }} 条，共 {{ filteredWarningRuleSets.length }} 条
+                            </div>
+                            <div class="flex items-center gap-2 text-slate-600">
+                                <span>每页显示</span>
+                                <select v-model.number="warningPagination.size" @change="setWarningPageSize"
+                                    class="htm-input w-20 h-8 text-xs">
+                                    <option :value="10">10</option>
+                                    <option :value="20">20</option>
+                                    <option :value="50">50</option>
+                                    <option :value="100">100</option>
+                                </select>
+                                <span>条</span>
+                                <button @click="setWarningPage(1)" :disabled="warningCurrentPage === 1"
+                                    class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">首页</button>
+                                <button @click="setWarningPage(warningCurrentPage - 1)" :disabled="warningCurrentPage === 1"
+                                    class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">上一页</button>
+                                <span>第 {{ warningCurrentPage }} / {{ warningPaginationPages }} 页</span>
+                                <button @click="setWarningPage(warningCurrentPage + 1)"
+                                    :disabled="warningCurrentPage >= warningPaginationPages"
+                                    class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">下一页</button>
+                                <button @click="setWarningPage(warningPaginationPages)"
+                                    :disabled="warningCurrentPage >= warningPaginationPages"
+                                    class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">末页</button>
+                                <span>跳至</span>
+                                <input v-model.number="warningJumpPage" @keyup.enter="jumpToWarningPage" type="number"
+                                    class="htm-input w-16 h-8 text-xs" :min="1" :max="warningPaginationPages">
+                                <span>页</span>
+                            </div>
+                        </div>
+
+                        <div class="px-4 py-3 border-t border-gray-100 bg-gray-50 text-[11px] text-slate-500">
+                            说明：列表中的“状态”仅作为启用/停用标识，真正的预警扫描频率与时间窗口遵循PRD
+                            4.2.7及4.6业务规则表的全局配置，不在此处修改。
+                        </div>
+                    </div>
+
+                    <!-- 规则集编辑弹窗（标准CRUD宽体弹窗） -->
+                    <div v-if="showWarningModal"
+                        class="fixed inset-0 z-40 flex items-center justify-center bg-black/30">
+                        <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-[1000px] max-h-[90vh] flex flex-col">
+                            <!-- 标题 -->
+                            <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                                <div>
+                                    <div class="text-base font-semibold text-slate-900">
+                                        {{ warningModalTitle }}
+                                    </div>
+                                    <div class="text-[11px] text-slate-500 mt-1">
+                                        基准时间N=订舱ETD；仅维护各节点的目标偏移（N±X天），预警升级范围固定为：A订单岗、B分公司业务、C总部物流、D总部领导，货代默认必收。
+                                    </div>
+                                </div>
+                                <button @click="closeWarningModal"
+                                    class="text-slate-400 hover:text-slate-600 transition-colors">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <!-- 内容区：三段式 -->
+                            <div class="px-6 py-4 space-y-5 overflow-y-auto custom-scroll">
+                                <!-- 上段：基础配置 -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="text-sm font-semibold text-slate-800">基础配置</div>
+                                        <div class="text-[11px] text-slate-400">
+                                            默认规则集：用于兜底未显式绑定目的地的订舱；目的地唯一约束由前后端双重校验。
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-12 gap-4 text-xs">
+                                        <div class="col-span-3">
+                                            <label class="block text-[11px] text-slate-500 mb-1.5">规则集编码</label>
+                                            <input type="text" class="htm-input font-mono"
+                                                v-model="warningForm.code" readonly>
+                                        </div>
+                                        <div class="col-span-4">
+                                            <label class="block text-[11px] text-slate-500 mb-1.5">
+                                                规则集名称 <span class="text-red-500">*</span>
+                                            </label>
+                                            <input type="text" class="htm-input"
+                                                v-model="warningForm.name"
+                                                :readonly="isWarningViewMode">
+                                        </div>
+                                        <div class="col-span-5">
+                                            <label class="block text-[11px] text-slate-500 mb-1.5">
+                                                适用目的地
+                                            </label>
+                                            <div class="custom-multiselect">
+                                                <div class="multiselect-input"
+                                                    :class="{ open: showDestinationDropdown }"
+                                                    @click="!isWarningViewMode && (showDestinationDropdown = !showDestinationDropdown)">
+                                                    <template
+                                                        v-if="warningForm.destinations && warningForm.destinations.length">
+                                                        <span v-for="code in warningForm.destinations" :key="code"
+                                                            class="multiselect-tag">
+                                                            {{ getDestinationLabel(code) }}
+                                                            <span v-if="!isWarningViewMode" class="remove"
+                                                                @click.stop="removeWarningDestination(code)">×</span>
+                                                        </span>
+                                                    </template>
+                                                    <span v-else class="multiselect-placeholder">请选择适用目的地</span>
+                                                    <i class="fas fa-chevron-down multiselect-arrow"></i>
+                                                </div>
+                                                <div v-if="showDestinationDropdown && !isWarningViewMode"
+                                                    class="multiselect-dropdown" @click.stop>
+                                                    <div class="multiselect-search">
+                                                        <input type="text" v-model="destinationSearch"
+                                                            placeholder="搜索目的地代码或名称..."
+                                                            @click.stop>
+                                                    </div>
+                                                    <div class="multiselect-options">
+                                                        <div v-for="opt in availableDestinations" :key="opt.value"
+                                                            class="multiselect-option"
+                                                            :class="{
+                                                                selected: warningForm.destinations && warningForm.destinations.includes(opt.value),
+                                                                disabled: opt.disabled
+                                                            }"
+                                                            :title="opt.disabled ? `已被${opt.boundBy}规则集绑定` : ''"
+                                                            @click="!opt.disabled && toggleWarningDestination(opt.value)">
+                                                            <span class="font-mono text-[11px] mr-1">{{ opt.value }}</span>
+                                                            <span>{{ opt.label }}</span>
+                                                            <span v-if="opt.disabled"
+                                                                class="text-xs text-gray-400 ml-2">(已被{{ opt.boundBy }}绑定)</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-span-2">
+                                            <label class="block text-[11px] text-slate-500 mb-1.5">默认规则集</label>
+                                            <div class="flex items-center h-9 gap-2">
+                                                <button type="button"
+                                                    class="htm-switch"
+                                                    :class="[{ 'htm-switch-on': warningForm.isDefault }, isWarningViewMode && 'htm-switch-disabled']"
+                                                    @click="handleDefaultSwitchChange">
+                                                    <span class="htm-switch-handle"></span>
+                                                </button>
+                                                <span class="text-xs text-slate-600">设为默认</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-span-2">
+                                            <label class="block text-[11px] text-slate-500 mb-1.5">状态</label>
+                                            <div class="flex items-center h-9">
+                                                <button type="button"
+                                                    class="inline-flex items-center h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
+                                                    :class="warningForm.status === 'enabled'
+                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                        : 'bg-slate-50 text-slate-500 border border-slate-200'"
+                                                    :disabled="isWarningViewMode"
+                                                    @click="toggleWarningFormStatus">
+                                                    <span
+                                                        class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                                        :class="warningForm.status === 'enabled' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                                                    {{ warningForm.status === 'enabled' ? '启用' : '停用' }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 中段：节点规则配置表 -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="text-sm font-semibold text-slate-800">
+                                            节点规则配置（基准时间 N = 订舱ETD）
+                                        </div>
+                                        <div class="text-[11px] text-slate-400">
+                                            仅维护“N±X天”的偏移量；预警接收范围固定为：A订单岗、B分公司业务、C总部物流、D总部领导。
+                                        </div>
+                                    </div>
+                                    <div class="border border-gray-200 rounded-lg overflow-hidden">
+                                        <table class="w-full htm-table text-xs">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="w-32">节点名称</th>
+                                                    <th class="w-24 text-center">是否启用</th>
+                                                    <th class="w-40">目标偏移（N±X 天）</th>
+                                                    <th>固定预警策略（只读）</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="node in warningForm.nodes" :key="node.index">
+                                                    <td>{{ node.label }}</td>
+                                                    <td class="text-center">
+                                                        <button type="button"
+                                                            class="htm-switch"
+                                                            :class="[{ 'htm-switch-on': node.enabled }, isWarningViewMode && 'htm-switch-disabled']"
+                                                            @click="!isWarningViewMode && (node.enabled = !node.enabled)">
+                                                            <span class="htm-switch-handle"></span>
+                                                        </button>
+                                                    </td>
+                                                    <td>
+                                                        <div class="flex items-center gap-2">
+                                                            <input type="number" class="htm-input w-24 text-right"
+                                                                v-model.number="node.offset"
+                                                                :readonly="isWarningViewMode">
+                                                            <span class="text-[11px] text-slate-400">
+                                                                例如：-7 表示 ETD 前 7 天
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-[11px] text-slate-600">
+                                                        {{ node.strategy }}
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- 下段：规则测算预览 -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="text-sm font-semibold text-slate-800">
+                                            规则测算预览
+                                        </div>
+                                        <div class="text-[11px] text-slate-400 max-w-xl text-right">
+                                            （注：模拟测算基于<strong>前端表单当前填写</strong>的目标偏移量实时计算，
+                                            不依赖数据库已保存数据；仅作为业务自检工具，不做真正写库。）
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="border border-dashed border-slate-300 rounded-lg px-4 py-3 bg-slate-50/60 flex items-center justify-between gap-4">
+                                        <div class="flex items-center gap-4 text-xs">
+                                            <div>
+                                                <label class="block text-[11px] text-slate-500 mb-1.5">假设订舱ETD</label>
+                                                <input type="date" class="htm-input w-44"
+                                                    v-model="warningSimulation.etd"
+                                                    :readonly="isWarningViewMode">
+                                            </div>
+                                            <div>
+                                                <label class="block text-[11px] text-slate-500 mb-1.5">当前系统日期</label>
+                                                <input type="date" class="htm-input w-44"
+                                                    v-model="warningSimulation.today"
+                                                    :readonly="isWarningViewMode">
+                                            </div>
+                                            <div class="text-[11px] text-slate-500 max-w-xs leading-relaxed">
+                                                默认扫描时间窗口：仅纳入 ETD 位于
+                                                [当前日期-90天, 当前日期+30天] 的订舱记录，
+                                                确保“完全无上传”的单据也能触发缺失预警。
+                                            </div>
+                                        </div>
+                                        <div class="flex items-end gap-2">
+                                            <button @click="runWarningSimulation"
+                                                class="bg-indigo-600 text-white text-xs px-5 h-9 rounded shadow-sm hover:bg-indigo-700 transition-colors"
+                                                :disabled="isWarningViewMode">
+                                                <i class="fas fa-play mr-1"></i> 运行测算
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 bg-white border border-slate-200 rounded-lg p-3 text-xs">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div class="font-semibold text-slate-800">
+                                                测算结果（展示 expectedMaxNode / maxReachedNodeIndex 与最近缺失节点）
+                                            </div>
+                                            <div class="text-[11px] text-slate-400">
+                                                示例，仅前端模拟：缺失节点 = Index(maxReachedNodeIndex) + 1，详见PRD
+                                                4.2.5与4.5节。
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-12 gap-3">
+                                            <div class="col-span-3">
+                                                <div class="text-[11px] text-slate-500">expectedMaxNodeIndex</div>
+                                                <div class="mt-1 font-mono text-sm text-slate-800">
+                                                    {{ warningSimulation.expectedMaxNodeIndex }}
+                                                </div>
+                                            </div>
+                                            <div class="col-span-3">
+                                                <div class="text-[11px] text-slate-500">maxReachedNodeIndex</div>
+                                                <div class="mt-1 font-mono text-sm text-slate-800">
+                                                    {{ warningSimulation.maxReachedNodeIndex }}
+                                                </div>
+                                            </div>
+                                            <div class="col-span-3">
+                                                <div class="text-[11px] text-slate-500">最近缺失节点（Index）</div>
+                                                <div class="mt-1 font-mono text-sm text-rose-600">
+                                                    {{ warningSimulation.missingNodeIndex || '-' }}
+                                                </div>
+                                            </div>
+                                            <div class="col-span-3">
+                                                <div class="text-[11px] text-slate-500">最近缺失节点（名称）</div>
+                                                <div class="mt-1 text-sm text-rose-600">
+                                                    {{ warningSimulation.missingNodeLabel || '-' }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 底部操作区 -->
+                            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                                <div class="text-[11px] text-slate-500">
+                                    点击“保存并生效”时，系统会校验：规则集名称必填、目标偏移为整数、适用目的地不与其他规则集冲突，
+                                    通过后立即生效并写入审计日志（后端维护）。
+                                </div>
+                                <div class="space-x-2">
+                                    <button @click="closeWarningModal"
+                                        class="bg-white text-slate-600 text-xs px-4 h-9 rounded border border-slate-300 hover:bg-slate-100">
+                                        {{ isWarningViewMode ? '关闭' : '取消' }}
+                                    </button>
+                                    <button v-if="!isWarningViewMode"
+                                        @click="saveWarningRuleSet"
+                                        class="bg-blue-600 text-white text-xs px-5 h-9 rounded shadow-sm hover:bg-blue-700">
+                                        保存并生效
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 默认规则集替换确认对话框 -->
+                <div v-if="showDefaultConfirmModal" class="modal-overlay" @click.self="showDefaultConfirmModal = false">
+                    <div class="modal-content" style="width: 420px;" @click.stop>
+                        <div class="p-6">
+                            <div class="flex items-start mb-4">
+                                <i class="fas fa-exclamation-triangle text-amber-500 text-xl mr-3 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <h3 class="text-base font-semibold text-slate-900 mb-2">确认替换默认规则集</h3>
+                                    <p class="text-sm text-slate-600">
+                                        当前已有默认规则集：<span class="font-medium text-slate-900">{{ existingDefaultRuleSetName }}</span>，确认替换？
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                                <button @click="showDefaultConfirmModal = false"
+                                    class="bg-white text-slate-600 text-sm px-5 h-9 rounded border border-slate-300 hover:bg-slate-50">
+                                    取消
+                                </button>
+                                <button @click="confirmDefaultSwitch"
+                                    class="bg-blue-600 text-white text-sm px-5 h-9 rounded shadow-sm hover:bg-blue-700">
+                                    确认替换
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1414,7 +1986,8 @@
                                 <div class="q-status-line"></div>
                             </div>
                             <div class="text-xs text-slate-500 mt-2">
-                                - 海运：订阅方显示船公司/数据源，逻辑不变；铁运：订阅方显示具体货代名称，完成订舱后默认订阅成功。
+                                <span v-if="language === 'en'">Sea: the subscriber shows the ocean carrier / data source, logic unchanged. Rail: the subscriber shows the actual forwarding agent; once the booking is confirmed, the subscription is treated as successful by default.</span>
+                                <span v-else>- 海运：订阅方显示船公司/数据源，逻辑不变；铁运：订阅方显示具体货代名称，完成订舱后默认订阅成功。</span>
                             </div>
                         </div>
 
@@ -1428,7 +2001,12 @@
                                     基本信息 <span class="text-slate-400 text-xs font-normal">Basic information</span>
                                 </div>
                                 <div class="text-xs text-slate-500">
+                                    <template v-if="language === 'en'">
+                                        Transport mode: <span class="font-semibold text-slate-800">{{ qBasic.transport === '铁运' ? 'Rail' : qBasic.transport }}</span>
+                                    </template>
+                                    <template v-else>
                                     运输方式：<span class="font-semibold text-slate-800">{{ qBasic.transport }}</span>
+                                    </template>
                                 </div>
                             </div>
                             <div class="p-4" v-show="!basicInfoCollapsed">
@@ -1560,20 +2138,25 @@
                                     <div class="font-bold text-slate-900 flex items-center gap-2">
                                         <i :class="currentStatusCollapsed ? 'fas fa-chevron-down' : 'fas fa-chevron-up'"
                                             class="text-slate-400 text-sm transition-transform"></i>
+                                        <template v-if="language === 'en'">
+                                            Current Status Visualization
+                                        </template>
+                                        <template v-else>
                                         当前状态可视化 <span class="text-slate-400 text-xs font-normal">Current Status
                                             Visualization</span>
+                                        </template>
                                     </div>
                                     <!-- 距离信息（按最新 update_time 的记录，一行展示，与标题同一行居中对齐） -->
                                     <div class="flex items-baseline gap-10 text-sm text-slate-600">
                                         <div class="flex items-baseline gap-1">
-                                            <span class="text-xs text-slate-500">距离始发站口岸(KM)</span>
+                                            <span class="text-xs text-slate-500">{{ language === 'en' ? 'Distance from origin border (KM)' : '距离始发站口岸(KM)' }}</span>
                                             <span class="text-lg font-semibold text-slate-900">
                                                 {{ qLatestDistances.kmFromOverseasOrigin != null ?
                                                 qLatestDistances.kmFromOverseasOrigin : '-' }}
                                             </span>
                                         </div>
                                         <div class="flex items-baseline gap-1">
-                                            <span class="text-xs text-slate-500">距离目的地(KM)</span>
+                                            <span class="text-xs text-slate-500">{{ language === 'en' ? 'Distance to destination (KM)' : '距离目的地(KM)' }}</span>
                                             <span class="text-lg font-semibold text-slate-900">
                                                 {{ qLatestDistances.kmToDestinationStation != null ?
                                                 qLatestDistances.kmToDestinationStation : '-' }}
@@ -1592,10 +2175,10 @@
                                                 <div class="node-dot">
                                                     <i :class="node.icon"></i>
                                                 </div>
-                                                <div class="node-label">{{ node.label }}</div>
+                                                <div class="node-label">{{ getNodeDisplayLabel(node) }}</div>
                                                 <div class="node-count">{{ node.count }}/{{ node.total }}</div>
                                                 <div class="node-time" :class="{ 'invisible': !node.timeLabel }">
-                                                    <div class="text-xs text-slate-500">{{ node.timeLabel || '' }}</div>
+                                                    <div class="text-xs text-slate-500">{{ getNodeTimeLabel(node) }}</div>
                                                     <div class="text-xs font-semibold text-slate-700">{{ node.time ||
                                                         '-' }}</div>
                                                 </div>
@@ -1608,12 +2191,19 @@
 
                                 <!-- 状态分布 -->
                                 <div class="border-t border-gray-200 pt-4">
-                                    <div class="text-xs text-slate-500 mb-2">状态分布</div>
+                                    <div class="text-xs text-slate-500 mb-2">{{ language === 'en' ? 'Status Distribution' : '状态分布' }}</div>
                                     <div class="flex flex-wrap gap-2">
                                         <div v-for="(node, idx) in progressNodes.filter(n => n.count > 0)"
                                             :key="node.code" class="status-badge">
-                                            <span class="font-semibold">{{ node.code }}-{{ node.label }}:</span>
-                                            <span class="ml-1">{{ node.count }}箱</span>
+                                            <span class="font-semibold">{{ getNodeDisplayLabel(node) }}:</span>
+                                            <span class="ml-1">
+                                                <template v-if="language === 'en'">
+                                                    {{ node.count }} {{ node.count === 1 ? 'container' : 'containers' }}
+                                                </template>
+                                                <template v-else>
+                                                    {{ node.count }}箱
+                                                </template>
+                                            </span>
                                         </div>
                                         <div v-if="progressNodes.filter(n => n.count > 0).length === 0"
                                             class="text-slate-400 text-xs">
@@ -1625,27 +2215,30 @@
                                 <!-- 颜色说明和业务逻辑说明 -->
                                 <div class="border-t border-gray-200 pt-4 mt-4">
                                     <div class="bg-slate-50 rounded-lg p-4">
-                                        <div class="text-xs font-semibold text-slate-700 mb-3">颜色说明 Color Legend</div>
+                                        <div class="text-xs font-semibold text-slate-700 mb-3">{{ language === 'en' ? 'Color Legend' : '颜色说明 Color Legend' }}</div>
                                         <div class="grid grid-cols-2 gap-4 mb-4">
                                             <div class="flex items-center gap-2">
                                                 <div
                                                     class="w-4 h-4 rounded-full bg-green-500 border-2 border-green-500">
                                                 </div>
-                                                <span class="text-xs text-slate-600">绿色：已完成/当前激活节点</span>
+                                                <span class="text-xs text-slate-600">{{ language === 'en' ? 'Green: completed / active node' : '绿色：已完成/当前激活节点' }}</span>
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <div class="w-4 h-4 rounded-full bg-gray-300 border-2 border-gray-300">
                                                 </div>
-                                                <span class="text-xs text-slate-600">灰色：未到达节点（虚线连接）</span>
+                                                <span class="text-xs text-slate-600">{{ language === 'en' ? 'Gray: not reached (dashed connection)' : '灰色：未到达节点（虚线连接）' }}</span>
                                             </div>
                                         </div>
-                                        <div class="text-xs font-semibold text-slate-700 mb-2">业务逻辑说明 Business Logic
-                                        </div>
+                                        <div class="text-xs font-semibold text-slate-700 mb-2">{{ language === 'en' ? 'Business Logic' : '业务逻辑说明 Business Logic' }}</div>
                                         <div class="text-xs text-slate-600 space-y-1">
-                                            <p><strong>状态推断规则：</strong>如果某个订舱号有箱子传了某个状态，系统认为前面的所有节点也已经完成。</p>
-                                            <p><strong>多箱子规则：</strong>只要有一个箱子到达了某个节点，所有前面的节点都应该显示为已完成（绿色），当前最高节点也显示为绿色。
+                                            <p v-if="language === 'en'">Status inference rule: if any container under a booking has reported a given status, the system assumes that all previous nodes have already been completed.</p>
+                                            <p v-else><strong>状态推断规则：</strong>如果某个订舱号有箱子传了某个状态，系统认为前面的所有节点也已经完成。</p>
+                                            <p v-if="language === 'en'">Multi-container rule: as long as one container has reached a node, all previous nodes are marked as completed (green), and the highest node reached is also shown in green.</p>
+                                            <p v-else><strong>多箱子规则：</strong>只要有一个箱子到达了某个节点，所有前面的节点都应该显示为已完成（绿色），当前最高节点也显示为绿色。
                                             </p>
-                                            <p><strong>示例：</strong>如果6个箱子中，有1个箱子在"境外换装"（30），则00、10、20、30节点都显示为已完成/激活（绿色），40、50节点显示为未到达（灰色，虚线连接）。
+                                            <p v-if="language === 'en'">Example: if 1 out of 6 containers is at "Overseas Reloading", the nodes Gate In, Domestic Departure, Arrived at Border and Overseas Reloading are shown as completed / active (green), while the nodes Overseas Transit and Arrived at Destination are shown as not reached (gray with dashed connections).
+                                            </p>
+                                            <p v-else><strong>示例：</strong>如果6个箱子中，有1个箱子在"境外换装"节点，则已提柜、国内已出发、抵达口岸、境外换装节点都显示为已完成/激活（绿色），境外在途、已抵达节点显示为未到达（灰色，虚线连接）。
                                             </p>
                                         </div>
                                     </div>
@@ -1966,6 +2559,26 @@
                                             @blur="validateField('currentLocation')">
                                         <span v-if="errors.currentLocation" class="error-message">{{
                                             errors.currentLocation }}</span>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1.5">境内提柜时间</label>
+                                        <input v-model="form.pickupTimeDomestic" type="date" class="htm-input"
+                                            placeholder="YYYY-MM-DD">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1.5">抵达边境时间</label>
+                                        <input v-model="form.arrivedBorderTime" type="date" class="htm-input"
+                                            placeholder="YYYY-MM-DD">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1.5">完成换装时间</label>
+                                        <input v-model="form.reloadingCompletedTime" type="date" class="htm-input"
+                                            placeholder="YYYY-MM-DD">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1.5">境外发车时间</label>
+                                        <input v-model="form.overseasDepartureTime" type="date" class="htm-input"
+                                            placeholder="YYYY-MM-DD">
                                     </div>
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1.5 required">距离始发站口岸(KM)</label>
@@ -2686,6 +3299,135 @@
                                     { time: '2026-01-20 09:31:10', message: '处理完成，文件已生成' },
                                     { time: '2026-01-27 02:00:00', message: '文件已过期并清理' }
                                 ]
+                            },
+                            // ====== 追加样例任务（用于演示列表更丰富的状态/条件组合） ======
+                            {
+                                taskId: 'task_007',
+                                fileName: '订舱管理_HGCC_20260226_142000_9012.xlsx',
+                                module: '订舱管理',
+                                status: 'COMPLETED',
+                                createTime: '2026-02-26 14:20:00',
+                                completeTime: '2026-02-26 14:20:40',
+                                fileSize: 1048576,
+                                progress: 100,
+                                queryConditions: {
+                                    booking_no: 'BK20260226001',
+                                    so_no: 'SO20260226A',
+                                    transport_mode: '海运',
+                                    carrier: 'HGCC',
+                                    etd_start: '2026-03-05',
+                                    etd_end: '2026-03-20'
+                                },
+                                logs: [
+                                    { time: '2026-02-26 14:20:00', message: '任务已创建' },
+                                    { time: '2026-02-26 14:20:02', message: '任务已入队' },
+                                    { time: '2026-02-26 14:20:08', message: '开始处理' },
+                                    { time: '2026-02-26 14:20:40', message: '处理完成' }
+                                ]
+                            },
+                            {
+                                taskId: 'task_008',
+                                fileName: '落货纸管理_HGCC_20260226_150510_6731.xlsx',
+                                module: '落货纸管理',
+                                status: 'QUEUED',
+                                createTime: '2026-02-26 15:05:10',
+                                completeTime: null,
+                                fileSize: null,
+                                progress: 0,
+                                queryConditions: {
+                                    lhz_order: 'LHZ20260226005',
+                                    container_no: 'MSCU1234567',
+                                    export_countries: ['越南']
+                                },
+                                logs: [
+                                    { time: '2026-02-26 15:05:10', message: '任务已创建，等待处理' }
+                                ]
+                            },
+                            {
+                                taskId: 'task_009',
+                                fileName: '物流台账_MXFCTR_20260227_091200_2204.xlsx',
+                                module: '物流台账',
+                                status: 'PROCESSING',
+                                createTime: '2026-02-27 09:12:00',
+                                completeTime: null,
+                                fileSize: null,
+                                progress: 30,
+                                queryConditions: {
+                                    so_no: 'LHZ20260227002',
+                                    export_countries: ['美国'],
+                                    etd_start: '2026-03-01',
+                                    etd_end: '2026-03-15'
+                                },
+                                logs: [
+                                    { time: '2026-02-27 09:12:00', message: '任务已创建' },
+                                    { time: '2026-02-27 09:12:01', message: '任务已入队' },
+                                    { time: '2026-02-27 09:12:10', message: '开始处理' }
+                                ]
+                            },
+                            {
+                                taskId: 'task_010',
+                                fileName: '可视化查询_GORFAC_20260225_114500_8088.xlsx',
+                                module: '可视化查询',
+                                status: 'FAILED',
+                                createTime: '2026-02-25 11:45:00',
+                                completeTime: null,
+                                fileSize: null,
+                                progress: 0,
+                                errorMessage: '导出字段过多，请减少字段数量后重试',
+                                queryConditions: {
+                                    booking_no: 'BK20260225009',
+                                    export_countries: ['德国', '法国', '意大利'],
+                                    etd_start: '2026-02-01',
+                                    etd_end: '2026-02-28'
+                                },
+                                logs: [
+                                    { time: '2026-02-25 11:45:00', message: '任务已创建' },
+                                    { time: '2026-02-25 11:45:01', message: '任务已入队' },
+                                    { time: '2026-02-25 11:45:06', message: '开始处理' },
+                                    { time: '2026-02-25 11:45:25', message: '处理失败：导出字段过多' }
+                                ]
+                            },
+                            {
+                                taskId: 'task_011',
+                                fileName: '订舱管理_HGCC_20260224_173000_7781.xlsx',
+                                module: '订舱管理',
+                                status: 'CANCELLED',
+                                createTime: '2026-02-24 17:30:00',
+                                completeTime: '2026-02-24 17:31:05',
+                                fileSize: null,
+                                progress: 0,
+                                errorMessage: '用户主动取消任务',
+                                queryConditions: {
+                                    booking_no: 'BK20260224003',
+                                    so_no: 'SO20260224B'
+                                },
+                                logs: [
+                                    { time: '2026-02-24 17:30:00', message: '任务已创建' },
+                                    { time: '2026-02-24 17:31:05', message: '用户取消任务' }
+                                ]
+                            },
+                            {
+                                taskId: 'task_012',
+                                fileName: '物流台账_SANFAC_20260223_081020_4450.xlsx',
+                                module: '物流台账',
+                                status: 'COMPLETED',
+                                createTime: '2026-02-23 08:10:20',
+                                completeTime: '2026-02-23 08:11:55',
+                                fileSize: 7340032,
+                                progress: 100,
+                                queryConditions: {
+                                    carrier: 'SANFAC',
+                                    transport_mode: '铁运',
+                                    export_countries: ['美国', '德国'],
+                                    etd_start: '2026-03-10',
+                                    etd_end: '2026-03-25'
+                                },
+                                logs: [
+                                    { time: '2026-02-23 08:10:20', message: '任务已创建' },
+                                    { time: '2026-02-23 08:10:21', message: '任务已入队' },
+                                    { time: '2026-02-23 08:10:30', message: '开始处理' },
+                                    { time: '2026-02-23 08:11:55', message: '处理完成' }
+                                ]
                             }
                         ],
                         selectedDownloadTasks: [],
@@ -2712,6 +3454,9 @@
                             { value: '订舱管理', label: '订舱管理' },
                             { value: '落货纸管理', label: '落货纸管理' }
                         ],
+
+                        // UI language (only affects query view texts)
+                        language: 'zh', // 'zh' | 'en'
 
                         // Collapse states
                         basicInfoCollapsed: false,
@@ -2745,12 +3490,12 @@
                         containerSizes: ['20GP', '40GP', '40HQ', '40NOR'],
                         // 当前状态枚举（与PRD 2.7.8 状态枚举表保持一致）
                         statusOptions: [
-                            { code: '00', label: '已进站 / 待发运' },
-                            { code: '10', label: '已发车 / 国内在途' },
-                            { code: '20', label: '抵达国内口岸 / 排队' },
-                            { code: '30', label: '境外换装中' },
+                            { code: '00', label: '已提柜' },
+                            { code: '10', label: '国内已出发' },
+                            { code: '20', label: '抵达口岸' },
+                            { code: '30', label: '境外换装' },
                             { code: '40', label: '境外在途' },
-                            { code: '50', label: '已抵达目的站' }
+                            { code: '50', label: '已抵达' }
                         ],
                         // 港口枚举
                         portOptions: ['CNTAO', 'DEHAM', 'CNSHA', 'DEBRV', 'CNDLC'],
@@ -2774,6 +3519,10 @@
                                 atd: '2025-01-28',
                                 realETA: '2025-02-15',
                                 ata: null,
+                                pickupTimeDomestic: null,
+                                arrivedBorderTime: '2025-02-03',
+                                reloadingCompletedTime: null,
+                                overseasDepartureTime: null,
                                 uploadTime: '2025-01-26 09:30:00',
                                 modifyTime: '2025-01-26 09:30:00',
                                 uploadUser: '用户A'
@@ -2816,6 +3565,10 @@
                                 atd: '2025-01-30',
                                 realETA: '2025-02-18',
                                 ata: null,
+                                pickupTimeDomestic: null,
+                                arrivedBorderTime: '2025-02-02',
+                                reloadingCompletedTime: '2025-02-05',
+                                overseasDepartureTime: null,
                                 uploadTime: '2025-01-26 11:20:00',
                                 modifyTime: '2025-01-26 11:20:00',
                                 uploadUser: '用户B'
@@ -2902,8 +3655,81 @@
                         },
                         jumpPage: 1,
 
-                        // View switch (upload/query)
+                        // View switch (upload/query/预警配置/下载中心)
                         currentView: 'upload',
+
+                        // ===== 预警配置（铁路预警管理） =====
+                        warningFilters: {
+                            name: '',
+                            status: 'all'
+                        },
+                        warningPagination: {
+                            current: 1,
+                            size: 10
+                        },
+                        warningJumpPage: 1,
+                        warningRuleSets: [
+                            {
+                                code: 'RAIL-RULE-001',
+                                name: '欧洲班列默认规则集',
+                                isDefault: true,
+                                destinations: [],
+                                status: 'enabled',
+                                updatedAt: '2026-03-04 10:00:00'
+                            },
+                            {
+                                code: 'RAIL-RULE-002',
+                                name: '东欧方向-波兰/捷克规则集',
+                                isDefault: false,
+                                destinations: ['PLGDN', 'PLCZB', 'CZPRG'],
+                                status: 'enabled',
+                                updatedAt: '2026-03-01 16:30:00'
+                            },
+                            {
+                                code: 'RAIL-RULE-003',
+                                name: '德国北部方向规则集',
+                                isDefault: false,
+                                destinations: ['DEBRV', 'DEHAM'],
+                                status: 'disabled',
+                                updatedAt: '2026-02-20 09:15:00'
+                            }
+                        ],
+                        showWarningModal: false,
+                        warningModalMode: 'view', // 'create' | 'view' | 'edit' | 'copy'
+                        warningForm: {
+                            code: '',
+                            name: '',
+                            destinations: [],
+                            isDefault: false,
+                            status: 'enabled',
+                            nodes: [
+                                { index: 1, label: '已提柜', offset: -7, enabled: true, strategy: '超2天通知A，超4天通知ABC' },
+                                { index: 2, label: '国内已出发', offset: 0, enabled: true, strategy: '超3天通知A，超7天通知ABC，超14天通知ABCD' },
+                                { index: 3, label: '抵达口岸', offset: 5, enabled: true, strategy: '超3天/超6天通知ABC，超10天通知ABCD' },
+                                { index: 4, label: '境外换装', offset: 10, enabled: true, strategy: '超3天/超7天通知ABC，超14天通知BCD' },
+                                { index: 5, label: '境外在途', offset: 12, enabled: true, strategy: '超3天/超7天通知ABC，超14天通知BCD' },
+                                { index: 6, label: '已抵达', offset: 22, enabled: true, strategy: '超3天/超7天通知BC，超14天通知BCD' }
+                            ]
+                        },
+                        warningDestinationOptions: [
+                            { value: 'PLGDN', label: '格但斯克 PLGDN' },
+                            { value: 'PLCZB', label: '琴斯托霍瓦 PLCZB' },
+                            { value: 'CZPRG', label: '布拉格 CZPRG' },
+                            { value: 'DEBRV', label: '不来梅哈芬 DEBRV' },
+                            { value: 'DEHAM', label: '汉堡 DEHAM' }
+                        ],
+                        showDestinationDropdown: false,
+                        destinationSearch: '',
+                        showDefaultConfirmModal: false,
+                        existingDefaultRuleSetName: '',
+                        warningSimulation: {
+                            etd: '',
+                            today: '',
+                            expectedMaxNodeIndex: '-',
+                            maxReachedNodeIndex: 0,
+                            missingNodeIndex: '',
+                            missingNodeLabel: ''
+                        },
 
                         // Query (native)
                         qActiveTab: 'tracking',
@@ -2969,7 +3795,11 @@
                                 currentStatus: 'Arrived at Port',
                                 statusCode: '20', // 状态代码
                                 updateTime: '2026-01-17 10:00:00',
-                                currentLocation: '二连浩特'
+                                currentLocation: '二连浩特',
+                                pickupTimeDomestic: null,
+                                arrivedBorderTime: '2025-11-02',
+                                reloadingCompletedTime: null,
+                                overseasDepartureTime: null
                             },
                             {
                                 containerNo: 'OCUU8688268',
@@ -2980,7 +3810,11 @@
                                 currentStatus: 'In Transit Domestically',
                                 statusCode: '10', // 状态代码
                                 updateTime: '2026-01-18 08:45:00',
-                                currentLocation: '霍尔果斯'
+                                currentLocation: '霍尔果斯',
+                                pickupTimeDomestic: null,
+                                arrivedBorderTime: null,
+                                reloadingCompletedTime: null,
+                                overseasDepartureTime: null
                             },
                             {
                                 containerNo: 'OCUU8688269',
@@ -2991,7 +3825,11 @@
                                 currentStatus: 'Overseas Transfer',
                                 statusCode: '30', // 状态代码 - 最新节点
                                 updateTime: '2026-01-19 19:20:00',
-                                currentLocation: '阿拉山口'
+                                currentLocation: '阿拉山口',
+                                pickupTimeDomestic: null,
+                                arrivedBorderTime: '2025-11-03',
+                                reloadingCompletedTime: '2025-11-05',
+                                overseasDepartureTime: null
                             },
                             {
                                 containerNo: 'OCUU8688270',
@@ -3002,7 +3840,11 @@
                                 currentStatus: 'Arrived at Port',
                                 statusCode: '20', // 状态代码
                                 updateTime: '2025-11-02 14:05:00',
-                                currentLocation: '二连浩特'
+                                currentLocation: '二连浩特',
+                                pickupTimeDomestic: null,
+                                arrivedBorderTime: '2025-11-02',
+                                reloadingCompletedTime: null,
+                                overseasDepartureTime: null
                             },
                             {
                                 containerNo: 'OCUU8688271',
@@ -3013,7 +3855,11 @@
                                 currentStatus: 'Overseas Transfer',
                                 statusCode: '30', // 状态代码
                                 updateTime: '2026-01-19 09:10:00',
-                                currentLocation: '阿拉山口'
+                                currentLocation: '阿拉山口',
+                                pickupTimeDomestic: null,
+                                arrivedBorderTime: '2025-11-04',
+                                reloadingCompletedTime: '2025-11-06',
+                                overseasDepartureTime: null
                             },
                             {
                                 containerNo: 'OCUU8688272',
@@ -3024,7 +3870,11 @@
                                 currentStatus: 'Overseas Transfer',
                                 statusCode: '30', // 状态代码
                                 updateTime: '2026-01-20 11:00:00',
-                                currentLocation: '阿拉山口'
+                                currentLocation: '阿拉山口',
+                                pickupTimeDomestic: null,
+                                arrivedBorderTime: '2025-11-05',
+                                reloadingCompletedTime: '2025-11-07',
+                                overseasDepartureTime: null
                             }
                         ],
 
@@ -3046,6 +3896,10 @@
                             containerSize: '',
                             currentStatus: '',
                             currentLocation: '',
+                            pickupTimeDomestic: '',
+                            arrivedBorderTime: '',
+                            reloadingCompletedTime: '',
+                            overseasDepartureTime: '',
                             kmToBorder: null,
                             kmToDestination: null,
                             realETD: '',
@@ -3120,6 +3974,80 @@
                         if (!this.sizeSearch) return this.containerSizes;
                         const search = this.sizeSearch.toLowerCase();
                         return this.containerSizes.filter(size => size.toLowerCase().includes(search));
+                    },
+
+                    // ===== 预警配置（铁路预警管理） =====
+                    filteredWarningRuleSets() {
+                        let list = [...this.warningRuleSets];
+                        const name = (this.warningFilters.name || '').trim();
+                        const status = this.warningFilters.status || 'all';
+                        if (name) {
+                            list = list.filter(r => r.name.includes(name) || r.code.includes(name));
+                        }
+                        if (status !== 'all') {
+                            list = list.filter(r => r.status === (status === 'enabled' ? 'enabled' : 'disabled'));
+                        }
+                        // 默认按更新时间倒序
+                        return list.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+                    },
+                    warningPaginationPages() {
+                        const size = Number(this.warningPagination.size) || 10;
+                        const total = this.filteredWarningRuleSets.length;
+                        return Math.max(1, Math.ceil(total / size));
+                    },
+                    warningCurrentPage() {
+                        const current = Number(this.warningPagination.current) || 1;
+                        return Math.min(Math.max(current, 1), this.warningPaginationPages);
+                    },
+                    pagedWarningRuleSets() {
+                        const size = Number(this.warningPagination.size) || 10;
+                        const start = (this.warningCurrentPage - 1) * size;
+                        return this.filteredWarningRuleSets.slice(start, start + size);
+                    },
+                    warningPageStart() {
+                        const total = this.filteredWarningRuleSets.length;
+                        if (total === 0) return 0;
+                        const size = Number(this.warningPagination.size) || 10;
+                        return (this.warningCurrentPage - 1) * size + 1;
+                    },
+                    warningPageEnd() {
+                        const total = this.filteredWarningRuleSets.length;
+                        if (total === 0) return 0;
+                        const size = Number(this.warningPagination.size) || 10;
+                        return Math.min(this.warningCurrentPage * size, total);
+                    },
+                    warningModalTitle() {
+                        if (this.warningModalMode === 'create') return '新建规则集';
+                        if (this.warningModalMode === 'edit') return `编辑规则集：${this.warningForm.name || this.warningForm.code}`;
+                        if (this.warningModalMode === 'copy') return `新建规则集（复制自：${this.warningForm.sourceName || this.warningForm.code}）`;
+                        return `查看规则集：${this.warningForm.name || this.warningForm.code}`;
+                    },
+                    isWarningViewMode() {
+                        return this.warningModalMode === 'view';
+                    },
+
+                    availableDestinations() {
+                        const search = (this.destinationSearch || '').trim().toUpperCase();
+                        const currentCodes = this.warningForm.destinations || [];
+
+                        return this.warningDestinationOptions
+                            .filter(opt => {
+                                if (!search) return true;
+                                return opt.value.toUpperCase().includes(search) || opt.label.toUpperCase().includes(search);
+                            })
+                            .map(opt => {
+                                const boundBy = this.warningRuleSets.find(r =>
+                                    r.code !== this.warningForm.code &&
+                                    Array.isArray(r.destinations) &&
+                                    r.destinations.includes(opt.value)
+                                );
+                                const disabled = !!boundBy && !currentCodes.includes(opt.value);
+                                return {
+                                    ...opt,
+                                    disabled,
+                                    boundBy: boundBy ? boundBy.name : ''
+                                };
+                            });
                     },
 
                     // ===== Query (native) =====
@@ -3293,6 +4221,21 @@
                             return maxStatusCode >= 50 ? '实际到站' : '预计到站';
                         };
 
+                        // 获取各节点对应的最新时间（按订舱号下所有箱子取该字段的最大值）
+                        const getLatestDateByField = (field) => {
+                            const values = containers
+                                .map(c => c[field])
+                                .filter(v => v)
+                                .sort();
+                            if (values.length === 0) return null;
+                            return formatDateOnly(values[values.length - 1]);
+                        };
+
+                        const pickupTime = null; // 已提柜节点当前不展示时间
+                        const arrivedBorderTime = getLatestDateByField('arrivedBorderTime'); // 抵达口岸-抵达边境时间
+                        const reloadingCompletedTime = getLatestDateByField('reloadingCompletedTime'); // 境外换装-完成换装时间
+                        const overseasDepartureTime = getLatestDateByField('overseasDepartureTime'); // 境外在途-境外发车时间
+
                         return [
                             {
                                 code: '00',
@@ -3317,7 +4260,8 @@
                                 icon: 'fas fa-border-all',
                                 count: summary.byStatus['20'] || 0,
                                 total: total,
-                                time: null
+                                time: arrivedBorderTime || null,
+                                timeLabel: arrivedBorderTime ? '抵达边境时间' : ''
                             },
                             {
                                 code: '30',
@@ -3325,7 +4269,8 @@
                                 icon: 'fas fa-exchange-alt',
                                 count: summary.byStatus['30'] || 0,
                                 total: total,
-                                time: null
+                                time: reloadingCompletedTime || null,
+                                timeLabel: reloadingCompletedTime ? '完成换装时间' : ''
                             },
                             {
                                 code: '40',
@@ -3333,7 +4278,8 @@
                                 icon: 'fas fa-train',
                                 count: summary.byStatus['40'] || 0,
                                 total: total,
-                                time: null
+                                time: overseasDepartureTime || null,
+                                timeLabel: overseasDepartureTime ? '境外发车时间' : ''
                             },
                             {
                                 code: '50',
@@ -3433,6 +4379,14 @@
                     } catch (e) {
                         // ignore
                     }
+                    // Initialize language from localStorage (only for query view texts)
+                    try {
+                        const savedLang = window.localStorage.getItem('tyvis_language');
+                        if (savedLang === 'zh' || savedLang === 'en') {
+                            this.language = savedLang;
+                        }
+                    } catch (e) { }
+
                     this.updateUploadTime();
                     this.filteredData = this.tableData;
                     this.search();
@@ -3444,10 +4398,19 @@
                             this.showSizeDropdown = false;
                             this.showStatusDropdown = false;
                             this.showModuleDropdown = false;
+                            this.showDestinationDropdown = false;
                         }
                     });
                 },
                 methods: {
+                    switchLanguage(lang) {
+                        if (lang !== 'zh' && lang !== 'en') return;
+                        this.language = lang;
+                        try {
+                            window.localStorage.setItem('tyvis_language', lang);
+                        } catch (e) { }
+                    },
+
                     selectTenant(tenant) {
                         this.selectedTenant = tenant;
                         this.showTenantDropdown = false;
@@ -3736,6 +4699,201 @@
                         this.showToast('已根据筛选条件导出列表（原型演示，无真实下载）', 'success');
                         this.closeExportModal();
                     },
+                    // ===== 预警配置（铁路预警管理） =====
+                    searchWarningRuleSets() {
+                        // 当前过滤逻辑完全由 computed: filteredWarningRuleSets 处理；
+                        // 这里主要用于将分页回到第一页，避免筛选后落在空白页
+                        this.warningPagination.current = 1;
+                        this.warningJumpPage = 1;
+                    },
+                    resetWarningFilters() {
+                        this.warningFilters = {
+                            name: '',
+                            status: 'all'
+                        };
+                        this.warningPagination.current = 1;
+                        this.warningJumpPage = 1;
+                    },
+                    setWarningPage(page) {
+                        const pages = this.warningPaginationPages;
+                        const next = Math.min(Math.max(Number(page) || 1, 1), pages);
+                        this.warningPagination.current = next;
+                        this.warningJumpPage = next;
+                    },
+                    setWarningPageSize() {
+                        this.warningPagination.current = 1;
+                        this.warningJumpPage = 1;
+                    },
+                    jumpToWarningPage() {
+                        this.setWarningPage(this.warningJumpPage);
+                    },
+                    openWarningModal(mode, rule) {
+                        this.warningModalMode = mode;
+                        if (mode === 'create') {
+                            const nowCode = `RAIL-RULE-${String(this.warningRuleSets.length + 1).padStart(3, '0')}`;
+                            this.warningForm = {
+                                code: nowCode,
+                                name: '',
+                                destinations: [],
+                                isDefault: false,
+                                status: 'enabled',
+                                nodes: this.warningForm.nodes.map(n => ({ ...n })), // 使用当前模板节点
+                                sourceName: ''
+                            };
+                        } else if (rule) {
+                            this.warningForm = {
+                                code: rule.code,
+                                name: mode === 'copy' ? '' : rule.name,
+                                destinations: mode === 'copy'
+                                    ? []
+                                    : (rule.destinations ? [...rule.destinations] : []),
+                                isDefault: mode === 'copy' ? false : !!rule.isDefault,
+                                status: rule.status || 'enabled',
+                                nodes: this.warningForm.nodes.map(n => ({ ...n })), // 节点偏移在原型中不做区分
+                                sourceName: rule.name
+                            };
+                        }
+
+                        // 模拟：默认测算参数
+                        const today = new Date();
+                        const formatDate = (d) => d.toISOString().slice(0, 10);
+                        this.warningSimulation = {
+                            etd: formatDate(today),
+                            today: formatDate(today),
+                            expectedMaxNodeIndex: '-',
+                            maxReachedNodeIndex: 0,
+                            missingNodeIndex: '',
+                            missingNodeLabel: ''
+                        };
+
+                        this.showWarningModal = true;
+                    },
+                    closeWarningModal() {
+                        this.showWarningModal = false;
+                    },
+                    toggleWarningStatus(rule) {
+                        // 原型：行内状态切换只修改前端状态，不做持久化
+                        rule.status = rule.status === 'enabled' ? 'disabled' : 'enabled';
+                        // 方案A：切换状态不更新“更新时间”，避免列表排序跳动
+                    },
+                    toggleWarningFormStatus() {
+                        if (this.isWarningViewMode) return;
+                        this.warningForm.status = this.warningForm.status === 'enabled' ? 'disabled' : 'enabled';
+                    },
+                    handleDefaultSwitchChange() {
+                        if (this.isWarningViewMode) return;
+                        // 如果当前是关闭状态，要开启，需要检查是否有其他默认规则集
+                        if (!this.warningForm.isDefault) {
+                            // 查找其他默认规则集（排除当前编辑的规则集）
+                            const otherDefaultRule = this.warningRuleSets.find(r => 
+                                r.isDefault && r.code !== this.warningForm.code
+                            );
+                            if (otherDefaultRule) {
+                                // 有其他默认规则集，弹出确认对话框
+                                this.existingDefaultRuleSetName = otherDefaultRule.name;
+                                this.showDefaultConfirmModal = true;
+                                return;
+                            }
+                        }
+                        // 没有其他默认规则集，或者是从开启切到关闭，直接切换
+                        this.warningForm.isDefault = !this.warningForm.isDefault;
+                    },
+                    confirmDefaultSwitch() {
+                        // 先将其他默认规则集设为非默认
+                        const otherDefaultRule = this.warningRuleSets.find(r => 
+                            r.isDefault && r.code !== this.warningForm.code
+                        );
+                        if (otherDefaultRule) {
+                            otherDefaultRule.isDefault = false;
+                        }
+                        // 将当前规则集设为默认
+                        this.warningForm.isDefault = true;
+                        // 关闭确认对话框
+                        this.showDefaultConfirmModal = false;
+                    },
+                    getDestinationLabel(code) {
+                        const opt = this.warningDestinationOptions.find(o => o.value === code);
+                        return opt ? opt.label : code;
+                    },
+                    toggleWarningDestination(code) {
+                        if (!this.warningForm.destinations) {
+                            this.$set(this.warningForm, 'destinations', []);
+                        }
+                        const index = this.warningForm.destinations.indexOf(code);
+                        if (index > -1) {
+                            this.warningForm.destinations.splice(index, 1);
+                        } else {
+                            this.warningForm.destinations.push(code);
+                        }
+                    },
+                    removeWarningDestination(code) {
+                        if (!this.warningForm.destinations) return;
+                        const index = this.warningForm.destinations.indexOf(code);
+                        if (index > -1) {
+                            this.warningForm.destinations.splice(index, 1);
+                        }
+                    },
+                    runWarningSimulation() {
+                        // 原型：按照PRD中“expectedMaxNodeIndex / maxReachedNodeIndex / 最近缺失节点”示意性展示
+                        const etd = this.warningSimulation.etd;
+                        const today = this.warningSimulation.today;
+                        if (!etd || !today) {
+                            this.showToast('请先选择假设ETD与当前系统日期', 'error');
+                            return;
+                        }
+                        const etdDate = new Date(etd);
+                        const todayDate = new Date(today);
+                        const diffDays = Math.floor((todayDate - etdDate) / (24 * 60 * 60 * 1000));
+
+                        // 简化：根据 diffDays 粗略映射 expectedMaxNodeIndex
+                        let expected = 0;
+                        if (diffDays >= -7) expected = 1;
+                        if (diffDays >= -5) expected = 2;
+                        if (diffDays >= -3) expected = 3;
+                        if (diffDays >= 0) expected = 4;
+                        if (diffDays >= 5) expected = 5;
+                        if (diffDays >= 15) expected = 6;
+
+                        const maxReached = this.warningSimulation.maxReachedNodeIndex || 0;
+                        let missingIndex = '';
+                        let missingLabel = '';
+                        if (expected > maxReached) {
+                            missingIndex = maxReached + 1;
+                            const node = this.warningForm.nodes.find(n => n.index === missingIndex);
+                            missingLabel = node ? node.label : '';
+                        }
+
+                        this.warningSimulation.expectedMaxNodeIndex = expected || '-';
+                        this.warningSimulation.maxReachedNodeIndex = maxReached;
+                        this.warningSimulation.missingNodeIndex = missingIndex;
+                        this.warningSimulation.missingNodeLabel = missingLabel;
+                    },
+                    saveWarningRuleSet() {
+                        if (!this.warningForm.name || !this.warningForm.name.trim()) {
+                            this.showToast('请填写规则集名称', 'error');
+                            return;
+                        }
+                        // 原型：只在前端数组中更新/插入，不做复杂唯一性校验
+                        const existingIndex = this.warningRuleSets.findIndex(r => r.code === this.warningForm.code);
+                        const destinations = Array.isArray(this.warningForm.destinations)
+                            ? [...this.warningForm.destinations]
+                            : [];
+                        const payload = {
+                            code: this.warningForm.code,
+                            name: this.warningForm.name.trim(),
+                            isDefault: !!this.warningForm.isDefault,
+                            destinations,
+                            status: this.warningForm.status || 'enabled',
+                            updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                        };
+                        if (existingIndex > -1) {
+                            this.warningRuleSets.splice(existingIndex, 1, payload);
+                        } else {
+                            this.warningRuleSets.push(payload);
+                        }
+                        this.showToast('规则集已保存并生效（原型演示，无真实写库）', 'success');
+                        this.showWarningModal = false;
+                    },
                     switchView(view) {
                         this.currentView = view;
                         // 防止从“上报”宽表横向滚动后，切到“查询”出现左侧大空白（window 横向滚动未复位）
@@ -4005,6 +5163,41 @@
                             this.selectedIds = this.paginatedData.map(item => item.id);
                         }
                     },
+                    getNodeDisplayLabel(node) {
+                        const labelZh = node && node.label ? node.label : '';
+                        if (this.language !== 'en') return labelZh;
+                        switch (node && node.code) {
+                            case '00': return 'Gate In';
+                            case '10': return 'Domestic Departure';
+                            case '20': return 'Arrived at Border';
+                            case '30': return 'Overseas Reloading';
+                            case '40': return 'Overseas Transit';
+                            case '50': return 'Arrived at Destination';
+                            default: return labelZh;
+                        }
+                    },
+
+                    getNodeTimeLabel(node) {
+                        const label = node && node.timeLabel ? node.timeLabel : '';
+                        if (!label) return '';
+                        if (this.language !== 'en') return label;
+                        const code = node && node.code;
+                        if (code === '10') {
+                            if (label === '实际发车') return 'Actual Departure';
+                            if (label === '预计发车') return 'Estimated Departure';
+                            return label;
+                        }
+                        if (code === '20') return 'Arrived Border Time';
+                        if (code === '30') return 'Reloading Completed Time';
+                        if (code === '40') return 'Overseas Departure Time';
+                        if (code === '50') {
+                            if (label === '实际到站') return 'Actual Arrival';
+                            if (label === '预计到站') return 'Estimated Arrival';
+                            return label;
+                        }
+                        return label;
+                    },
+
                     getStatusLabel(code) {
                         if (!code) return '-';
                         const matched = this.statusOptions.find(s => s.code === code);
@@ -4153,6 +5346,10 @@
                             containerSize: '',
                             currentStatus: '',
                             currentLocation: '',
+                            pickupTimeDomestic: '',
+                            arrivedBorderTime: '',
+                            reloadingCompletedTime: '',
+                            overseasDepartureTime: '',
                             kmToBorder: null,
                             kmToDestination: null,
                             realETD: '',
@@ -4176,6 +5373,10 @@
                             containerSize: item.containerSize || '',
                             currentStatus: item.currentStatus || '',
                             currentLocation: item.currentLocation || '',
+                            pickupTimeDomestic: item.pickupTimeDomestic || '',
+                            arrivedBorderTime: item.arrivedBorderTime || '',
+                            reloadingCompletedTime: item.reloadingCompletedTime || '',
+                            overseasDepartureTime: item.overseasDepartureTime || '',
                             kmToBorder: item.kmToBorder != null ? item.kmToBorder : null,
                             kmToDestination: item.kmToDestination != null ? item.kmToDestination : null,
                             realETD: this.toDateTimeLocal(item.realETD),
@@ -4206,6 +5407,10 @@
                                     pod: this.form.pod,
                                     currentStatus: this.form.currentStatus,
                                     currentLocation: this.form.currentLocation,
+                                    pickupTimeDomestic: this.form.pickupTimeDomestic || null,
+                                    arrivedBorderTime: this.form.arrivedBorderTime || null,
+                                    reloadingCompletedTime: this.form.reloadingCompletedTime || null,
+                                    overseasDepartureTime: this.form.overseasDepartureTime || null,
                                     kmToBorder: this.form.kmToBorder,
                                     kmToDestination: this.form.kmToDestination,
                                     realETD: this.formatDateOnly(this.formatDateTime(this.form.realETD)),
@@ -4232,6 +5437,10 @@
                                 pod: this.form.pod,
                                 currentStatus: this.form.currentStatus,
                                 currentLocation: this.form.currentLocation,
+                                pickupTimeDomestic: this.form.pickupTimeDomestic || null,
+                                arrivedBorderTime: this.form.arrivedBorderTime || null,
+                                reloadingCompletedTime: this.form.reloadingCompletedTime || null,
+                                overseasDepartureTime: this.form.overseasDepartureTime || null,
                                 kmToBorder: this.form.kmToBorder,
                                 kmToDestination: this.form.kmToDestination,
                                 realETD: this.formatDateOnly(this.formatDateTime(this.form.realETD)),
@@ -4279,6 +5488,10 @@
                             containerSize: '',
                             currentStatus: '',
                             currentLocation: '',
+                            pickupTimeDomestic: '',
+                            arrivedBorderTime: '',
+                            reloadingCompletedTime: '',
+                            overseasDepartureTime: '',
                             kmToBorder: null,
                             kmToDestination: null,
                             realETD: '',

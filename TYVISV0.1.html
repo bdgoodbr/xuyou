@@ -1506,7 +1506,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="rule in filteredWarningRuleSets" :key="rule.code">
+                                    <tr v-for="rule in pagedWarningRuleSets" :key="rule.code">
                                         <td class="font-mono text-[12px] text-slate-700">{{ rule.code }}</td>
                                         <td class="text-slate-800">{{ rule.name }}</td>
                                         <td>
@@ -1567,6 +1567,39 @@
                                 </tbody>
                             </table>
                         </div>
+                        <!-- 分页 -->
+                        <div class="px-4 py-3 border-t border-gray-100 bg-white text-xs flex items-center justify-between">
+                            <div class="text-slate-500">
+                                显示第 {{ warningPageStart }} 到 {{ warningPageEnd }} 条，共 {{ filteredWarningRuleSets.length }} 条
+                            </div>
+                            <div class="flex items-center gap-2 text-slate-600">
+                                <span>每页显示</span>
+                                <select v-model.number="warningPagination.size" @change="setWarningPageSize"
+                                    class="htm-input w-20 h-8 text-xs">
+                                    <option :value="10">10</option>
+                                    <option :value="20">20</option>
+                                    <option :value="50">50</option>
+                                    <option :value="100">100</option>
+                                </select>
+                                <span>条</span>
+                                <button @click="setWarningPage(1)" :disabled="warningCurrentPage === 1"
+                                    class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">首页</button>
+                                <button @click="setWarningPage(warningCurrentPage - 1)" :disabled="warningCurrentPage === 1"
+                                    class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">上一页</button>
+                                <span>第 {{ warningCurrentPage }} / {{ warningPaginationPages }} 页</span>
+                                <button @click="setWarningPage(warningCurrentPage + 1)"
+                                    :disabled="warningCurrentPage >= warningPaginationPages"
+                                    class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">下一页</button>
+                                <button @click="setWarningPage(warningPaginationPages)"
+                                    :disabled="warningCurrentPage >= warningPaginationPages"
+                                    class="px-2 py-1 border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed">末页</button>
+                                <span>跳至</span>
+                                <input v-model.number="warningJumpPage" @keyup.enter="jumpToWarningPage" type="number"
+                                    class="htm-input w-16 h-8 text-xs" :min="1" :max="warningPaginationPages">
+                                <span>页</span>
+                            </div>
+                        </div>
+
                         <div class="px-4 py-3 border-t border-gray-100 bg-gray-50 text-[11px] text-slate-500">
                             说明：列表中的“状态”仅作为启用/停用标识，真正的预警扫描频率与时间窗口遵循PRD
                             4.2.7及4.6业务规则表的全局配置，不在此处修改。
@@ -3630,6 +3663,11 @@
                             name: '',
                             status: 'all'
                         },
+                        warningPagination: {
+                            current: 1,
+                            size: 10
+                        },
+                        warningJumpPage: 1,
                         warningRuleSets: [
                             {
                                 code: 'RAIL-RULE-001',
@@ -3951,6 +3989,32 @@
                         }
                         // 默认按更新时间倒序
                         return list.sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+                    },
+                    warningPaginationPages() {
+                        const size = Number(this.warningPagination.size) || 10;
+                        const total = this.filteredWarningRuleSets.length;
+                        return Math.max(1, Math.ceil(total / size));
+                    },
+                    warningCurrentPage() {
+                        const current = Number(this.warningPagination.current) || 1;
+                        return Math.min(Math.max(current, 1), this.warningPaginationPages);
+                    },
+                    pagedWarningRuleSets() {
+                        const size = Number(this.warningPagination.size) || 10;
+                        const start = (this.warningCurrentPage - 1) * size;
+                        return this.filteredWarningRuleSets.slice(start, start + size);
+                    },
+                    warningPageStart() {
+                        const total = this.filteredWarningRuleSets.length;
+                        if (total === 0) return 0;
+                        const size = Number(this.warningPagination.size) || 10;
+                        return (this.warningCurrentPage - 1) * size + 1;
+                    },
+                    warningPageEnd() {
+                        const total = this.filteredWarningRuleSets.length;
+                        if (total === 0) return 0;
+                        const size = Number(this.warningPagination.size) || 10;
+                        return Math.min(this.warningCurrentPage * size, total);
                     },
                     warningModalTitle() {
                         if (this.warningModalMode === 'create') return '新建规则集';
@@ -4637,13 +4701,31 @@
                     },
                     // ===== 预警配置（铁路预警管理） =====
                     searchWarningRuleSets() {
-                        // 当前过滤逻辑完全由 computed: filteredWarningRuleSets 处理，这里仅保留方法占位，方便后续接入接口
+                        // 当前过滤逻辑完全由 computed: filteredWarningRuleSets 处理；
+                        // 这里主要用于将分页回到第一页，避免筛选后落在空白页
+                        this.warningPagination.current = 1;
+                        this.warningJumpPage = 1;
                     },
                     resetWarningFilters() {
                         this.warningFilters = {
                             name: '',
                             status: 'all'
                         };
+                        this.warningPagination.current = 1;
+                        this.warningJumpPage = 1;
+                    },
+                    setWarningPage(page) {
+                        const pages = this.warningPaginationPages;
+                        const next = Math.min(Math.max(Number(page) || 1, 1), pages);
+                        this.warningPagination.current = next;
+                        this.warningJumpPage = next;
+                    },
+                    setWarningPageSize() {
+                        this.warningPagination.current = 1;
+                        this.warningJumpPage = 1;
+                    },
+                    jumpToWarningPage() {
+                        this.setWarningPage(this.warningJumpPage);
                     },
                     openWarningModal(mode, rule) {
                         this.warningModalMode = mode;
@@ -4692,7 +4774,7 @@
                     toggleWarningStatus(rule) {
                         // 原型：行内状态切换只修改前端状态，不做持久化
                         rule.status = rule.status === 'enabled' ? 'disabled' : 'enabled';
-                        rule.updatedAt = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                        // 方案A：切换状态不更新“更新时间”，避免列表排序跳动
                     },
                     toggleWarningFormStatus() {
                         if (this.isWarningViewMode) return;
