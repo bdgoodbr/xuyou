@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>铁运可视化信息上报 - HTM</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
@@ -1737,7 +1738,7 @@
                                                                 v-model.number="node.offset"
                                                                 :readonly="isWarningViewMode">
                                                             <span class="text-[11px] text-slate-400">
-                                                                例如：-7 表示 ETD 前 7 天
+                                                                {{ getOffsetHint(node.offset) }}
                                                             </span>
                                                         </div>
                                                     </td>
@@ -1757,8 +1758,7 @@
                                             规则测算预览
                                         </div>
                                         <div class="text-[11px] text-slate-400 max-w-xl text-right">
-                                            （注：模拟测算基于<strong>前端表单当前填写</strong>的目标偏移量实时计算，
-                                            不依赖数据库已保存数据；仅作为业务自检工具，不做真正写库。）
+                                            （注：默认不展示测算结果；仅当点击<strong>运行测算</strong>后，才会读取当前表单中的假设订舱ETD、当前系统日期与各节点目标偏移量进行一次性测算并渲染。）
                                         </div>
                                     </div>
                                     <div
@@ -1790,42 +1790,57 @@
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="mt-3 bg-white border border-slate-200 rounded-lg p-3 text-xs">
-                                        <div class="flex items-center justify-between mb-2">
-                                            <div class="font-semibold text-slate-800">
-                                                测算结果（展示 expectedMaxNode / maxReachedNodeIndex 与最近缺失节点）
-                                            </div>
+                                    <div class="mt-3 bg-white border border-slate-200 rounded-lg overflow-hidden text-xs">
+                                        <div class="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                                            <div class="font-semibold text-slate-800">测算结果（固定6个节点）</div>
                                             <div class="text-[11px] text-slate-400">
-                                                示例，仅前端模拟：缺失节点 = Index(maxReachedNodeIndex) + 1，详见PRD
-                                                4.2.5与4.5节。
+                                                应达日期=假设订舱ETD+目标偏移天数；已超天数=当前系统日期-应达日期（自然日）
                                             </div>
                                         </div>
-                                        <div class="grid grid-cols-12 gap-3">
-                                            <div class="col-span-3">
-                                                <div class="text-[11px] text-slate-500">expectedMaxNodeIndex</div>
-                                                <div class="mt-1 font-mono text-sm text-slate-800">
-                                                    {{ warningSimulation.expectedMaxNodeIndex }}
-                                                </div>
-                                            </div>
-                                            <div class="col-span-3">
-                                                <div class="text-[11px] text-slate-500">maxReachedNodeIndex</div>
-                                                <div class="mt-1 font-mono text-sm text-slate-800">
-                                                    {{ warningSimulation.maxReachedNodeIndex }}
-                                                </div>
-                                            </div>
-                                            <div class="col-span-3">
-                                                <div class="text-[11px] text-slate-500">最近缺失节点（Index）</div>
-                                                <div class="mt-1 font-mono text-sm text-rose-600">
-                                                    {{ warningSimulation.missingNodeIndex || '-' }}
-                                                </div>
-                                            </div>
-                                            <div class="col-span-3">
-                                                <div class="text-[11px] text-slate-500">最近缺失节点（名称）</div>
-                                                <div class="mt-1 text-sm text-rose-600">
-                                                    {{ warningSimulation.missingNodeLabel || '-' }}
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <table class="w-full htm-table text-xs">
+                                            <thead class="bg-white">
+                                                <tr class="bg-white">
+                                                    <th class="w-32">节点名称</th>
+                                                    <th class="w-40">应达日期</th>
+                                                    <th class="w-40">已超天数</th>
+                                                    <th>触发预警范围</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="node in warningForm.nodes" :key="node.index">
+                                                    <td class="text-slate-800">{{ node.label }}</td>
+                                                    <td class="font-mono text-slate-800">
+                                                        {{ (warningSimulation.rows && warningSimulation.rows[node.index - 1] && warningSimulation.rows[node.index - 1].dueDate) ? warningSimulation.rows[node.index - 1].dueDate : '-' }}
+                                                    </td>
+                                                    <td>
+                                                        <span v-if="!warningSimulation.hasRun" class="text-slate-400">-</span>
+                                                        <span v-else>
+                                                            <span v-if="warningSimulation.rows[node.index - 1] && warningSimulation.rows[node.index - 1].overdueDays > 0"
+                                                                class="inline-flex items-center text-rose-600 font-medium">
+                                                                <i class="fas fa-circle-exclamation mr-1"></i>
+                                                                已超 {{ warningSimulation.rows[node.index - 1].overdueDays }} 天
+                                                            </span>
+                                                            <span v-else-if="warningSimulation.rows[node.index - 1] && warningSimulation.rows[node.index - 1].overdueDays < 0"
+                                                                class="inline-flex items-center text-emerald-600 font-medium">
+                                                                <i class="fas fa-circle-check mr-1"></i>
+                                                                还有 {{ Math.abs(warningSimulation.rows[node.index - 1].overdueDays) }} 天
+                                                            </span>
+                                                            <span v-else class="text-emerald-600 font-medium">
+                                                                今日应达
+                                                            </span>
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span v-if="!warningSimulation.hasRun" class="text-slate-400">-</span>
+                                                        <span v-else-if="warningSimulation.rows[node.index - 1] && warningSimulation.rows[node.index - 1].triggerScope"
+                                                            class="inline-flex items-center px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono">
+                                                            {{ warningSimulation.rows[node.index - 1].triggerScope }}
+                                                        </span>
+                                                        <span v-else class="text-slate-400">未触发</span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -3701,10 +3716,8 @@
                         warningSimulation: {
                             etd: '',
                             today: '',
-                            expectedMaxNodeIndex: '-',
-                            maxReachedNodeIndex: 0,
-                            missingNodeIndex: '',
-                            missingNodeLabel: ''
+                            hasRun: false,
+                            rows: [] // 固定6行：{ index,label,dueDate,overdueDays,triggerScope }
                         },
 
                         // Query (native)
@@ -4736,10 +4749,14 @@
                         this.warningSimulation = {
                             etd: formatDate(today),
                             today: formatDate(today),
-                            expectedMaxNodeIndex: '-',
-                            maxReachedNodeIndex: 0,
-                            missingNodeIndex: '',
-                            missingNodeLabel: ''
+                            hasRun: false,
+                            rows: (this.warningForm.nodes || []).map(n => ({
+                                index: n.index,
+                                label: n.label,
+                                dueDate: '-',
+                                overdueDays: null,
+                                triggerScope: ''
+                            }))
                         };
 
                         this.showWarningModal = true;
@@ -4834,40 +4851,87 @@
                             this.warningForm.destinations.splice(index, 1);
                         }
                     },
+                    getOffsetHint(value) {
+                        if (value === null || value === undefined || value === '') {
+                            return '正数=ETD后，负数=ETD前，0=ETD当天';
+                        }
+                        const n = Number(value);
+                        if (Number.isNaN(n)) {
+                            return '正数=ETD后，负数=ETD前，0=ETD当天';
+                        }
+                        if (n < 0) return `表示 ETD 前 ${Math.abs(n)} 天`;
+                        if (n > 0) return `表示 ETD 后 ${n} 天`;
+                        return '表示 ETD 当天';
+                    },
+                    getWarningTriggerScope(nodeIndex, overdueDays) {
+                        // 触发预警范围（仅示意）：以PRD 4.2.3.1的固定阶梯为准
+                        if (overdueDays === null || overdueDays === undefined) return '';
+                        const d = Number(overdueDays);
+                        if (!Number.isFinite(d) || d <= 0) return '';
+
+                        const tiersByNode = {
+                            1: [{ days: 2, scope: 'A' }, { days: 4, scope: 'ABC' }],
+                            2: [{ days: 3, scope: 'A' }, { days: 7, scope: 'ABC' }, { days: 14, scope: 'ABCD' }],
+                            3: [{ days: 3, scope: 'ABC' }, { days: 10, scope: 'ABCD' }],
+                            4: [{ days: 3, scope: 'ABC' }, { days: 14, scope: 'BCD' }],
+                            5: [{ days: 3, scope: 'ABC' }, { days: 14, scope: 'BCD' }],
+                            6: [{ days: 3, scope: 'BC' }, { days: 14, scope: 'BCD' }]
+                        };
+
+                        const tiers = tiersByNode[nodeIndex] || [];
+                        let scope = '';
+                        for (const t of tiers) {
+                            if (d >= t.days) scope = t.scope;
+                        }
+                        return scope;
+                    },
                     runWarningSimulation() {
-                        // 原型：按照PRD中“expectedMaxNodeIndex / maxReachedNodeIndex / 最近缺失节点”示意性展示
                         const etd = this.warningSimulation.etd;
                         const today = this.warningSimulation.today;
                         if (!etd || !today) {
                             this.showToast('请先选择假设ETD与当前系统日期', 'error');
                             return;
                         }
-                        const etdDate = new Date(etd);
-                        const todayDate = new Date(today);
-                        const diffDays = Math.floor((todayDate - etdDate) / (24 * 60 * 60 * 1000));
 
-                        // 简化：根据 diffDays 粗略映射 expectedMaxNodeIndex
-                        let expected = 0;
-                        if (diffDays >= -7) expected = 1;
-                        if (diffDays >= -5) expected = 2;
-                        if (diffDays >= -3) expected = 3;
-                        if (diffDays >= 0) expected = 4;
-                        if (diffDays >= 5) expected = 5;
-                        if (diffDays >= 15) expected = 6;
-
-                        const maxReached = this.warningSimulation.maxReachedNodeIndex || 0;
-                        let missingIndex = '';
-                        let missingLabel = '';
-                        if (expected > maxReached) {
-                            missingIndex = maxReached + 1;
-                            const node = this.warningForm.nodes.find(n => n.index === missingIndex);
-                            missingLabel = node ? node.label : '';
+                        // 运行测算：仅在点击后一次性计算并渲染（固定6行）
+                        const nodes = Array.isArray(this.warningForm.nodes) ? this.warningForm.nodes : [];
+                        if (nodes.length === 0) {
+                            this.showToast('节点规则为空，无法测算', 'error');
+                            return;
                         }
 
-                        this.warningSimulation.expectedMaxNodeIndex = expected || '-';
-                        this.warningSimulation.maxReachedNodeIndex = maxReached;
-                        this.warningSimulation.missingNodeIndex = missingIndex;
-                        this.warningSimulation.missingNodeLabel = missingLabel;
+                        // 校验：目标偏移必须为整数（示意）
+                        const invalidNode = nodes.find(n =>
+                            n.offset === null || n.offset === undefined || n.offset === '' || !Number.isInteger(Number(n.offset))
+                        );
+                        if (invalidNode) {
+                            this.showToast('请先填写所有节点的目标偏移（整数）再运行测算', 'error');
+                            return;
+                        }
+
+                        const etdD = dayjs(etd).startOf('day');
+                        const todayD = dayjs(today).startOf('day');
+                        if (!etdD.isValid() || !todayD.isValid()) {
+                            this.showToast('日期格式不正确，请重新选择', 'error');
+                            return;
+                        }
+
+                        const rows = nodes.map(n => {
+                            const due = etdD.add(Number(n.offset), 'day').startOf('day');
+                            const dueDate = due.format('YYYY-MM-DD');
+                            const overdueDays = todayD.diff(due, 'day'); // 自然日差
+                            const triggerScope = this.getWarningTriggerScope(n.index, overdueDays);
+                            return {
+                                index: n.index,
+                                label: n.label,
+                                dueDate,
+                                overdueDays,
+                                triggerScope
+                            };
+                        });
+
+                        this.warningSimulation.hasRun = true;
+                        this.warningSimulation.rows = rows;
                     },
                     saveWarningRuleSet() {
                         if (!this.warningForm.name || !this.warningForm.name.trim()) {
