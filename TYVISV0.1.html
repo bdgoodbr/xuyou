@@ -3638,12 +3638,12 @@
                             isDefault: false,
                             status: 'enabled',
                             nodes: [
-                                { index: 1, label: '已提柜', offset: -7, enabled: true, strategy: 'N-7当天，如未到达则触发：A订单岗+货代' },
-                                { index: 2, label: '国内已出发', offset: -5, enabled: true, strategy: 'N-5当天，如未到达则触发：AB阶梯预警' },
-                                { index: 3, label: '抵达口岸', offset: -3, enabled: true, strategy: 'N-3当天，如未到达则触发：ABC阶梯预警' },
-                                { index: 4, label: '境外换装', offset: 0, enabled: true, strategy: 'N+0当天，如未到达则触发：ABCD阶梯预警' },
-                                { index: 5, label: '境外在途', offset: 5, enabled: true, strategy: 'N+5当天，如未到达则触发：ABCD阶梯预警' },
-                                { index: 6, label: '已抵达', offset: 15, enabled: true, strategy: 'N+15当天，如未到达则触发：ABCD阶梯预警' }
+                                { index: 1, label: '已提柜', offset: -7, enabled: true, strategy: '超2天通知A，超4天通知ABC' },
+                                { index: 2, label: '国内已出发', offset: 0, enabled: true, strategy: '超3天通知A，超7天通知ABC，超14天通知ABCD' },
+                                { index: 3, label: '抵达口岸', offset: 5, enabled: true, strategy: '超3天/超6天通知ABC，超10天通知ABCD' },
+                                { index: 4, label: '境外换装', offset: 10, enabled: true, strategy: '超3天/超7天通知ABC，超14天通知BCD' },
+                                { index: 5, label: '境外在途', offset: 12, enabled: true, strategy: '超3天/超7天通知ABC，超14天通知BCD' },
+                                { index: 6, label: '已抵达', offset: 22, enabled: true, strategy: '超3天/超7天通知BC，超14天通知BCD' }
                             ]
                         },
                         warningDestinationOptions: [
