@@ -228,6 +228,57 @@
             margin-right: 4px;
         }
 
+        .multiselect-option.disabled {
+            background-color: #F9FAFB;
+            color: #9CA3AF;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .multiselect-option.disabled:hover {
+            background-color: #F9FAFB;
+        }
+
+        /* Feishu-like switch */
+        .htm-switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 34px;
+            height: 18px;
+            border-radius: 9999px;
+            background-color: #E5E7EB;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.8);
+            transition: background-color 0.18s ease, box-shadow 0.18s ease;
+            cursor: pointer;
+        }
+
+        .htm-switch-handle {
+            position: absolute;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 9999px;
+            background-color: #FFFFFF;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+            transition: transform 0.18s ease;
+        }
+
+        .htm-switch-on {
+            background-color: #22C55E;
+            box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.75);
+        }
+
+        .htm-switch-on .htm-switch-handle {
+            transform: translateX(14px);
+        }
+
+        .htm-switch.htm-switch-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         /* Table & sticky columns */
         .htm-table {
             border-collapse: separate;
@@ -1479,16 +1530,18 @@
                                             <span v-else class="text-[11px] text-slate-400">（默认规则集适用未绑定目的地）</span>
                                         </td>
                                         <td class="text-center">
-                                            <button @click="toggleWarningStatus(rule)"
-                                                class="inline-flex items-center h-6 px-2 rounded-full text-[11px] font-medium transition-colors"
-                                                :class="rule.status === 'enabled'
-                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                    : 'bg-slate-50 text-slate-500 border border-slate-200'">
-                                                <span
-                                                    class="w-1.5 h-1.5 rounded-full mr-1.5"
-                                                    :class="rule.status === 'enabled' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
-                                                {{ rule.status === 'enabled' ? '启用' : '停用' }}
-                                            </button>
+                                            <div class="inline-flex items-center justify-center gap-2">
+                                                <button type="button"
+                                                    class="htm-switch"
+                                                    :class="{ 'htm-switch-on': rule.status === 'enabled' }"
+                                                    @click="toggleWarningStatus(rule)">
+                                                    <span class="htm-switch-handle"></span>
+                                                </button>
+                                                <span class="text-[11px]"
+                                                    :class="rule.status === 'enabled' ? 'text-emerald-600' : 'text-slate-400'">
+                                                    {{ rule.status === 'enabled' ? '启用' : '停用' }}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td class="font-mono text-[12px] text-slate-500">{{ rule.updatedAt }}</td>
                                         <td class="text-center space-x-2">
@@ -1568,20 +1621,57 @@
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 适用目的地
                                             </label>
-                                            <input type="text" class="htm-input"
-                                                placeholder="示例：DEBRV、PLGDN（复制时默认清空，避免目的地冲突）"
-                                                v-model="warningForm.destinationsDisplay"
-                                                :readonly="isWarningViewMode">
+                                            <div class="custom-multiselect">
+                                                <div class="multiselect-input"
+                                                    :class="{ open: showDestinationDropdown }"
+                                                    @click="!isWarningViewMode && (showDestinationDropdown = !showDestinationDropdown)">
+                                                    <template
+                                                        v-if="warningForm.destinations && warningForm.destinations.length">
+                                                        <span v-for="code in warningForm.destinations" :key="code"
+                                                            class="multiselect-tag">
+                                                            {{ getDestinationLabel(code) }}
+                                                            <span v-if="!isWarningViewMode" class="remove"
+                                                                @click.stop="removeWarningDestination(code)">×</span>
+                                                        </span>
+                                                    </template>
+                                                    <span v-else class="multiselect-placeholder">请选择适用目的地</span>
+                                                    <i class="fas fa-chevron-down multiselect-arrow"></i>
+                                                </div>
+                                                <div v-if="showDestinationDropdown && !isWarningViewMode"
+                                                    class="multiselect-dropdown" @click.stop>
+                                                    <div class="multiselect-search">
+                                                        <input type="text" v-model="destinationSearch"
+                                                            placeholder="搜索目的地代码或名称..."
+                                                            @click.stop>
+                                                    </div>
+                                                    <div class="multiselect-options">
+                                                        <div v-for="opt in availableDestinations" :key="opt.value"
+                                                            class="multiselect-option"
+                                                            :class="{
+                                                                selected: warningForm.destinations && warningForm.destinations.includes(opt.value),
+                                                                disabled: opt.disabled
+                                                            }"
+                                                            :title="opt.disabled ? `已被${opt.boundBy}规则集绑定` : ''"
+                                                            @click="!opt.disabled && toggleWarningDestination(opt.value)">
+                                                            <span class="font-mono text-[11px] mr-1">{{ opt.value }}</span>
+                                                            <span>{{ opt.label }}</span>
+                                                            <span v-if="opt.disabled"
+                                                                class="text-xs text-gray-400 ml-2">(已被{{ opt.boundBy }}绑定)</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="col-span-2">
                                             <label class="block text-[11px] text-slate-500 mb-1.5">默认规则集</label>
-                                            <div class="flex items-center h-9">
-                                                <label class="inline-flex items-center gap-2 text-xs">
-                                                    <input type="checkbox" class="h-4 w-4 rounded border-slate-300"
-                                                        v-model="warningForm.isDefault"
-                                                        :disabled="isWarningViewMode">
-                                                    <span>设为默认</span>
-                                                </label>
+                                            <div class="flex items-center h-9 gap-2">
+                                                <button type="button"
+                                                    class="htm-switch"
+                                                    :class="[{ 'htm-switch-on': warningForm.isDefault }, isWarningViewMode && 'htm-switch-disabled']"
+                                                    @click="toggleWarningFormStatus">
+                                                    <span class="htm-switch-handle"></span>
+                                                </button>
+                                                <span class="text-xs text-slate-600">设为默认</span>
                                             </div>
                                         </div>
                                         <div class="col-span-2">
@@ -1628,9 +1718,12 @@
                                                 <tr v-for="node in warningForm.nodes" :key="node.index">
                                                     <td>{{ node.label }}</td>
                                                     <td class="text-center">
-                                                        <input type="checkbox" class="h-4 w-4 rounded border-slate-300"
-                                                            v-model="node.enabled"
-                                                            :disabled="isWarningViewMode">
+                                                        <button type="button"
+                                                            class="htm-switch"
+                                                            :class="[{ 'htm-switch-on': node.enabled }, isWarningViewMode && 'htm-switch-disabled']"
+                                                            @click="!isWarningViewMode && (node.enabled = !node.enabled)">
+                                                            <span class="htm-switch-handle"></span>
+                                                        </button>
                                                     </td>
                                                     <td>
                                                         <div class="flex items-center gap-2">
@@ -3541,7 +3634,7 @@
                         warningForm: {
                             code: '',
                             name: '',
-                            destinationsDisplay: '',
+                            destinations: [],
                             isDefault: false,
                             status: 'enabled',
                             nodes: [
@@ -3553,6 +3646,15 @@
                                 { index: 6, label: '已抵达', offset: 15, enabled: true, strategy: 'N+15当天，如未到达则触发：ABCD阶梯预警' }
                             ]
                         },
+                        warningDestinationOptions: [
+                            { value: 'PLGDN', label: '格但斯克 PLGDN' },
+                            { value: 'PLCZB', label: '琴斯托霍瓦 PLCZB' },
+                            { value: 'CZPRG', label: '布拉格 CZPRG' },
+                            { value: 'DEBRV', label: '不来梅哈芬 DEBRV' },
+                            { value: 'DEHAM', label: '汉堡 DEHAM' }
+                        ],
+                        showDestinationDropdown: false,
+                        destinationSearch: '',
                         warningSimulation: {
                             etd: '',
                             today: '',
@@ -3829,6 +3931,30 @@
                     },
                     isWarningViewMode() {
                         return this.warningModalMode === 'view';
+                    },
+
+                    availableDestinations() {
+                        const search = (this.destinationSearch || '').trim().toUpperCase();
+                        const currentCodes = this.warningForm.destinations || [];
+
+                        return this.warningDestinationOptions
+                            .filter(opt => {
+                                if (!search) return true;
+                                return opt.value.toUpperCase().includes(search) || opt.label.toUpperCase().includes(search);
+                            })
+                            .map(opt => {
+                                const boundBy = this.warningRuleSets.find(r =>
+                                    r.code !== this.warningForm.code &&
+                                    Array.isArray(r.destinations) &&
+                                    r.destinations.includes(opt.value)
+                                );
+                                const disabled = !!boundBy && !currentCodes.includes(opt.value);
+                                return {
+                                    ...opt,
+                                    disabled,
+                                    boundBy: boundBy ? boundBy.name : ''
+                                };
+                            });
                     },
 
                     // ===== Query (native) =====
@@ -4179,6 +4305,7 @@
                             this.showSizeDropdown = false;
                             this.showStatusDropdown = false;
                             this.showModuleDropdown = false;
+                            this.showDestinationDropdown = false;
                         }
                     });
                 },
@@ -4496,7 +4623,7 @@
                             this.warningForm = {
                                 code: nowCode,
                                 name: '',
-                                destinationsDisplay: '',
+                                destinations: [],
                                 isDefault: false,
                                 status: 'enabled',
                                 nodes: this.warningForm.nodes.map(n => ({ ...n })), // 使用当前模板节点
@@ -4506,9 +4633,9 @@
                             this.warningForm = {
                                 code: rule.code,
                                 name: mode === 'copy' ? '' : rule.name,
-                                destinationsDisplay: mode === 'copy'
-                                    ? ''
-                                    : (rule.destinations || []).join('、'),
+                                destinations: mode === 'copy'
+                                    ? []
+                                    : (rule.destinations ? [...rule.destinations] : []),
                                 isDefault: mode === 'copy' ? false : !!rule.isDefault,
                                 status: rule.status || 'enabled',
                                 nodes: this.warningForm.nodes.map(n => ({ ...n })), // 节点偏移在原型中不做区分
@@ -4540,7 +4667,29 @@
                     },
                     toggleWarningFormStatus() {
                         if (this.isWarningViewMode) return;
-                        this.warningForm.status = this.warningForm.status === 'enabled' ? 'disabled' : 'enabled';
+                        this.warningForm.isDefault = !this.warningForm.isDefault;
+                    },
+                    getDestinationLabel(code) {
+                        const opt = this.warningDestinationOptions.find(o => o.value === code);
+                        return opt ? opt.label : code;
+                    },
+                    toggleWarningDestination(code) {
+                        if (!this.warningForm.destinations) {
+                            this.$set(this.warningForm, 'destinations', []);
+                        }
+                        const index = this.warningForm.destinations.indexOf(code);
+                        if (index > -1) {
+                            this.warningForm.destinations.splice(index, 1);
+                        } else {
+                            this.warningForm.destinations.push(code);
+                        }
+                    },
+                    removeWarningDestination(code) {
+                        if (!this.warningForm.destinations) return;
+                        const index = this.warningForm.destinations.indexOf(code);
+                        if (index > -1) {
+                            this.warningForm.destinations.splice(index, 1);
+                        }
                     },
                     runWarningSimulation() {
                         // 原型：按照PRD中“expectedMaxNodeIndex / maxReachedNodeIndex / 最近缺失节点”示意性展示
@@ -4584,10 +4733,9 @@
                         }
                         // 原型：只在前端数组中更新/插入，不做复杂唯一性校验
                         const existingIndex = this.warningRuleSets.findIndex(r => r.code === this.warningForm.code);
-                        const destinations = (this.warningForm.destinationsDisplay || '')
-                            .split(/[,，、\s]+/)
-                            .map(d => d.trim())
-                            .filter(Boolean);
+                        const destinations = Array.isArray(this.warningForm.destinations)
+                            ? [...this.warningForm.destinations]
+                            : [];
                         const payload = {
                             code: this.warningForm.code,
                             name: this.warningForm.name.trim(),
