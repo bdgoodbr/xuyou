@@ -1448,18 +1448,18 @@
                                     <li><span class="font-semibold">基准时间(N)</span>：预警计算的基准时间N统一为运单的“订舱ETD”。</li>
                                     <li><span class="font-semibold">偏移配置(N加减X)</span>：您只需维护各节点的目标偏移天数。输入负数代表ETD前，正数代表ETD后，0代表ETD当天。</li>
                                     <li><span class="font-semibold">唯一绑定(重要)</span>：同一目的地全局只能绑定在一个规则集中。即使该规则集被停用，其绑定的目的地也不会自动释放，必须手动移除后才能被其他规则集使用。</li>
-                                    <li><span class="font-semibold">兜底机制</span>：系统必须且只能开启一个“默认规则集”，用于自动兜底所有未显式绑定目的地的物流运单。</li>
+                                    <li><span class="font-semibold">兜底机制</span>：系统必须且只能开启一个“默认规则集”，用于自动兜底所有未显式绑定目的地(港口)的物流运单（即：目的地未绑定到任何规则集时，按默认规则集计算预警）。</li>
                                     <li><span class="font-semibold">通知策略</span>：预警的升级阶梯与接收范围为系统内置固定策略，本页面仅用于配置时间触发节点。</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 规则集列表 -->
+                    <!-- 预警规则配置列表 -->
                     <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex-1 flex flex-col">
                         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
                             <div class="text-sm font-semibold text-slate-800">
-                                规则集列表
+                                预警规则配置列表
                                 <span class="ml-2 text-xs text-slate-500 font-normal">
                                     （点击行尾操作进入查看 / 编辑 / 复制）
                                 </span>
@@ -1478,7 +1478,6 @@
                             <table class="w-full htm-table text-xs">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="min-w-[120px]">规则集编码</th>
                                         <th class="min-w-[160px]">规则集名称</th>
                                         <th class="min-w-[80px]">是否默认</th>
                                         <th class="min-w-[200px]">适用目的地</th>
@@ -1489,7 +1488,6 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="rule in pagedWarningRuleSets" :key="rule.code">
-                                        <td class="font-mono text-[12px] text-slate-700">{{ rule.code }}</td>
                                         <td class="text-slate-800">{{ rule.name }}</td>
                                         <td>
                                             <span v-if="rule.isDefault"
@@ -1542,8 +1540,8 @@
                                         </td>
                                     </tr>
                                     <tr v-if="filteredWarningRuleSets.length === 0">
-                                        <td colspan="7" class="py-10 text-center text-slate-400 text-xs">
-                                            暂无规则集，请点击列表右上角“新建规则集”进行配置。
+                                        <td colspan="6" class="py-10 text-center text-slate-400 text-xs">
+                                            暂无预警规则配置，请点击列表右上角“新建规则集”进行配置。
                                         </td>
                                     </tr>
                                 </tbody>
@@ -1615,11 +1613,6 @@
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-12 gap-4 text-xs">
-                                        <div class="col-span-3">
-                                            <label class="block text-[11px] text-slate-500 mb-1.5">规则集编码</label>
-                                            <input type="text" class="htm-input font-mono"
-                                                v-model="warningForm.code" readonly>
-                                        </div>
                                         <div class="col-span-4">
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 规则集名称 <span class="text-red-500">*</span>
@@ -1628,7 +1621,7 @@
                                                 v-model="warningForm.name"
                                                 :readonly="isWarningViewMode">
                                         </div>
-                                        <div class="col-span-5">
+                                        <div class="col-span-6">
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 适用目的地
                                             </label>
