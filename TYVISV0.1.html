@@ -1650,45 +1650,17 @@
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 适用目的地
                                             </label>
-                                            <div class="custom-multiselect">
-                                                <div class="multiselect-input"
-                                                    :class="{ open: showDestinationDropdown }"
-                                                    @click="!isWarningViewMode && (showDestinationDropdown = !showDestinationDropdown)">
-                                                    <template
-                                                        v-if="warningForm.destinations && warningForm.destinations.length">
-                                                        <span v-for="code in warningForm.destinations" :key="code"
-                                                            class="multiselect-tag">
-                                                            {{ getDestinationLabel(code) }}
-                                                            <span v-if="!isWarningViewMode" class="remove"
-                                                                @click.stop="removeWarningDestination(code)">×</span>
-                                                        </span>
-                                                    </template>
-                                                    <span v-else class="multiselect-placeholder">请选择适用目的地</span>
-                                                    <i class="fas fa-chevron-down multiselect-arrow"></i>
-                                                </div>
-                                                <div v-if="showDestinationDropdown && !isWarningViewMode"
-                                                    class="multiselect-dropdown" @click.stop>
-                                                    <div class="multiselect-search">
-                                                        <input type="text" v-model="destinationSearch"
-                                                            placeholder="搜索目的地代码或名称..."
-                                                            @click.stop>
-                                                    </div>
-                                                    <div class="multiselect-options">
-                                                        <div v-for="opt in availableDestinations" :key="opt.value"
-                                                            class="multiselect-option"
-                                                            :class="{
-                                                                selected: warningForm.destinations && warningForm.destinations.includes(opt.value),
-                                                                disabled: opt.disabled
-                                                            }"
-                                                            :title="opt.disabled ? `已被${opt.boundBy}规则集绑定` : ''"
-                                                            @click="!opt.disabled && toggleWarningDestination(opt.value)">
-                                                            <span class="font-mono text-[11px] mr-1">{{ opt.value }}</span>
-                                                            <span>{{ opt.label }}</span>
-                                                            <span v-if="opt.disabled"
-                                                                class="text-xs text-gray-400 ml-2">(已被{{ opt.boundBy }}绑定)</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                            <select class="htm-input h-24" multiple
+                                                v-model="warningForm.destinations"
+                                                :disabled="isWarningViewMode"
+                                                @change="handleWarningDestinationsChange">
+                                                <option v-for="opt in warningDestinationOptions" :key="opt.value"
+                                                    :value="opt.value">
+                                                    {{ opt.value }} {{ opt.label }}
+                                                </option>
+                                            </select>
+                                            <div class="mt-1 text-[11px] text-slate-400">
+                                                选中时校验目的地唯一性；如冲突将提示并自动移除该选项。
                                             </div>
                                         </div>
                                         <div class="col-span-2">
@@ -3664,6 +3636,7 @@
                             size: 10
                         },
                         warningJumpPage: 1,
+                        lastWarningDestinations: [],
                         warningRuleSets: [
                             {
                                 code: 'RAIL-RULE-001',
@@ -4750,6 +4723,11 @@
                             };
                         }
 
+                        // 目的地选择：用于“选中即拦截”判断新增项
+                        this.lastWarningDestinations = Array.isArray(this.warningForm.destinations)
+                            ? [...this.warningForm.destinations]
+                            : [];
+
                         // 模拟：默认测算参数
                         const today = new Date();
                         const formatDate = (d) => d.toISOString().slice(0, 10);
@@ -4810,6 +4788,28 @@
                     getDestinationLabel(code) {
                         const opt = this.warningDestinationOptions.find(o => o.value === code);
                         return opt ? opt.label : code;
+                    },
+                    handleWarningDestinationsChange(e) {
+                        if (this.isWarningViewMode) return;
+                        const selected = Array.from(e?.target?.selectedOptions || []).map(o => o.value);
+                        const prev = Array.isArray(this.lastWarningDestinations) ? this.lastWarningDestinations : [];
+                        const added = selected.filter(code => !prev.includes(code));
+
+                        let finalSelected = [...selected];
+                        for (const code of added) {
+                            const conflict = this.warningRuleSets.find(r =>
+                                r.code !== this.warningForm.code &&
+                                Array.isArray(r.destinations) &&
+                                r.destinations.includes(code)
+                            );
+                            if (conflict) {
+                                this.showToast(`该目的地已被【${conflict.name}】绑定，如需移入本规则集，请先在对应规则集中移除后再操作`, 'error');
+                                finalSelected = finalSelected.filter(x => x !== code);
+                            }
+                        }
+
+                        this.warningForm.destinations = finalSelected;
+                        this.lastWarningDestinations = [...finalSelected];
                     },
                     toggleWarningDestination(code) {
                         if (!this.warningForm.destinations) {
