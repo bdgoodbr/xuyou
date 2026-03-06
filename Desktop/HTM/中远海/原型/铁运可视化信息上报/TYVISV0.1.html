@@ -1690,7 +1690,7 @@
                                                 </div>
                                             </div>
                                             <div class="mt-1 text-[11px] text-slate-400">
-                                                已被其他规则集绑定的目的地选中时将提示冲突，不会自动移除，需用户主动确认。
+                                                选中冲突目的地时会提示，但不会自动移除；保存并生效时会进行强校验，若冲突则阻断保存并报错。
                                             </div>
                                         </div>
                                         <div class="col-span-2">
@@ -4818,15 +4818,27 @@
                     },
                     selectWarningDestination(opt) {
                         if (this.isWarningViewMode) return;
+                        // 每次点击先清空上一条提示，由后续逻辑重新生成
                         this.warningDestinationConflictMsg = '';
 
                         const boundBy = opt && opt.boundBy ? opt.boundBy : '';
+                        const boundRule = this.warningRuleSets.find(r =>
+                            r.name === boundBy
+                        );
+                        const boundStatusLabel = boundRule
+                            ? (boundRule.status === 'enabled' ? '启用' : '停用')
+                            : '';
+
                         const alreadySelected = this.warningForm.destinations && this.warningForm.destinations.includes(opt.value);
 
+                        // 方案A：停用不释放绑定。前端只做显性提示，不阻断“选中”动作；
+                        // 真正的唯一性在保存时由后端（此处用前端模拟）兜底校验。
                         if (boundBy && !alreadySelected) {
-                            this.warningDestinationConflictMsg = `该目的地已被「${boundBy}」绑定，请先在对应规则集中移除后再操作。`;
-                            return;
+                            const statusPart = boundStatusLabel ? `（当前状态：${boundStatusLabel}）` : '';
+                            this.warningDestinationConflictMsg = `${opt.value} 已被「${boundBy}」绑定${statusPart}，如需移入本规则集，请先在${boundBy}中移除该目的地。`;
                         }
+
+                        // 仍允许切换选中/取消选中状态
                         this.toggleWarningDestination(opt.value);
                     },
                     toggleWarningDestination(code) {
@@ -4887,7 +4899,30 @@
                             this.showToast('请填写规则集名称', 'error');
                             return;
                         }
-                        // 原型：只在前端数组中更新/插入，不做复杂唯一性校验
+                        // 目的地唯一性校验（模拟后端兜底）：停用不释放绑定
+                        if (Array.isArray(this.warningForm.destinations) && this.warningForm.destinations.length > 0) {
+                            const conflicts = [];
+                            for (const code of this.warningForm.destinations) {
+                                const conflictRule = this.warningRuleSets.find(r =>
+                                    r.code !== this.warningForm.code &&
+                                    Array.isArray(r.destinations) &&
+                                    r.destinations.includes(code)
+                                );
+                                if (conflictRule) {
+                                    conflicts.push({
+                                        code,
+                                        ruleName: conflictRule.name
+                                    });
+                                }
+                            }
+                            if (conflicts.length > 0) {
+                                const first = conflicts[0];
+                                this.showToast(`目的地 ${first.code} 已被规则集「${first.ruleName}」绑定，请先解绑后再操作`, 'error');
+                                return;
+                            }
+                        }
+
+                        // 原型：只在前端数组中更新/插入
                         const existingIndex = this.warningRuleSets.findIndex(r => r.code === this.warningForm.code);
                         const destinations = Array.isArray(this.warningForm.destinations)
                             ? [...this.warningForm.destinations]
