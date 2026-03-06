@@ -1010,7 +1010,7 @@
                     <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs text-white">U
                     </div>
                     <div class="ml-3 text-xs text-gray-700">
-                        <div class="font-bold">用户 (货代)</div>
+                        <div class="font-bold">用户</div>
                     </div>
                 </div>
             </div>
@@ -1516,6 +1516,7 @@
                                                 <button type="button"
                                                     class="htm-switch"
                                                     :class="{ 'htm-switch-on': rule.status === 'enabled' }"
+                                                    :disabled="rule.isDefault"
                                                     @click="toggleWarningStatus(rule)">
                                                     <span class="htm-switch-handle"></span>
                                                 </button>
@@ -1594,7 +1595,7 @@
                                         {{ warningModalTitle }}
                                     </div>
                                     <div class="text-[11px] text-slate-500 mt-1">
-                                        基准时间N=订舱ETD；仅维护各节点的目标偏移（N±X天），预警升级范围固定为：A订单岗、B分公司业务、C总部物流、D总部领导，货代默认必收。
+                                        基准时间N=订舱ETD；仅维护各节点的目标偏移（N±X天），预警升级范围固定为：A订单岗、B分公司业务、C总部物流、D总部领导。
                                     </div>
                                 </div>
                                 <button @click="closeWarningModal"
@@ -4743,6 +4744,10 @@
                                 nodes: this.warningForm.nodes.map(n => ({ ...n })), // 节点偏移在原型中不做区分
                                 sourceName: rule.name
                             };
+                            // 极简防呆：已有默认预警规则若状态异常，进入弹窗时强制修正为启用
+                            if (this.warningForm.isDefault && this.warningForm.status !== 'enabled') {
+                                this.warningForm.status = 'enabled';
+                            }
                         }
                         this.destinationSearch = '';
                         this.showDestinationDropdown = false;
