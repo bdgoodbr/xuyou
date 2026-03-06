@@ -1650,17 +1650,47 @@
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 适用目的地
                                             </label>
-                                            <select class="htm-input h-24" multiple
-                                                v-model="warningForm.destinations"
-                                                :disabled="isWarningViewMode"
-                                                @change="handleWarningDestinationsChange">
-                                                <option v-for="opt in warningDestinationOptions" :key="opt.value"
-                                                    :value="opt.value">
-                                                    {{ opt.value }} {{ opt.label }}
-                                                </option>
-                                            </select>
+                                            <div class="custom-multiselect">
+                                                <div class="multiselect-input"
+                                                    :class="{ open: showDestinationDropdown }"
+                                                    @click="!isWarningViewMode && (showDestinationDropdown = !showDestinationDropdown)">
+                                                    <template
+                                                        v-if="warningForm.destinations && warningForm.destinations.length">
+                                                        <span v-for="code in warningForm.destinations" :key="code"
+                                                            class="multiselect-tag">
+                                                            {{ getDestinationLabel(code) }}
+                                                            <span v-if="!isWarningViewMode" class="remove"
+                                                                @click.stop="removeWarningDestination(code)">×</span>
+                                                        </span>
+                                                    </template>
+                                                    <span v-else class="multiselect-placeholder">Select destinations</span>
+                                                    <i class="fas fa-chevron-down multiselect-arrow"></i>
+                                                </div>
+                                                <div v-if="showDestinationDropdown && !isWarningViewMode"
+                                                    class="multiselect-dropdown" @click.stop>
+                                                    <div class="multiselect-search">
+                                                        <input type="text" v-model="destinationSearch"
+                                                            placeholder="Search..."
+                                                            @click.stop>
+                                                    </div>
+                                                    <div class="multiselect-options">
+                                                        <div v-for="opt in availableDestinations" :key="opt.value"
+                                                            class="multiselect-option"
+                                                            :class="{
+                                                                selected: warningForm.destinations && warningForm.destinations.includes(opt.value)
+                                                            }"
+                                                            @click="selectWarningDestination(opt)">
+                                                            {{ opt.label }}
+                                                        </div>
+                                                    </div>
+                                                    <div v-if="warningDestinationConflictMsg"
+                                                        class="px-3 py-2 text-[11px] text-red-600 border-t border-red-100 bg-red-50/60">
+                                                        {{ warningDestinationConflictMsg }}
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <div class="mt-1 text-[11px] text-slate-400">
-                                                选中时校验目的地唯一性；如冲突将提示并自动移除该选项。
+                                                已被其他规则集绑定的目的地选中时将提示冲突，不会自动移除，需用户主动确认。
                                             </div>
                                         </div>
                                         <div class="col-span-2">
@@ -3636,7 +3666,6 @@
                             size: 10
                         },
                         warningJumpPage: 1,
-                        lastWarningDestinations: [],
                         warningRuleSets: [
                             {
                                 code: 'RAIL-RULE-001',
@@ -3681,14 +3710,17 @@
                             ]
                         },
                         warningDestinationOptions: [
-                            { value: 'PLGDN', label: '格但斯克 PLGDN' },
-                            { value: 'PLCZB', label: '琴斯托霍瓦 PLCZB' },
-                            { value: 'CZPRG', label: '布拉格 CZPRG' },
-                            { value: 'DEBRV', label: '不来梅哈芬 DEBRV' },
-                            { value: 'DEHAM', label: '汉堡 DEHAM' }
+                            { value: 'AE1548', label: 'AJMAN-AE / AE1548' },
+                            { value: 'BJ1590', label: 'COTONOU-BJ / BJ1590' },
+                            { value: 'BR2743', label: 'ITAJAI-BR / BR2743' },
+                            { value: 'CI0001', label: 'ABIDJAN-CI / CI0001' },
+                            { value: 'DJ0214', label: 'DJIBOUTI-DJ / DJ0214' },
+                            { value: 'DZ1565', label: 'BEJAIA-DZ / DZ1565' },
+                            { value: 'EC2840', label: 'POSORJA-EC / EC2840' }
                         ],
                         showDestinationDropdown: false,
                         destinationSearch: '',
+                        warningDestinationConflictMsg: '',
                         showDefaultConfirmModal: false,
                         existingDefaultRuleSetName: '',
                         warningSimulation: {
@@ -3997,7 +4029,6 @@
 
                     availableDestinations() {
                         const search = (this.destinationSearch || '').trim().toUpperCase();
-                        const currentCodes = this.warningForm.destinations || [];
 
                         return this.warningDestinationOptions
                             .filter(opt => {
@@ -4010,10 +4041,8 @@
                                     Array.isArray(r.destinations) &&
                                     r.destinations.includes(opt.value)
                                 );
-                                const disabled = !!boundBy && !currentCodes.includes(opt.value);
                                 return {
                                     ...opt,
-                                    disabled,
                                     boundBy: boundBy ? boundBy.name : ''
                                 };
                             });
@@ -4722,11 +4751,9 @@
                                 sourceName: rule.name
                             };
                         }
-
-                        // 目的地选择：用于“选中即拦截”判断新增项
-                        this.lastWarningDestinations = Array.isArray(this.warningForm.destinations)
-                            ? [...this.warningForm.destinations]
-                            : [];
+                        this.destinationSearch = '';
+                        this.showDestinationDropdown = false;
+                        this.warningDestinationConflictMsg = '';
 
                         // 模拟：默认测算参数
                         const today = new Date();
@@ -4789,27 +4816,18 @@
                         const opt = this.warningDestinationOptions.find(o => o.value === code);
                         return opt ? opt.label : code;
                     },
-                    handleWarningDestinationsChange(e) {
+                    selectWarningDestination(opt) {
                         if (this.isWarningViewMode) return;
-                        const selected = Array.from(e?.target?.selectedOptions || []).map(o => o.value);
-                        const prev = Array.isArray(this.lastWarningDestinations) ? this.lastWarningDestinations : [];
-                        const added = selected.filter(code => !prev.includes(code));
+                        this.warningDestinationConflictMsg = '';
 
-                        let finalSelected = [...selected];
-                        for (const code of added) {
-                            const conflict = this.warningRuleSets.find(r =>
-                                r.code !== this.warningForm.code &&
-                                Array.isArray(r.destinations) &&
-                                r.destinations.includes(code)
-                            );
-                            if (conflict) {
-                                this.showToast(`该目的地已被【${conflict.name}】绑定，如需移入本规则集，请先在对应规则集中移除后再操作`, 'error');
-                                finalSelected = finalSelected.filter(x => x !== code);
-                            }
+                        const boundBy = opt && opt.boundBy ? opt.boundBy : '';
+                        const alreadySelected = this.warningForm.destinations && this.warningForm.destinations.includes(opt.value);
+
+                        if (boundBy && !alreadySelected) {
+                            this.warningDestinationConflictMsg = `该目的地已被「${boundBy}」绑定，请先在对应规则集中移除后再操作。`;
+                            return;
                         }
-
-                        this.warningForm.destinations = finalSelected;
-                        this.lastWarningDestinations = [...finalSelected];
+                        this.toggleWarningDestination(opt.value);
                     },
                     toggleWarningDestination(code) {
                         if (!this.warningForm.destinations) {
