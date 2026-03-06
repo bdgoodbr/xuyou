@@ -1668,7 +1668,7 @@
                                                 <button type="button"
                                                     class="htm-switch"
                                                     :class="[{ 'htm-switch-on': warningForm.isDefault }, isWarningViewMode && 'htm-switch-disabled']"
-                                                    @click="toggleWarningFormStatus">
+                                                    @click="handleDefaultSwitchChange">
                                                     <span class="htm-switch-handle"></span>
                                                 </button>
                                                 <span class="text-xs text-slate-600">设为默认</span>
@@ -1841,6 +1841,33 @@
                                         保存并生效
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 默认规则集替换确认对话框 -->
+                <div v-if="showDefaultConfirmModal" class="modal-overlay" @click.self="showDefaultConfirmModal = false">
+                    <div class="modal-content" style="width: 420px;" @click.stop>
+                        <div class="p-6">
+                            <div class="flex items-start mb-4">
+                                <i class="fas fa-exclamation-triangle text-amber-500 text-xl mr-3 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <h3 class="text-base font-semibold text-slate-900 mb-2">确认替换默认规则集</h3>
+                                    <p class="text-sm text-slate-600">
+                                        当前已有默认规则集：<span class="font-medium text-slate-900">{{ existingDefaultRuleSetName }}</span>，确认替换？
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                                <button @click="showDefaultConfirmModal = false"
+                                    class="bg-white text-slate-600 text-sm px-5 h-9 rounded border border-slate-300 hover:bg-slate-50">
+                                    取消
+                                </button>
+                                <button @click="confirmDefaultSwitch"
+                                    class="bg-blue-600 text-white text-sm px-5 h-9 rounded shadow-sm hover:bg-blue-700">
+                                    确认替换
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -3655,6 +3682,8 @@
                         ],
                         showDestinationDropdown: false,
                         destinationSearch: '',
+                        showDefaultConfirmModal: false,
+                        existingDefaultRuleSetName: '',
                         warningSimulation: {
                             etd: '',
                             today: '',
@@ -4667,7 +4696,38 @@
                     },
                     toggleWarningFormStatus() {
                         if (this.isWarningViewMode) return;
+                        this.warningForm.status = this.warningForm.status === 'enabled' ? 'disabled' : 'enabled';
+                    },
+                    handleDefaultSwitchChange() {
+                        if (this.isWarningViewMode) return;
+                        // 如果当前是关闭状态，要开启，需要检查是否有其他默认规则集
+                        if (!this.warningForm.isDefault) {
+                            // 查找其他默认规则集（排除当前编辑的规则集）
+                            const otherDefaultRule = this.warningRuleSets.find(r => 
+                                r.isDefault && r.code !== this.warningForm.code
+                            );
+                            if (otherDefaultRule) {
+                                // 有其他默认规则集，弹出确认对话框
+                                this.existingDefaultRuleSetName = otherDefaultRule.name;
+                                this.showDefaultConfirmModal = true;
+                                return;
+                            }
+                        }
+                        // 没有其他默认规则集，或者是从开启切到关闭，直接切换
                         this.warningForm.isDefault = !this.warningForm.isDefault;
+                    },
+                    confirmDefaultSwitch() {
+                        // 先将其他默认规则集设为非默认
+                        const otherDefaultRule = this.warningRuleSets.find(r => 
+                            r.isDefault && r.code !== this.warningForm.code
+                        );
+                        if (otherDefaultRule) {
+                            otherDefaultRule.isDefault = false;
+                        }
+                        // 将当前规则集设为默认
+                        this.warningForm.isDefault = true;
+                        // 关闭确认对话框
+                        this.showDefaultConfirmModal = false;
                     },
                     getDestinationLabel(code) {
                         const opt = this.warningDestinationOptions.find(o => o.value === code);
