@@ -1483,8 +1483,13 @@
                                         <th class="min-w-[80px]">是否默认</th>
                                         <th class="min-w-[200px]">适用目的地</th>
                                         <th class="min-w-[160px]">更新时间</th>
-                                        <th class="min-w-[80px] text-center">状态</th>
-                                        <th class="min-w-[120px] text-center">操作</th>
+                                        <th class="w-[100px] text-center">
+                                            <span class="inline-flex items-center justify-center gap-1">
+                                                状态
+                                                <span class="inline-flex items-center justify-center w-3 h-3 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-help" title="注：设为默认时，状态将强制启用且不可停用。">?</span>
+                                            </span>
+                                        </th>
+                                        <th class="w-[140px] text-center">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1511,7 +1516,7 @@
                                             <span v-else class="text-[11px] text-slate-400">（默认预警规则适用未绑定目的地）</span>
                                         </td>
                                         <td class="font-mono text-[12px] text-slate-500">{{ rule.updatedAt }}</td>
-                                        <td class="text-center">
+                                        <td class="w-[100px] text-center align-middle">
                                             <div class="inline-flex items-center justify-center gap-2">
                                                 <button type="button"
                                                     class="htm-switch"
@@ -1526,7 +1531,7 @@
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="text-center space-x-2">
+                                        <td class="w-[140px] text-center align-middle space-x-2">
                                             <button @click="openWarningModal('view', rule)"
                                                 class="text-blue-600 hover:text-blue-800 font-medium">
                                                 查看
