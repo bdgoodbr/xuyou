@@ -1653,24 +1653,26 @@
 
                             <!-- 内容区：三段式 -->
                             <div class="px-6 py-4 space-y-5 overflow-y-auto custom-scroll">
-                                <!-- 上段：基础配置 -->
+                                <!-- 上段：基础配置（两列栅格） -->
                                 <div>
-                                    <div class="flex items-center justify-between mb-3">
+                                    <div class="mb-3">
                                         <div class="text-sm font-semibold text-slate-800">基础配置</div>
-                                        <div class="text-[11px] text-slate-400">
+                                        <div class="mt-1 text-[11px] text-slate-400">
                                             默认预警规则：用于兜底未显式绑定目的地的订舱；目的地唯一约束由前后端双重校验。
                                         </div>
                                     </div>
-                                    <div class="grid grid-cols-12 gap-4 text-xs">
-                                        <div class="col-span-4">
+                                    <div class="grid grid-cols-2 gap-x-8 gap-y-5 text-xs">
+                                        <!-- 第一行左：预警规则名称 -->
+                                        <div>
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 预警规则名称 <span class="text-red-500">*</span>
                                             </label>
-                                            <input type="text" class="htm-input"
+                                            <input type="text" class="htm-input w-full"
                                                 v-model="warningForm.name"
                                                 :readonly="isWarningViewMode">
                                         </div>
-                                        <div class="col-span-6">
+                                        <!-- 第一行右：适用目的地 -->
+                                        <div>
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 适用目的地
                                             </label>
@@ -1687,14 +1689,14 @@
                                                                 @click.stop="removeWarningDestination(code)">×</span>
                                                         </span>
                                                     </template>
-                                                    <span v-else class="multiselect-placeholder">Select destinations</span>
+                                                    <span v-else class="multiselect-placeholder">请选择适用目的地</span>
                                                     <i class="fas fa-chevron-down multiselect-arrow"></i>
                                                 </div>
                                                 <div v-if="showDestinationDropdown && !isWarningViewMode"
                                                     class="multiselect-dropdown" @click.stop>
                                                     <div class="multiselect-search">
                                                         <input type="text" v-model="destinationSearch"
-                                                            placeholder="Search..."
+                                                            placeholder="搜索..."
                                                             @click.stop>
                                                     </div>
                                                     <div class="multiselect-options">
@@ -1713,13 +1715,14 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="mt-1 text-[11px] text-slate-400">
+                                            <div class="mt-1.5 text-[11px] text-slate-400 leading-relaxed">
                                                 选中冲突目的地时会提示，但不会自动移除；保存并生效时会进行强校验，若冲突则阻断保存并报错。
                                             </div>
                                         </div>
-                                        <div class="col-span-2">
+                                        <!-- 第二行左：默认预警规则 -->
+                                        <div>
                                             <label class="block text-[11px] text-slate-500 mb-1.5">默认预警规则</label>
-                                            <div class="flex items-center h-9 gap-2">
+                                            <div class="flex items-center gap-2">
                                                 <button type="button"
                                                     class="htm-switch"
                                                     :class="[{ 'htm-switch-on': warningForm.isDefault }, isWarningViewMode && 'htm-switch-disabled']"
@@ -1729,7 +1732,8 @@
                                                 <span class="text-xs text-slate-600">设为默认</span>
                                             </div>
                                         </div>
-                                        <div class="col-span-2">
+                                        <!-- 第二行右：状态（含 help 区，避免截断） -->
+                                        <div>
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 状态
                                                 <span
@@ -1738,24 +1742,22 @@
                                                     ?
                                                 </span>
                                             </label>
-                                            <div class="flex flex-col h-9 space-y-1">
-                                                <div class="flex items-center">
-                                                    <button type="button"
-                                                        class="inline-flex items-center h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
-                                                        :class="warningForm.status === 'enabled'
-                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                            : 'bg-slate-50 text-slate-500 border border-slate-200'"
-                                                        :disabled="isWarningViewMode || warningForm.isDefault"
-                                                        @click="toggleWarningFormStatus">
-                                                        <span
-                                                            class="w-1.5 h-1.5 rounded-full mr-1.5"
-                                                            :class="warningForm.status === 'enabled' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
-                                                        {{ warningForm.status === 'enabled' ? '启用' : '停用' }}
-                                                    </button>
-                                                </div>
-                                                <div class="text-[11px] text-slate-400 leading-tight">
-                                                    注：设为默认时，状态将强制启用且不可停用。
-                                                </div>
+                                            <div class="flex items-center gap-2">
+                                                <button type="button"
+                                                    class="inline-flex items-center h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
+                                                    :class="warningForm.status === 'enabled'
+                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                        : 'bg-slate-50 text-slate-500 border border-slate-200'"
+                                                    :disabled="isWarningViewMode || warningForm.isDefault"
+                                                    @click="toggleWarningFormStatus">
+                                                    <span
+                                                        class="w-1.5 h-1.5 rounded-full mr-1.5"
+                                                        :class="warningForm.status === 'enabled' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                                                    {{ warningForm.status === 'enabled' ? '启用' : '停用' }}
+                                                </button>
+                                            </div>
+                                            <div class="mt-2 text-[11px] text-slate-400 leading-relaxed min-h-[2.5rem]">
+                                                注：设为默认时，状态将强制启用且不可停用。
                                             </div>
                                         </div>
                                     </div>
