@@ -1671,10 +1671,12 @@
                                                 v-model="warningForm.name"
                                                 :readonly="isWarningViewMode">
                                         </div>
-                                        <!-- 第一行右：适用目的地 -->
+                                        <!-- 第一行右：适用目的地（说明入 Tooltip） -->
                                         <div>
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 适用目的地
+                                                <span class="ml-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-help align-middle"
+                                                    title="选中冲突目的地时会提示，但不会自动移除；保存并生效时会进行强校验，若冲突则阻断保存并报错。">ⓘ</span>
                                             </label>
                                             <div class="custom-multiselect">
                                                 <div class="multiselect-input"
@@ -1715,49 +1717,34 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="mt-1.5 text-[11px] text-slate-400 leading-relaxed">
-                                                选中冲突目的地时会提示，但不会自动移除；保存并生效时会进行强校验，若冲突则阻断保存并报错。
-                                            </div>
                                         </div>
-                                        <!-- 第二行左：默认预警规则 -->
+                                        <!-- 第二行左：设为默认（仅 label + Switch） -->
                                         <div>
-                                            <label class="block text-[11px] text-slate-500 mb-1.5">默认预警规则</label>
-                                            <div class="flex items-center gap-2">
+                                            <label class="block text-[11px] text-slate-500 mb-1.5">设为默认</label>
+                                            <div class="flex items-center h-8">
                                                 <button type="button"
                                                     class="htm-switch"
                                                     :class="[{ 'htm-switch-on': warningForm.isDefault }, isWarningViewMode && 'htm-switch-disabled']"
                                                     @click="handleDefaultSwitchChange">
                                                     <span class="htm-switch-handle"></span>
                                                 </button>
-                                                <span class="text-xs text-slate-600">设为默认</span>
                                             </div>
                                         </div>
-                                        <!-- 第二行右：状态（含 help 区，避免截断） -->
+                                        <!-- 第二行右：状态（Switch，说明入 Tooltip） -->
                                         <div>
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 状态
-                                                <span
-                                                    class="ml-1 inline-flex items-center justify-center w-3 h-3 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-help align-middle"
-                                                    title="设为默认时，状态将强制启用且不可停用。">
-                                                    ?
-                                                </span>
+                                                <span class="ml-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-help align-middle"
+                                                    title="注：设为默认时，状态将强制启用且不可停用。">ⓘ</span>
                                             </label>
-                                            <div class="flex items-center gap-2">
+                                            <div class="flex items-center h-8">
                                                 <button type="button"
-                                                    class="inline-flex items-center h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
-                                                    :class="warningForm.status === 'enabled'
-                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                        : 'bg-slate-50 text-slate-500 border border-slate-200'"
+                                                    class="htm-switch"
+                                                    :class="[{ 'htm-switch-on': warningForm.status === 'enabled' }, (isWarningViewMode || warningForm.isDefault) && 'htm-switch-disabled']"
                                                     :disabled="isWarningViewMode || warningForm.isDefault"
                                                     @click="toggleWarningFormStatus">
-                                                    <span
-                                                        class="w-1.5 h-1.5 rounded-full mr-1.5"
-                                                        :class="warningForm.status === 'enabled' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
-                                                    {{ warningForm.status === 'enabled' ? '启用' : '停用' }}
+                                                    <span class="htm-switch-handle"></span>
                                                 </button>
-                                            </div>
-                                            <div class="mt-2 text-[11px] text-slate-400 leading-relaxed min-h-[2.5rem]">
-                                                注：设为默认时，状态将强制启用且不可停用。
                                             </div>
                                         </div>
                                     </div>
