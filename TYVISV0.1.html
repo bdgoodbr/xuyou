@@ -1516,12 +1516,17 @@
                                         <th class="min-w-[200px]">适用目的地</th>
                                         <th class="min-w-[160px]">更新时间</th>
                                         <th class="htm-col-status">
-                                            <div class="htm-cell-center flex-col gap-0.5 py-0.5">
+                                            <div class="htm-cell-center flex-col gap-0.5 py-0.5 relative">
                                                 <span class="inline-flex items-center justify-center gap-1">
                                                     状态
-                                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-slate-400 bg-slate-100 text-slate-600 text-xs font-bold" title="注：设为默认时，状态将强制启用且不可停用。">?</span>
+                                                    <button type="button"
+                                                        class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-slate-400 bg-slate-100 text-slate-600 text-xs font-bold cursor-pointer hover:bg-slate-200 focus:outline-none"
+                                                        title="点击查看说明"
+                                                        @click="showStatusTip = !showStatusTip">
+                                                        ?
+                                                    </button>
                                                 </span>
-                                                <span class="text-[10px] text-slate-500 leading-tight">注：设为默认时不可停用</span>
+                                                <span v-show="showStatusTip" class="text-[10px] text-slate-500 leading-tight">注：设为默认时不可停用</span>
                                             </div>
                                         </th>
                                         <th class="htm-col-ops">操作</th>
@@ -3226,6 +3231,8 @@
                             { code: 'VITFAC', name: 'VITFAC(越)' },
                             { code: 'SANFAC', name: 'SANFAC' }
                         ],
+                        // 预警规则列表：状态列问号点击后显示说明
+                        showStatusTip: false,
                         // Download Center
                         showStatusDropdown: false,
                         showModuleDropdown: false,
