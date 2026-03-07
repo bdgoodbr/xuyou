@@ -280,6 +280,36 @@
             cursor: not-allowed;
         }
 
+        /* 表头问号悬停提示（可见文案） */
+        .htm-tooltip-trigger {
+            position: relative;
+        }
+        .htm-tooltip-trigger .htm-tooltip-text {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 100%;
+            margin-bottom: 6px;
+            padding: 6px 10px;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #fff;
+            background: #334155;
+            border-radius: 6px;
+            white-space: normal;
+            max-width: 220px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s, visibility 0.15s;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .htm-tooltip-trigger:hover .htm-tooltip-text {
+            opacity: 1;
+            visibility: visible;
+        }
+
         /* Table & sticky columns */
         .htm-table {
             border-collapse: separate;
@@ -1486,7 +1516,10 @@
                                         <th class="w-[100px] text-center">
                                             <span class="inline-flex items-center justify-center gap-1">
                                                 状态
-                                                <span class="inline-flex items-center justify-center w-3 h-3 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-help" title="注：设为默认时，状态将强制启用且不可停用。">?</span>
+                                                <span class="htm-tooltip-trigger inline-flex items-center justify-center w-3 h-3 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-help" title="注：设为默认时，状态将强制启用且不可停用。">
+                                                    ?
+                                                    <span class="htm-tooltip-text">注：设为默认时，状态将强制启用且不可停用。</span>
+                                                </span>
                                             </span>
                                         </th>
                                         <th class="w-[140px] text-center">操作</th>
@@ -1516,8 +1549,8 @@
                                             <span v-else class="text-[11px] text-slate-400">（默认预警规则适用未绑定目的地）</span>
                                         </td>
                                         <td class="font-mono text-[12px] text-slate-500">{{ rule.updatedAt }}</td>
-                                        <td class="w-[100px] text-center align-middle">
-                                            <div class="inline-flex items-center justify-center gap-2">
+                                        <td class="w-[100px] align-middle">
+                                            <div class="flex justify-center items-center gap-2">
                                                 <button type="button"
                                                     class="htm-switch"
                                                     :class="{ 'htm-switch-on': rule.status === 'enabled' }"
@@ -1531,19 +1564,21 @@
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="w-[140px] text-center align-middle space-x-2">
-                                            <button @click="openWarningModal('view', rule)"
-                                                class="text-blue-600 hover:text-blue-800 font-medium">
-                                                查看
-                                            </button>
-                                            <button @click="openWarningModal('edit', rule)"
-                                                class="text-amber-600 hover:text-amber-800 font-medium">
-                                                编辑
-                                            </button>
-                                            <button @click="openWarningModal('copy', rule)"
-                                                class="text-emerald-600 hover:text-emerald-800 font-medium">
-                                                复制
-                                            </button>
+                                        <td class="w-[140px] align-middle">
+                                            <div class="flex justify-center items-center gap-x-2">
+                                                <button @click="openWarningModal('view', rule)"
+                                                    class="text-blue-600 hover:text-blue-800 font-medium">
+                                                    查看
+                                                </button>
+                                                <button @click="openWarningModal('edit', rule)"
+                                                    class="text-amber-600 hover:text-amber-800 font-medium">
+                                                    编辑
+                                                </button>
+                                                <button @click="openWarningModal('copy', rule)"
+                                                    class="text-emerald-600 hover:text-emerald-800 font-medium">
+                                                    复制
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr v-if="filteredWarningRuleSets.length === 0">
