@@ -1757,8 +1757,12 @@
                                         <div class="text-sm font-semibold text-slate-800">
                                             节点规则配置（基准时间 N = 订舱ETD）
                                         </div>
-                                        <div class="text-[11px] text-slate-400">
-                                            仅维护“N±X天”的偏移量；预警接收范围固定为：A订单岗、B分公司业务、C总部物流、D总部领导。
+                                        <div class="flex items-center gap-3 text-[11px] text-slate-400">
+                                            <span>仅维护“N±X天”的偏移量；预警接收范围固定为：A订单岗、B分公司业务、C总部物流、D总部领导。</span>
+                                            <button type="button" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700" @click="openWarningExplainDrawer">
+                                                <span class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-blue-200 text-[10px]">i</span>
+                                                <span>查看预警触发说明</span>
+                                            </button>
                                         </div>
                                     </div>
                                     <div class="border border-gray-200 rounded-lg overflow-hidden">
@@ -1801,6 +1805,49 @@
                                     </div>
                                 </div>
 
+
+
+                                <!-- Drawer：预警触发与升级逻辑说明（右侧抽屉，宽400px） -->
+                                <div v-if="showWarningExplainDrawer" class="fixed inset-0 z-[9999]">
+                                    <div class="absolute inset-0 bg-black/30" @click="closeWarningExplainDrawer"></div>
+                                    <div class="absolute top-0 right-0 h-full w-[400px] bg-white shadow-xl flex flex-col">
+                                        <div class="px-4 py-3 border-b flex items-center justify-between">
+                                            <div class="text-sm font-semibold text-slate-800">预警触发与升级逻辑说明</div>
+                                            <button type="button" class="text-slate-400 hover:text-slate-600" @click="closeWarningExplainDrawer">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                        <div class="px-4 py-4 overflow-y-auto text-sm text-slate-700 leading-relaxed">
+                                            <div class="font-semibold text-slate-800 mb-1">系统是怎么算“超期”的？</div>
+                                            <div class="pl-3">
+                                                <div>• <b>找起点</b>：永远以这票货的“订舱ETD”作为起点。</div>
+                                                <div>• <b>算死线</b>：订舱ETD 加上/减去 您配置的“偏移天数”。</div>
+                                                <div>• <b>算超期</b>：用【今天几号】减去【死线日期】。</div>
+                                            </div>
+
+                                            <div class="font-semibold text-slate-800 mt-4 mb-1">什么时候才会真正发报警邮件？</div>
+                                            <div class="pl-3">必须同时满足 3 个条件：事实缺失（货代确实没填）+ 已经超期 + 达到容忍门槛（如超3天）。</div>
+
+                                            <div class="font-semibold text-slate-800 mt-4 mb-1">阶梯升级的“就高不就低”原则（同一节点内）</div>
+                                            <div class="pl-3">如果某天扫描时，一个箱子同时满足了“超3天”和“超7天”的门槛，系统本次只会取最高阶梯（超7天）发一封邮件，不会发两封。</div>
+
+                                            <div class="font-semibold text-slate-800 mt-4 mb-1">多节点同时超期怎么办？（最近缺失节点优先）</div>
+                                            <div class="pl-3">如果好几个节点同时超期了，系统只会挑离它最近的一个“该到未到”的节点发邮件催促，绝对不会多个节点一起发邮件轰炸。</div>
+
+                                            <div class="font-semibold text-slate-800 mt-4 mb-1">真实日历推演示例（以“国内已出发”目标偏移0，门槛3/7/14天为例）</div>
+                                            <div class="pl-3">
+                                                <div>• 假设 ETD 为 3月10日，死线为 3月10日。</div>
+                                                <div>• 3月10~12日（晚0~2天）：未触碰底线，系统安静。</div>
+                                                <div>• 3月13日（晚3天）：首次触碰底线，发邮件通知 A + 货代。</div>
+                                                <div>• 3月17日（晚7天）：事态升级，通知扩大为 ABC + 货代。</div>
+                                                <div>• 3月24日（晚14天）：最高级别警报，通知 ABCD + 货代。</div>
+                                            </div>
+                                        </div>
+                                        <div class="px-4 py-3 border-t bg-white">
+                                            <button type="button" class="htm-btn-primary w-full" @click="closeWarningExplainDrawer">关闭</button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <!-- 下段：规则测算预览 -->
                                 <div>
                                     <div class="flex items-center justify-between mb-3">
@@ -4819,6 +4866,7 @@
                     },
                     closeWarningModal() {
                         this.showWarningModal = false;
+                        this.showWarningExplainDrawer = false;
                     },
                     toggleWarningStatus(rule) {
                         // 原型：行内状态切换只修改前端状态，不做持久化
