@@ -1678,7 +1678,7 @@
                                                 <span class="relative group ml-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-pointer align-middle">
                                                     ⓘ
                                                     <span class="pointer-events-none absolute left-1/2 top-full z-10 mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-[11px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        选中冲突目的地时会提示，但不会自动移除；保存并生效时会进行强校验，若冲突则阻断保存并报错。
+                                                        注：同一目的地全局仅能绑定在一个预警规则中，不可重复占用。
                                                     </span>
                                                 </span>
                                             </label>
@@ -1764,8 +1764,7 @@
                                         <div class="text-sm font-semibold text-slate-800">
                                             节点规则配置（基准时间 N = 订舱ETD）
                                         </div>
-                                        <div class="flex items-center gap-3 text-[11px] text-slate-400">
-                                            <span>仅维护“N±X天”的偏移量；预警接收范围固定为：A订单岗、B分公司业务、C总部物流、D总部领导。</span>
+                                        <div class="flex items-center justify-end text-[11px] text-slate-400">
                                             <button type="button" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700" @click="openWarningExplainDrawer">
                                                 <span class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-blue-200 text-[10px]">i</span>
                                                 <span>查看预警触发说明</span>
