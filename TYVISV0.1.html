@@ -1730,13 +1730,12 @@
                                                 </button>
                                             </div>
                                         </div>
-                                        <!-- 第二行右：状态（Switch，说明入 Tooltip） -->
+                                        <!-- 第二行右：状态（Switch，说明入 Tooltip，悬停触发） -->
                                         <div>
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 状态
-                                                <span class="ml-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-pointer align-middle"
-                                                    title="注：设为默认时，状态将强制启用且不可停用。"
-                                                    @click.stop="showToast('注：设为默认时，状态将强制启用且不可停用。', 'info')">ⓘ</span>
+                                                <span class="ml-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-help align-middle"
+                                                    title="注：设为默认时，状态将强制启用且不可停用。">ⓘ</span>
                                             </label>
                                             <div class="flex items-center h-8">
                                                 <button type="button"
