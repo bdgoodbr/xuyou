@@ -3782,6 +3782,7 @@
                             }
                         ],
                         showWarningModal: false,
+                        showWarningExplainDrawer: false,
                         warningModalMode: 'view', // 'create' | 'view' | 'edit' | 'copy'
                         warningForm: {
                             code: '',
@@ -4863,6 +4864,12 @@
                         };
 
                         this.showWarningModal = true;
+                    },
+                    openWarningExplainDrawer() {
+                        this.showWarningExplainDrawer = true;
+                    },
+                    closeWarningExplainDrawer() {
+                        this.showWarningExplainDrawer = false;
                     },
                     closeWarningModal() {
                         this.showWarningModal = false;
