@@ -280,6 +280,38 @@
             cursor: not-allowed;
         }
 
+        /* 预警规则列表：固定列宽 + 状态/操作列居中 */
+        .htm-table-warning-rules {
+            table-layout: fixed;
+        }
+        .htm-table-warning-rules .htm-col-status {
+            width: 110px;
+            min-width: 110px;
+            max-width: 110px;
+            text-align: center;
+        }
+        .htm-table-warning-rules .htm-col-status .htm-cell-center {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .htm-table-warning-rules .htm-col-status .htm-cell-center.flex-col {
+            flex-direction: column;
+        }
+        .htm-table-warning-rules .htm-col-ops {
+            width: 150px;
+            min-width: 150px;
+            max-width: 150px;
+            text-align: center;
+        }
+        .htm-table-warning-rules .htm-col-ops .htm-cell-center {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         /* Table & sticky columns */
         .htm-table {
             border-collapse: separate;
@@ -1010,7 +1042,7 @@
                     <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs text-white">U
                     </div>
                     <div class="ml-3 text-xs text-gray-700">
-                        <div class="font-bold">用户 (货代)</div>
+                        <div class="font-bold">用户</div>
                     </div>
                 </div>
             </div>
@@ -1476,15 +1508,28 @@
                             </div>
                         </div>
                         <div class="overflow-x-auto custom-scroll">
-                            <table class="w-full htm-table text-xs">
+                            <table class="w-full htm-table htm-table-warning-rules text-xs">
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="min-w-[160px]">预警规则名称</th>
                                         <th class="min-w-[80px]">是否默认</th>
                                         <th class="min-w-[200px]">适用目的地</th>
                                         <th class="min-w-[160px]">更新时间</th>
-                                        <th class="min-w-[80px] text-center">状态</th>
-                                        <th class="min-w-[120px] text-center">操作</th>
+                                        <th class="htm-col-status">
+                                            <div class="htm-cell-center flex-col gap-0.5 py-0.5 relative">
+                                                <span class="inline-flex items-center justify-center gap-1">
+                                                    状态
+                                                    <button type="button"
+                                                        class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-slate-400 bg-slate-100 text-slate-600 text-xs font-bold cursor-pointer hover:bg-slate-200 focus:outline-none"
+                                                        title="点击查看说明"
+                                                        @click="showStatusTip = !showStatusTip">
+                                                        ?
+                                                    </button>
+                                                </span>
+                                                <span v-show="showStatusTip" class="text-[10px] text-slate-500 leading-tight">注：设为默认时不可停用</span>
+                                            </div>
+                                        </th>
+                                        <th class="htm-col-ops">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1511,11 +1556,12 @@
                                             <span v-else class="text-[11px] text-slate-400">（默认预警规则适用未绑定目的地）</span>
                                         </td>
                                         <td class="font-mono text-[12px] text-slate-500">{{ rule.updatedAt }}</td>
-                                        <td class="text-center">
-                                            <div class="inline-flex items-center justify-center gap-2">
+                                        <td class="htm-col-status align-middle">
+                                            <div class="htm-cell-center gap-2">
                                                 <button type="button"
                                                     class="htm-switch"
                                                     :class="{ 'htm-switch-on': rule.status === 'enabled' }"
+                                                    :disabled="rule.isDefault"
                                                     @click="toggleWarningStatus(rule)">
                                                     <span class="htm-switch-handle"></span>
                                                 </button>
@@ -1525,19 +1571,21 @@
                                                 </span>
                                             </div>
                                         </td>
-                                        <td class="text-center space-x-2">
-                                            <button @click="openWarningModal('view', rule)"
-                                                class="text-blue-600 hover:text-blue-800 font-medium">
-                                                查看
-                                            </button>
-                                            <button @click="openWarningModal('edit', rule)"
-                                                class="text-amber-600 hover:text-amber-800 font-medium">
-                                                编辑
-                                            </button>
-                                            <button @click="openWarningModal('copy', rule)"
-                                                class="text-emerald-600 hover:text-emerald-800 font-medium">
-                                                复制
-                                            </button>
+                                        <td class="htm-col-ops align-middle">
+                                            <div class="htm-cell-center gap-x-2">
+                                                <button @click="openWarningModal('view', rule)"
+                                                    class="text-blue-600 hover:text-blue-800 font-medium">
+                                                    查看
+                                                </button>
+                                                <button @click="openWarningModal('edit', rule)"
+                                                    class="text-amber-600 hover:text-amber-800 font-medium">
+                                                    编辑
+                                                </button>
+                                                <button @click="openWarningModal('copy', rule)"
+                                                    class="text-emerald-600 hover:text-emerald-800 font-medium">
+                                                    复制
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr v-if="filteredWarningRuleSets.length === 0">
@@ -1605,26 +1653,30 @@
 
                             <!-- 内容区：三段式 -->
                             <div class="px-6 py-4 space-y-5 overflow-y-auto custom-scroll">
-                                <!-- 上段：基础配置 -->
+                                <!-- 上段：基础配置（两列栅格） -->
                                 <div>
-                                    <div class="flex items-center justify-between mb-3">
+                                    <div class="mb-3">
                                         <div class="text-sm font-semibold text-slate-800">基础配置</div>
-                                        <div class="text-[11px] text-slate-400">
+                                        <div class="mt-1 text-[11px] text-slate-400">
                                             默认预警规则：用于兜底未显式绑定目的地的订舱；目的地唯一约束由前后端双重校验。
                                         </div>
                                     </div>
-                                    <div class="grid grid-cols-12 gap-4 text-xs">
-                                        <div class="col-span-4">
+                                    <div class="grid grid-cols-2 gap-x-8 gap-y-5 text-xs">
+                                        <!-- 第一行左：预警规则名称 -->
+                                        <div>
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 预警规则名称 <span class="text-red-500">*</span>
                                             </label>
-                                            <input type="text" class="htm-input"
+                                            <input type="text" class="htm-input w-full"
                                                 v-model="warningForm.name"
                                                 :readonly="isWarningViewMode">
                                         </div>
-                                        <div class="col-span-6">
+                                        <!-- 第一行右：适用目的地（说明入 Tooltip） -->
+                                        <div>
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 适用目的地
+                                                <span class="ml-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-help align-middle"
+                                                    title="选中冲突目的地时会提示，但不会自动移除；保存并生效时会进行强校验，若冲突则阻断保存并报错。">ⓘ</span>
                                             </label>
                                             <div class="custom-multiselect">
                                                 <div class="multiselect-input"
@@ -1639,14 +1691,14 @@
                                                                 @click.stop="removeWarningDestination(code)">×</span>
                                                         </span>
                                                     </template>
-                                                    <span v-else class="multiselect-placeholder">Select destinations</span>
+                                                    <span v-else class="multiselect-placeholder">请选择适用目的地</span>
                                                     <i class="fas fa-chevron-down multiselect-arrow"></i>
                                                 </div>
                                                 <div v-if="showDestinationDropdown && !isWarningViewMode"
                                                     class="multiselect-dropdown" @click.stop>
                                                     <div class="multiselect-search">
                                                         <input type="text" v-model="destinationSearch"
-                                                            placeholder="Search..."
+                                                            placeholder="搜索..."
                                                             @click.stop>
                                                     </div>
                                                     <div class="multiselect-options">
@@ -1665,36 +1717,33 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="mt-1 text-[11px] text-slate-400">
-                                                选中冲突目的地时会提示，但不会自动移除；保存并生效时会进行强校验，若冲突则阻断保存并报错。
-                                            </div>
                                         </div>
-                                        <div class="col-span-2">
-                                            <label class="block text-[11px] text-slate-500 mb-1.5">默认预警规则</label>
-                                            <div class="flex items-center h-9 gap-2">
+                                        <!-- 第二行左：设为默认（仅 label + Switch） -->
+                                        <div>
+                                            <label class="block text-[11px] text-slate-500 mb-1.5">设为默认</label>
+                                            <div class="flex items-center h-8">
                                                 <button type="button"
                                                     class="htm-switch"
                                                     :class="[{ 'htm-switch-on': warningForm.isDefault }, isWarningViewMode && 'htm-switch-disabled']"
                                                     @click="handleDefaultSwitchChange">
                                                     <span class="htm-switch-handle"></span>
                                                 </button>
-                                                <span class="text-xs text-slate-600">设为默认</span>
                                             </div>
                                         </div>
-                                        <div class="col-span-2">
-                                            <label class="block text-[11px] text-slate-500 mb-1.5">状态</label>
-                                            <div class="flex items-center h-9">
+                                        <!-- 第二行右：状态（Switch，说明入 Tooltip） -->
+                                        <div>
+                                            <label class="block text-[11px] text-slate-500 mb-1.5">
+                                                状态
+                                                <span class="ml-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-help align-middle"
+                                                    title="注：设为默认时，状态将强制启用且不可停用。">ⓘ</span>
+                                            </label>
+                                            <div class="flex items-center h-8">
                                                 <button type="button"
-                                                    class="inline-flex items-center h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
-                                                    :class="warningForm.status === 'enabled'
-                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                        : 'bg-slate-50 text-slate-500 border border-slate-200'"
-                                                    :disabled="isWarningViewMode"
+                                                    class="htm-switch"
+                                                    :class="[{ 'htm-switch-on': warningForm.status === 'enabled' }, (isWarningViewMode || warningForm.isDefault) && 'htm-switch-disabled']"
+                                                    :disabled="isWarningViewMode || warningForm.isDefault"
                                                     @click="toggleWarningFormStatus">
-                                                    <span
-                                                        class="w-1.5 h-1.5 rounded-full mr-1.5"
-                                                        :class="warningForm.status === 'enabled' ? 'bg-emerald-500' : 'bg-slate-400'"></span>
-                                                    {{ warningForm.status === 'enabled' ? '启用' : '停用' }}
+                                                    <span class="htm-switch-handle"></span>
                                                 </button>
                                             </div>
                                         </div>
@@ -1758,7 +1807,7 @@
                                             规则测算预览
                                         </div>
                                         <div class="text-[11px] text-slate-400 max-w-xl text-right">
-                                            （注：默认不展示测算结果；仅当点击<strong>运行测算</strong>后，才会读取当前表单中的假设订舱ETD、当前系统日期与各节点目标偏移量进行一次性测算并渲染。）
+                                            （注：点击<strong>运行测算</strong>后，系统将读取表单参数进行一次性模拟渲染。本预览仅用于并行校验各节点的时间与阶梯阈值；真实业务预警将严格遵循「最近缺失节点优先」原则，绝对不会对同一箱子同时触发多节点报警。）
                                         </div>
                                     </div>
                                     <div
@@ -3171,6 +3220,8 @@
                             { code: 'VITFAC', name: 'VITFAC(越)' },
                             { code: 'SANFAC', name: 'SANFAC' }
                         ],
+                        // 预警规则列表：状态列问号点击后显示说明
+                        showStatusTip: false,
                         // Download Center
                         showStatusDropdown: false,
                         showModuleDropdown: false,
@@ -4738,6 +4789,10 @@
                                 nodes: this.warningForm.nodes.map(n => ({ ...n })), // 节点偏移在原型中不做区分
                                 sourceName: rule.name
                             };
+                            // 极简防呆：已有默认预警规则若状态异常，进入弹窗时强制修正为启用
+                            if (this.warningForm.isDefault && this.warningForm.status !== 'enabled') {
+                                this.warningForm.status = 'enabled';
+                            }
                         }
                         this.destinationSearch = '';
                         this.showDestinationDropdown = false;
