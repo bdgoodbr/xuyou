@@ -1675,8 +1675,12 @@
                                         <div>
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 适用目的地
-                                                <span class="ml-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-help align-middle"
-                                                    title="选中冲突目的地时会提示，但不会自动移除；保存并生效时会进行强校验，若冲突则阻断保存并报错。">ⓘ</span>
+                                                <span class="relative group ml-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-pointer align-middle">
+                                                    ⓘ
+                                                    <span class="pointer-events-none absolute left-1/2 top-full z-10 mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-[11px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        选中冲突目的地时会提示，但不会自动移除；保存并生效时会进行强校验，若冲突则阻断保存并报错。
+                                                    </span>
+                                                </span>
                                             </label>
                                             <div class="custom-multiselect">
                                                 <div class="multiselect-input"
@@ -1734,8 +1738,12 @@
                                         <div>
                                             <label class="block text-[11px] text-slate-500 mb-1.5">
                                                 状态
-                                                <span class="ml-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-help align-middle"
-                                                    title="注：设为默认时，状态将强制启用且不可停用。">ⓘ</span>
+                                                <span class="relative group ml-1 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-slate-300 text-[10px] text-slate-400 cursor-pointer align-middle">
+                                                    ⓘ
+                                                    <span class="pointer-events-none absolute left-1/2 top-full z-10 mt-1 -translate-x-1/2 whitespace-nowrap rounded bg-black/80 px-2 py-1 text-[11px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        注：设为默认时，状态将强制启用且不可停用。
+                                                    </span>
+                                                </span>
                                             </label>
                                             <div class="flex items-center h-8">
                                                 <button type="button"
