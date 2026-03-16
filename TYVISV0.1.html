@@ -2672,7 +2672,7 @@
                                             placeholder="YYYY-MM-DD">
                                     </div>
                                     <div>
-                                        <label class="block text-xs text-gray-500 mb-1.5 required">距离始发站口岸(KM)</label>
+                                        <label class="block text-xs text-gray-500 mb-1.5">距离始发站口岸(KM)</label>
                                         <input v-model.number="form.kmToBorder" type="number" step="0.01" min="0"
                                             class="htm-input" :class="{error: errors.kmToBorder}" placeholder="请输入距离"
                                             @blur="validateField('kmToBorder')">
@@ -5467,7 +5467,7 @@
                         return 'status-pending';
                     },
                     validateField(field) {
-                        const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder', 'realETD', 'realETA'];
+                        const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'realETD', 'realETA'];
                         if (requiredFields.includes(field) && !this.form[field]) {
                             this.$set(this.errors, field, `请填写${this.getFieldLabel(field)}`);
                             return;
@@ -5495,7 +5495,7 @@
                     },
                     validateForm() {
                         this.errors = {};
-                        const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'kmToBorder', 'realETD', 'realETA'];
+                        const requiredFields = ['pol', 'pod', 'lhzOrder', 'containerNo', 'containerSize', 'currentStatus', 'currentLocation', 'realETD', 'realETA'];
                         let hasError = false;
 
                         requiredFields.forEach(field => {
