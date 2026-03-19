@@ -2021,6 +2021,10 @@
                             <!-- Query Bar -->
                             <div class="p-4 flex items-center justify-between gap-4">
                                 <div class="flex items-center gap-2">
+                                    <select v-model="qTransportType" class="htm-input" style="width: 120px;">
+                                        <option value="sea">海运</option>
+                                        <option value="rail">铁运</option>
+                                    </select>
                                     <select v-model="qQueryType" class="htm-input" style="width: 150px;">
                                         <option value="so">订舱号 SO NO.</option>
                                         <option value="lhz">订舱号（原落货纸号）</option>
@@ -3829,10 +3833,10 @@
                         qQueryType: 'so',
                         qQueryValue: 'COSU64321333310',
                         // 模拟：运输方式切换（海运/铁运），用于验证“订阅方横条”逻辑
-                        qTransportType: 'rail', // 'sea' | 'rail'
+                        qTransportType: 'sea', // 'sea' | 'rail'
 
                         qBasic: {
-                            transport: '铁运',
+                            transport: '海运',
                             waybillNo: '1696176(H)',
                             deliveryNotes: '1696175,1696176',
                             carrier: '青岛经汉物流服务有限公司',
@@ -3869,8 +3873,8 @@
                             arrive: { station: 'RIJEKA,HR', time: '2025-12-29 21:14:00' }
                         },
                         qMilestones: [
-                            { milestone: '起运港发船 / Departure from Origin', location: 'QINGDAO-CN', mode: 'Rail', actualDate: '2025-10-30 14:46:00' },
-                            { milestone: '目的站到港 / Arrival at Destination', location: 'RIJEKA,HR', mode: 'Rail', actualDate: '2025-12-29 21:14:00' }
+                            { milestone: '起运港发船 / Departure from Origin', location: 'QINGDAO-CN', mode: 'Sea', actualDate: '2025-10-30 14:46:00' },
+                            { milestone: '目的站到港 / Arrival at Destination', location: 'RIJEKA,HR', mode: 'Sea', actualDate: '2025-12-29 21:14:00' }
                         ],
                         qContainerSummary: {
                             firstDeparture: { completed: 6, total: 6 },
@@ -5112,7 +5116,16 @@
                             } catch (e) { }
                         });
                     },
+                    applyQueryTransport() {
+                        const isSea = this.qTransportType === 'sea';
+                        this.qBasic.transport = isSea ? '海运' : '铁运';
+                        const mode = isSea ? 'Sea' : 'Rail';
+                        if (Array.isArray(this.qMilestones)) {
+                            this.qMilestones = this.qMilestones.map(m => ({ ...m, mode }));
+                        }
+                    },
                     qDoQuery() {
+                        this.applyQueryTransport();
                         this.showToast('查询功能待接真实数据（原型演示）', 'success');
                     },
                     qOpenBookingInfo() {
