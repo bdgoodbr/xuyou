@@ -1235,16 +1235,21 @@
                                     </option>
                                 </select>
                             </div>
-                            <div class="col-span-4">
+                            <div class="col-span-3">
                                 <label class="block text-xs text-gray-500 mb-1.5">上传时间</label>
                                 <input v-model="filters.uploadTimeRange" type="text" class="htm-input"
                                     placeholder="YYYY-MM-DD - YYYY-MM-DD">
                             </div>
                             <div class="col-span-3">
+                                <label class="block text-xs text-gray-500 mb-1.5">修改时间</label>
+                                <input v-model="filters.modifyTimeRange" type="text" class="htm-input"
+                                    placeholder="YYYY-MM-DD - YYYY-MM-DD">
+                            </div>
+                            <div class="col-span-2">
                                 <label class="block text-xs text-gray-500 mb-1.5">货代</label>
                                 <input v-model="filters.carrier" type="text" class="htm-input" placeholder="请输入货代">
                             </div>
-                            <div class="col-span-3">
+                            <div class="col-span-2">
                                 <label class="block text-xs text-gray-500 mb-1.5">上传人</label>
                                 <input v-model="filters.uploadUser" type="text" class="htm-input" placeholder="请输入上传人">
                             </div>
@@ -2091,14 +2096,7 @@
                                         class="text-slate-400 text-sm transition-transform"></i>
                                     基本信息 <span class="text-slate-400 text-xs font-normal">Basic information</span>
                                 </div>
-                                <div class="text-xs text-slate-500">
-                                    <template v-if="language === 'en'">
-                                        Transport mode: <span class="font-semibold text-slate-800">{{ qBasic.transport === '铁运' ? 'Rail' : qBasic.transport }}</span>
-                                    </template>
-                                    <template v-else>
-                                    运输方式：<span class="font-semibold text-slate-800">{{ qBasic.transport }}</span>
-                                    </template>
-                                </div>
+                                <!-- 技术评审意见：查询页基本信息右侧不展示“运输方式：铁运” -->
                             </div>
                             <div class="p-4" v-show="!basicInfoCollapsed">
                                 <div class="grid grid-cols-3 gap-0 border border-gray-200 rounded overflow-hidden">
@@ -2233,8 +2231,7 @@
                                             Current Status Visualization
                                         </template>
                                         <template v-else>
-                                        当前状态可视化 <span class="text-slate-400 text-xs font-normal">Current Status
-                                            Visualization</span>
+                                            <span class="text-slate-400 text-xs font-normal">Current Status Visualization</span>
                                         </template>
                                     </div>
                                     <!-- 距离信息（按最新 update_time 的记录，一行展示，与标题同一行居中对齐） -->
@@ -2737,7 +2734,7 @@
                                 <ul class="list-disc list-inside space-y-1 text-xs">
                                     <li>支持Excel格式（.xlsx、.xls）</li>
                                     <li>文件大小限制：10MB</li>
-                                    <li class="text-red-600 font-medium">批量导入规则：如果存在不符合要求的记录，所有记录都不会入库，请修正错误后重新导入</li>
+                                    <li class="text-red-600 font-medium">批量导入规则：如果存在不符合要求的记录，所有记录都不会保存，请修正错误后重新导入</li>
                                 </ul>
                             </div>
                             <div class="mb-4">
@@ -2805,7 +2802,7 @@
                                         <p class="font-bold text-red-800 mb-2">导入失败</p>
                                         <p class="text-sm text-red-700 mb-1">本次导入共 {{ importResult.success +
                                             importResult.failed }} 条记录，其中 {{ importResult.failed }}
-                                            条记录不符合要求，已全部回滚，未入库任何数据。</p>
+                                            条记录不符合要求，已全部回滚，未保存任何数据。</p>
                                         <p class="text-sm text-red-700 font-medium">请修正错误后重新导入。</p>
                                     </div>
                                 </div>
@@ -3567,6 +3564,7 @@
                             containerSize: [],
                             currentStatus: '',
                             uploadTimeRange: '',
+                            modifyTimeRange: '',
                             carrier: '',
                             uploadUser: ''
                         },
@@ -5218,6 +5216,7 @@
                         const carrierVal = this.filters.carrier.trim();
                         const uploadUserVal = this.filters.uploadUser.trim();
                         const uploadTimeRange = this.filters.uploadTimeRange.trim();
+                        const modifyTimeRange = this.filters.modifyTimeRange.trim();
 
                         // 数据权限过滤：货代A不能搜索到货代B上传的数据
                         if (this.userRole === 'carrier') {
@@ -5272,6 +5271,21 @@
                                 });
                             }
                         }
+                        if (modifyTimeRange) {
+                            // 时间范围查询：格式 YYYY-MM-DD - YYYY-MM-DD（修改时间；若无修改时间则按上传时间兜底）
+                            const parts = modifyTimeRange.split('-').map(s => s.trim());
+                            if (parts.length === 2) {
+                                const startDate = new Date(parts[0]);
+                                const endDate = new Date(parts[1]);
+                                endDate.setHours(23, 59, 59, 999);
+                                result = result.filter(item => {
+                                    const raw = item.modifyTime || item.uploadTime;
+                                    if (!raw) return false;
+                                    const d = new Date(raw);
+                                    return d >= startDate && d <= endDate;
+                                });
+                            }
+                        }
 
                         this.filteredData = result;
                         this.pagination.current = 1;
@@ -5287,6 +5301,7 @@
                             containerSize: [],
                             currentStatus: '',
                             uploadTimeRange: '',
+                            modifyTimeRange: '',
                             carrier: '',
                             uploadUser: ''
                         };
@@ -5796,7 +5811,7 @@
                                     this.showBatchModal = false;
                                     this.showImportResult = true;
                                     this.selectedFile = null;
-                                    this.showToast('导入失败：存在不符合要求的记录，已全部回滚，未入库任何数据', 'error');
+                                    this.showToast('导入失败：存在不符合要求的记录，已全部回滚，未保存任何数据', 'error');
                                 } else {
                                     // 全部成功，才入库
                                     const now = new Date();
