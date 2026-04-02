@@ -4,19 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>系统外落货纸 Living Spec v2.8 [版本: design-spec]</title>
-    <!-- Version: design-spec - 按照审批过程弹框设计方案实现 -->
+    <!-- 修改时间: 2026-04-02 14:59 -->
+    
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <script>
-        // 强制清除缓存并重新加载
         if (performance.navigation.type === 1) {
-            // 页面刷新，清除所有缓存
             caches.keys().then(function(names) {
                 for (let name of names) caches.delete(name);
             });
         }
-        // 添加版本号到 window 对象，方便控制台检查
         window.APP_VERSION = 'design-spec';
         console.log('✅ 页面版本:', window.APP_VERSION, '- 按照审批过程弹框设计方案实现');
     </script>
@@ -48,7 +46,7 @@
     <style>
         body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #334155; }
         
-        /* Form Controls */
+        
         .htm-input {
             height: 32px;
             font-size: 13px;
@@ -62,12 +60,12 @@
         .htm-input:focus { outline: none; border-color: #2563EB; box-shadow: 0 0 0 1px #2563EB; }
         .htm-input:disabled, .htm-input[readonly] { background-color: #F8FAFC; color: #94a3b8; cursor: not-allowed; border-color: #E2E8F0; }
         
-        /* Table Styles */
+        
         .htm-table th { background-color: #F1F5F9; color: #475569; font-weight: 600; font-size: 12px; padding: 10px 12px; text-align: left; border-bottom: 1px solid #E2E8F0; white-space: nowrap; }
         .htm-table td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #F8FAFC; color: #334155; white-space: nowrap; transition: background 0.1s; }
         .htm-table tr:hover td { background-color: #F8FAFC; }
         
-        /* 审批过程表格样式（按照设计方案） */
+        
         .approval-table {
             width: 100%;
             border-collapse: collapse;
@@ -86,13 +84,13 @@
             font-size: 13px;
             border-bottom: 1px solid #F8FAFC;
             color: #334155;
-            height: 40px; /* 按照设计方案，每行高度 40px */
+            height: 40px; 
         }
         .approval-table tr:hover td {
             background-color: #F8FAFC;
         }
 
-        /* Badges */
+        
         .badge { padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; line-height: 1.4; }
         .badge-draft { background: #DBEAFE; color: #1E40AF; border: 1px solid #BFDBFE; } 
         .badge-submitted { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; } 
@@ -102,7 +100,7 @@
 
         .required::after { content: " *"; color: #EF4444; margin-left: 2px; }
 
-        /* Layout */
+        
         #ui-container { height: 95vh; display: flex; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); background: white; margin: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
         
         .nav-item.active { background-color: #1d4ed8; border-left: 4px solid #60a5fa; color: white; }
@@ -111,7 +109,7 @@
         
         input[type="checkbox"] { accent-color: #2563EB; width: 14px; height: 14px; cursor: pointer; }
 
-        /* Modal & Utilities */
+        
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); }
         .modal-content { background: white; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); width: 500px; overflow: hidden; animation: slideIn 0.2s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -122,17 +120,17 @@
         .container-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
         .group-label { font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; border-bottom: 1px solid #F1F5F9; padding-bottom: 4px; }
         
-        /* ULTRA HIGH VISIBILITY BOLD Scrollbar for Batch Table */
+        
         .batch-table-container { 
             overflow-x: auto; 
             max-width: 100%; 
             padding-bottom: 0px;
-            scrollbar-color: #64748B #F1F5F9; /* Firefox */
-            scrollbar-width: auto; /* Firefox */
+            scrollbar-color: #64748B #F1F5F9; 
+            scrollbar-width: auto; 
         }
-        /* Webkit Scrollbar Styling (Chrome, Safari, Edge) - BOLD & THICK */
+        
         .batch-table-container::-webkit-scrollbar {
-            height: 24px; /* Very Thick */
+            height: 24px; 
             background-color: #F1F5F9;
             border-top: 1px solid #E2E8F0;
         }
@@ -140,26 +138,25 @@
             background-color: #F1F5F9;
         }
         .batch-table-container::-webkit-scrollbar-thumb {
-            background-color: #64748B; /* Dark, high contrast */
+            background-color: #64748B; 
             border-radius: 6px;
-            border: 5px solid #F1F5F9; /* Thick padding to make thumb pop */
+            border: 5px solid #F1F5F9; 
         }
         .batch-table-container::-webkit-scrollbar-thumb:hover {
-            background-color: #475569; /* Even darker on hover */
+            background-color: #475569; 
         }
         
         .batch-table th, .batch-table td { white-space: nowrap; }
         
-        /* Custom scroll for main content */
+        
         .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
     </style>
     
-    <!-- 在 Vue 加载之前就定义占位函数，确保始终可用 -->
+    
     <script>
-        // 立即定义占位函数，不依赖任何其他库，不使用 IIFE，直接执行
         window.showApprovalProcess = function() {
             console.warn('⚠️ showApprovalProcess 方法尚未初始化，请等待页面加载完成');
             if (window._htmApprovalProcess && typeof window._htmApprovalProcess === 'function') {
@@ -788,11 +785,9 @@
 </div>
 
 <script>
-    // 立即验证占位函数是否存在
     console.log('=== 主 script 开始执行 ===');
     console.log('window.showApprovalProcess 类型:', typeof window.showApprovalProcess);
     
-    // 等待 Vue 加载完成
     if (typeof Vue === 'undefined') {
         console.error('❌ Vue 未加载，请检查网络连接');
     } else {
@@ -847,7 +842,6 @@
                 }
             });
 
-            // Logic
             const paginatedData = computed(() => {
                 state.pagination.total = state.listData.length;
                 const start = (state.pagination.current - 1) * state.pagination.size;
@@ -893,7 +887,6 @@
                         containers: [{ type: '40HQ', qty: 1 }],
                         products: [] 
                     };
-                    // Ensure MOCK DATA IS PRESENT on create for demo
                     if(state.form.products.length === 0) editOrder({ id: 'LR251230001', status: '待提交' }); 
                 }
             };
@@ -917,7 +910,6 @@
                     return;
                 }
                 
-                // Simulate checking ID
                 if (orderId === 'NULL') { // Mock fail condition
                     alert('错误：无此落货纸号');
                     return;
@@ -929,7 +921,6 @@
 
                 if (confirm(msg)) {
                     alert('模拟成功：已复制数据');
-                    // Mock data population logic would go here
                 }
             };
 
@@ -939,7 +930,6 @@
                 if(!state.form.id) state.form.id = 'LR251230001'; // Fallback
                 if(!state.form.status) state.form.status = '待提交';
 
-                // 6 High Fidelity Mock Data Rows with COMPLETE Fields
                 state.form.products = [
                     { batch: 'B2201-001', code: '1001001', name: 'LED TV 55"', enName: '55 Inch UHD TV', model: '55A6G', brand: 'Hisense', color: 'Black', pipe: 'None', qty: 150, boxes: 75, currency: 'USD', price: 210.00, salesCurrency: 'USD', salesPrice: 230.00, fobCurrency: 'USD', fobPrice: 195.00, netWeight: 14.5, grossWeight: 17.2, unitVol: 0.12, extContract: 'HSA-2025-01', form: '整机', tradeType: '一般贸易' },
                     { batch: 'B2201-002', code: '1001002', name: 'Soundbar HS218', enName: '2.1CH Soundbar', model: 'HS218', brand: 'Hisense', color: 'Black', pipe: 'PVC', qty: 200, boxes: 50, currency: 'USD', price: 65.00, salesCurrency: 'USD', salesPrice: 75.00, fobCurrency: 'USD', fobPrice: 55.00, netWeight: 5.2, grossWeight: 6.8, unitVol: 0.04, extContract: 'HSA-2025-01', form: '整机', tradeType: '一般贸易' },
@@ -966,7 +956,6 @@
                 state.form.submitTime = fmt(now);
                 state.form.lastUpdate = fmt(now);
                 state.form.status = '提交审核';
-                // 需求：点击“提交审核”后，直接弹出审批过程表格（两行：提交审核 + 区域经理待处理）
                 showApprovalProcess();
             };
             const recall = () => { if(confirm('确定撤回吗？')) state.form.status = '已撤回'; };
@@ -975,7 +964,6 @@
             const confirmImport = () => { state.showImportModal = false; alert('模拟导入成功'); };
             const exportBatch = () => { if(state.form.products.length === 0) return alert('没有数据可导出'); alert('导出批次明细成功 (Mock Export)'); };
 
-            // 生成审批历史记录（按照设计方案实现）
             const generateApprovalHistory = (form) => {
                 const history = [];
                 const currentStatus = form.status || '待提交';
@@ -990,12 +978,10 @@
                     }).replace(/\//g, '-');
                 };
                 
-                // 如果状态是"待提交"，返回空数组，显示"暂无审批记录"
                 if (currentStatus === '待提交' || !form.status) {
                     return history; // 空数组
                 }
                 
-                // 节点1：提交审核（所有已提交的状态都有这个节点）
                 if (['提交审核', '执行', '驳回', '转办'].includes(currentStatus)) {
                     history.push({
                         id: 1,
@@ -1008,7 +994,6 @@
                     });
                 }
                 
-                // 节点2：区域经理审核（所有已提交的状态都有这个节点）
                 if (['提交审核', '执行', '驳回', '转办'].includes(currentStatus)) {
                     const node2 = {
                         id: 2,
@@ -1021,25 +1006,21 @@
                     };
                     
                     if (currentStatus === '提交审核') {
-                        // 待处理状态
                         node2.approver = '-';
                         node2.action = '-';
                         node2.comments = '';
                         node2.actionTime = '';
                     } else if (currentStatus === '执行') {
-                        // 审批通过
                         node2.approver = form.regionalManager || '区域经理 张三';
                         node2.action = '通过'; // 按照设计方案，使用"通过"而不是"审批通过"
                         node2.comments = form.approvalComments || ''; // 审批意见：用户写了才有（默认空）
                         node2.actionTime = form.approvalTime || form.lastUpdate || formatTime(new Date());
                     } else if (currentStatus === '驳回') {
-                        // 驳回
                         node2.approver = form.regionalManager || '区域经理 张三';
                         node2.action = '驳回';
                         node2.comments = form.rejectComments || ''; // 审批意见：用户写了才有（默认空）
                         node2.actionTime = form.rejectTime || form.lastUpdate || formatTime(new Date());
                     } else if (currentStatus === '转办') {
-                        // 转办
                         node2.approver = form.regionalManager || '区域经理 张三';
                         node2.action = '转办';
                         node2.comments = form.transferComments || ''; // 转办意见默认为空
@@ -1052,7 +1033,6 @@
                 return history;
             };
 
-            // 原型用：获取审批过程样例数据（模拟完整审批流程）
             const getApprovalDemoRows = () => {
                 const fmt = (d) => new Date(d).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\//g,'-');
                 const baseId = state.form.id || 'LR251230001';
@@ -1097,7 +1077,6 @@
                 ];
             };
 
-            // 显示审批过程弹窗
             const showApprovalProcess = () => {
                 console.log('=== showApprovalProcess 开始执行 ===');
                 console.log('当前状态:', { 
@@ -1107,11 +1086,9 @@
                 });
                 
                 try {
-                    // 原型需求：点击“审批过程”直接展示两条样例数据
                     const history = getApprovalDemoRows();
                     console.log('审批过程样例数据:', history);
                     
-                    // 直接设置状态
                     state.approvalHistory = history;
                     state.showApprovalModal = true;
                     
@@ -1120,10 +1097,8 @@
                         showApprovalModal: state.showApprovalModal
                     });
                     
-                    // 强制更新视图
                     nextTick(() => {
                         console.log('nextTick 执行完成, showApprovalModal:', state.showApprovalModal);
-                        // 检查 DOM 中是否有弹窗元素
                         const modal = document.querySelector('.modal-overlay');
                         console.log('弹窗 DOM 元素:', modal);
                         if (!modal) {
@@ -1142,21 +1117,15 @@
                 addContainer, removeContainer, handleContainerTypeChange, toggleQuery, handleRefCreate, showApprovalProcess
             };
             
-            // 在 setup 函数内部直接暴露方法到 window（使用闭包访问 state）
-            // 这样不依赖 Vue 实例挂载，确保方法立即可用
             console.log('=== 准备暴露 showApprovalProcess 方法 ===');
             console.log('showApprovalProcess 函数:', typeof showApprovalProcess);
             
             const exposedMethod = showApprovalProcess;
             
-            // 立即暴露到 window
             try {
-                // 直接替换 window.showApprovalProcess
                 window.showApprovalProcess = exposedMethod;
-                // 也存储到全局变量中作为备用
                 window._htmApprovalProcess = exposedMethod;
                 
-                // 验证是否成功
                 if (window.showApprovalProcess === exposedMethod) {
                     console.log('✅ window.showApprovalProcess 已成功设置');
                 } else {
@@ -1173,7 +1142,6 @@
                     showApprovalProcess();
                 };
                 
-                // 快速测试函数：切换状态并查看审批过程
                 window.testApprovalWithStatus = (status) => {
                     const validStatuses = ['待提交', '提交审核', '执行', '驳回', '转办'];
                     if (!validStatuses.includes(status)) {
@@ -1182,7 +1150,6 @@
                     }
                     console.log(`=== 切换到状态: ${status} ===`);
                     state.form.status = status;
-                    // 设置一些测试数据
                     if (status === '提交审核') {
                         state.form.submitTime = new Date().toLocaleString('zh-CN');
                     } else if (status === '执行') {
@@ -1213,26 +1180,21 @@
         }
     });
     
-    // 将 Vue 实例暴露到全局
     const app = vueApp.mount('#app');
     window.app = app;
     
-    // 确保方法暴露的多种方式（多重保障）
     const ensureMethodExposed = () => {
-        // 方式1：检查是否已在 setup 中暴露
         if (typeof window.showApprovalProcess === 'function') {
             console.log('✅ 审批过程方法已暴露（方式1：setup 中）');
             return true;
         }
         
-        // 方式1.5：从全局变量获取
         if (window._htmApprovalProcess && typeof window._htmApprovalProcess === 'function') {
             window.showApprovalProcess = window._htmApprovalProcess;
             console.log('✅ 审批过程方法已暴露（方式1.5：全局变量）');
             return true;
         }
         
-        // 方式2：从 app 实例获取
         if (app && typeof app.showApprovalProcess === 'function') {
             window.showApprovalProcess = app.showApprovalProcess;
             window.testApprovalProcess = () => {
@@ -1246,12 +1208,9 @@
         return false;
     };
     
-    // 立即尝试
     if (!ensureMethodExposed()) {
-        // 如果立即失败，使用 nextTick 延迟尝试
         nextTick(() => {
             if (!ensureMethodExposed()) {
-                // 如果还是失败，再延迟一点
                 setTimeout(() => {
                     if (!ensureMethodExposed()) {
                         console.error('❌ 所有方式都失败，无法暴露 showApprovalProcess 方法');
