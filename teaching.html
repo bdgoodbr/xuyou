@@ -1,0 +1,1625 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>供应链概念教学（交互版）</title>
+    <meta name="description" content="面向供应链产品经理新手的交互式概念教学页面：多主题切换 + 模拟操作 + 影响分析 + 关系图 + 小测验。" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* 更稳定的字体与滚动表现 */
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        font-feature-settings: "ss01" 1, "ss02" 1;
+      }
+      .scrollbar-thin::-webkit-scrollbar {
+        height: 8px;
+        width: 8px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: rgba(100, 116, 139, 0.35);
+        border-radius: 9999px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-track {
+        background: rgba(148, 163, 184, 0.15);
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900">
+    <div id="root"></div>
+
+    <!-- React (no build) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+      const { useEffect, useMemo, useRef, useState } = React;
+
+      const SECTIONS = [
+        { id: "scene", name: "1. 场景引入" },
+        { id: "concept", name: "2. 概念拆解" },
+        { id: "create", name: "3. 创建流程" },
+        { id: "change", name: "4. 变更管理" },
+        { id: "decision", name: "5. 设计边界 / 使用决策" },
+        { id: "usage", name: "6. 使用场景" },
+        { id: "graph", name: "7. 关系图" },
+        { id: "pains", name: "8. 常见痛点" },
+        { id: "quiz", name: "9. 小测验" },
+      ];
+
+      const SYSTEMS = [
+        { key: "ERP", label: "ERP" },
+        { key: "WMS", label: "WMS" },
+        { key: "OMS", label: "OMS" },
+      ];
+
+      const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+      function uid(prefix = "id") {
+        return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`;
+      }
+
+      function classNames(...arr) {
+        return arr.filter(Boolean).join(" ");
+      }
+
+      function Pill({ children, tone = "slate" }) {
+        const tones = {
+          slate: "bg-slate-100 text-slate-700 ring-slate-200",
+          blue: "bg-blue-50 text-blue-700 ring-blue-200",
+          emerald: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+          amber: "bg-amber-50 text-amber-700 ring-amber-200",
+          rose: "bg-rose-50 text-rose-700 ring-rose-200",
+          violet: "bg-violet-50 text-violet-700 ring-violet-200",
+        };
+        return (
+          <span className={classNames("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs ring-1", tones[tone] || tones.slate)}>
+            {children}
+          </span>
+        );
+      }
+
+      function SectionCard({ id, title, subtitle, children, right }) {
+        return (
+          <section id={id} className="scroll-mt-24">
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
+                <div>
+                  <div className="text-base font-semibold tracking-tight">{title}</div>
+                  {subtitle ? <div className="mt-1 text-sm text-slate-600">{subtitle}</div> : null}
+                </div>
+                {right ? <div className="shrink-0">{right}</div> : null}
+              </div>
+              <div className="px-5 py-4">{children}</div>
+            </div>
+          </section>
+        );
+      }
+
+      function CollapsibleQA({ q, a, defaultOpen = false }) {
+        const [open, setOpen] = useState(defaultOpen);
+        return (
+          <div className="rounded-xl border border-slate-200 bg-white">
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left"
+            >
+              <div className="text-sm font-medium text-slate-900">{q}</div>
+              <div className="mt-0.5 shrink-0 text-slate-500">{open ? "收起" : "展开"}</div>
+            </button>
+            {open ? <div className="border-t border-slate-100 px-4 py-3 text-sm leading-relaxed text-slate-700">{a}</div> : null}
+          </div>
+        );
+      }
+
+      function KeyValueTable({ rows }) {
+        return (
+          <div className="overflow-hidden rounded-xl border border-slate-200">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="w-40 px-3 py-2 text-left font-medium">字段</th>
+                  <th className="px-3 py-2 text-left font-medium">含义 / 约束</th>
+                  <th className="w-36 px-3 py-2 text-left font-medium">来源</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((r) => (
+                  <tr key={r.key} className="bg-white">
+                    <td className="px-3 py-2 font-medium text-slate-900">{r.key}</td>
+                    <td className="px-3 py-2 text-slate-700">{r.desc}</td>
+                    <td className="px-3 py-2">
+                      <Pill tone={r.sourceTone || "slate"}>{r.source}</Pill>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+
+      function MiniFlow({ steps }) {
+        return (
+          <div className="overflow-x-auto scrollbar-thin">
+            <div className="flex min-w-max items-stretch gap-3">
+              {steps.map((s, i) => (
+                <div key={s.title} className="flex items-stretch gap-3">
+                  <div className="w-[260px] rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-semibold">{s.title}</div>
+                      <Pill tone={s.tone || "slate"}>{s.tag}</Pill>
+                    </div>
+                    <div className="mt-2 text-sm leading-relaxed text-slate-700">{s.body}</div>
+                    {s.bullets?.length ? (
+                      <ul className="mt-3 space-y-1 text-sm text-slate-700">
+                        {s.bullets.map((b) => (
+                          <li key={b} className="flex gap-2">
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300"></span>
+                            <span>{b}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                  {i < steps.length - 1 ? (
+                    <div className="flex w-10 items-center justify-center text-slate-400">
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      function RelationshipGraph({ nodes, edges, highlight }) {
+        const layout = useMemo(() => {
+          // 简单环形布局，避免引入复杂图形库
+          const cx = 240;
+          const cy = 170;
+          const r = 120;
+          const positions = new Map();
+          nodes.forEach((n, idx) => {
+            const a = (Math.PI * 2 * idx) / nodes.length - Math.PI / 2;
+            positions.set(n.id, { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+          });
+          return { cx, cy, r, positions };
+        }, [nodes]);
+
+        return (
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-semibold">对象关系图（演示版）</div>
+              <div className="flex flex-wrap gap-2">
+                <Pill tone="slate">点击左侧沙盘操作可触发高亮</Pill>
+              </div>
+            </div>
+            <div className="mt-3 overflow-auto scrollbar-thin">
+              <svg width="520" height="360" viewBox="0 0 520 360" className="block">
+                <defs>
+                  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+                  </marker>
+                </defs>
+
+                {edges.map((e) => {
+                  const p1 = layout.positions.get(e.from);
+                  const p2 = layout.positions.get(e.to);
+                  const active = highlight?.edges?.includes(e.id);
+                  const stroke = active ? "#2563eb" : "#94a3b8";
+                  const width = active ? 2.5 : 1.5;
+                  return (
+                    <g key={e.id}>
+                      <line
+                        x1={p1.x}
+                        y1={p1.y}
+                        x2={p2.x}
+                        y2={p2.y}
+                        stroke={stroke}
+                        strokeWidth={width}
+                        markerEnd="url(#arrow)"
+                        opacity={active ? 1 : 0.7}
+                      />
+                      <text x={(p1.x + p2.x) / 2} y={(p1.y + p2.y) / 2} fill={active ? "#1d4ed8" : "#64748b"} fontSize="11">
+                        {e.label}
+                      </text>
+                    </g>
+                  );
+                })}
+
+                {nodes.map((n) => {
+                  const p = layout.positions.get(n.id);
+                  const active = highlight?.nodes?.includes(n.id);
+                  return (
+                    <g key={n.id}>
+                      <circle cx={p.x} cy={p.y} r={active ? 26 : 22} fill={active ? "#dbeafe" : "#f1f5f9"} stroke={active ? "#2563eb" : "#cbd5e1"} />
+                      <text x={p.x} y={p.y + 4} textAnchor="middle" fill={active ? "#1e40af" : "#0f172a"} fontSize="12" fontWeight="600">
+                        {n.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          </div>
+        );
+      }
+
+      function makeThemes() {
+        // 这里的内容是“通用教学示例”，后续你可以替换为你们公司口径/字段
+        return [
+          {
+            id: "batch",
+            name: "批次管理",
+            tag: "主数据/库存维度",
+            introCase:
+              "食品仓：同一个 SKU（酸奶）不同生产批次效期不同。门店要先卖先到期的批次；仓库拣货也要按批次出库。你如果只按 SKU 管理，会出现“明明有库存却不能发”的投诉。",
+            whatIs:
+              "批次管理是把库存进一步细分到“同 SKU 不同批次”的层级，用来承载与批次相关的属性（生产日期、效期、产地、质检状态等），并在收发存与追溯中被严格引用。",
+            whatNot:
+              "不是“条码管理”（条码可能一物一码/一箱一码）；也不是“SKU 的替代”。批次是库存维度，不应该被当成商品主数据层级去承载商品属性。",
+            objects: [
+              { id: "SKU", label: "SKU" },
+              { id: "BATCH", label: "批次" },
+              { id: "LOTATTR", label: "批次属性" },
+              { id: "ASN", label: "入库单" },
+              { id: "INV", label: "库存台账" },
+              { id: "SO", label: "销售单" },
+              { id: "PICK", label: "拣货" },
+            ],
+            relations: [
+              { id: "e1", from: "SKU", to: "BATCH", label: "1:N" },
+              { id: "e2", from: "BATCH", to: "LOTATTR", label: "承载" },
+              { id: "e3", from: "ASN", to: "BATCH", label: "产生/引用" },
+              { id: "e4", from: "BATCH", to: "INV", label: "沉淀" },
+              { id: "e5", from: "SO", to: "BATCH", label: "约束" },
+              { id: "e6", from: "PICK", to: "BATCH", label: "指派" },
+            ],
+            keyFields: [
+              { key: "batch_no", desc: "批次号；建议规则化+不可复用", source: "系统/上游", sourceTone: "blue" },
+              { key: "mfg_date", desc: "生产日期；用于效期计算/追溯", source: "上游/实物", sourceTone: "amber" },
+              { key: "exp_date", desc: "到期日；参与 FEFO 拣选", source: "系统计算/上游", sourceTone: "blue" },
+              { key: "qc_status", desc: "质检状态（待检/合格/不合格）", source: "WMS", sourceTone: "emerald" },
+              { key: "origin", desc: "产地/供应商批次；追溯用", source: "ERP/供应商", sourceTone: "violet" },
+              { key: "hold_flag", desc: "是否冻结；异常批次隔离", source: "系统", sourceTone: "slate" },
+            ],
+            antiCase: {
+              title: "反面案例：把“批次号”当成“SKU 编码”",
+              body: "结果：商品主数据膨胀、价格与条码混乱、报表口径无法统一；一旦批次停用，会误伤商品在售。",
+            },
+            createFlow: [
+              { title: "定义是否启用批次", tag: "配置", tone: "slate", body: "在 SKU/WMS 策略中声明“是否按批次管理”。", bullets: ["不启用：库存仅到 SKU 维度", "启用：入库必须录入批次信息"] },
+              { title: "收货生成批次记录", tag: "作业", tone: "emerald", body: "收货/质检时创建或选择批次号，录入批次属性。", bullets: ["批次号可来自供应商或系统生成", "效期可由规则计算"] },
+              { title: "库存沉淀与可用性", tag: "台账", tone: "blue", body: "库存台账落到（SKU+批次+库位/容器）层级。", bullets: ["冻结/不合格批次不可分配", "FEFO 优先策略可配置"] },
+              { title: "出库拣选与追溯", tag: "执行", tone: "amber", body: "订单分配到具体批次；出库单据必须带批次回传。", bullets: ["追溯：按批次召回", "对账：批次级损耗分析"] },
+            ],
+            changeRules: {
+              add: { checks: ["是否允许同 SKU 多批次并存", "批次号是否重复", "效期规则是否一致"], flow: ["在收货/生产入库创建批次", "补齐批次属性（生产/效期/质检）", "同步 OMS/ERP 的可售口径（若需要）"], taboo: ["先建批次后补字段，导致可用库存误判"] },
+              edit: { checks: ["是否已有库存/在途/未完结单据引用", "是否涉及效期变更（高风险）", "历史出入库是否需要追溯一致性"], flow: ["优先“更正记录”而非直接改值", "必要时新增新批次并迁移库存", "对外系统做差异同步"], taboo: ["直接改批次号（会断开追溯链）"] },
+              del: { checks: ["库存是否为 0", "是否存在未完结单据引用", "是否存在质检/冻结未处理"], flow: ["建议软删除（停用）", "保留历史单据引用", "清理/归档批次属性"], taboo: ["物理删除导致历史报表、追溯失真"] },
+              disaster:
+                "真实灾难：某仓把“不合格批次”改为“合格”并同步到 OMS，结果平台继续售卖；用户收到变质商品引发大面积退货与舆情，后续追溯因批次改名失败，召回范围扩大。",
+            },
+            decision: {
+              framework: [
+                { q: "是否存在“同 SKU 不同效期/产地/质检/批号”的并存？", yes: "需要批次管理", no: "可只到 SKU 维度" },
+                { q: "是否需要召回/追溯到批次？", yes: "需要批次管理", no: "可用序列号/箱码替代（视业务）" },
+                { q: "是否需要 FEFO（先到期先出）？", yes: "批次/效期是关键维度", no: "可只做先进先出 FIFO" },
+              ],
+              boundary: "批次管理的成本在于：作业录入、拣选复杂度、台账膨胀、对外口径一致性。不要为了“看起来更精细”而开启。",
+            },
+            usageScenarios: [
+              { title: "创建主数据", body: "在 SKU 上配置“启用批次”、效期计算规则、质检流程与 FEFO 策略。" },
+              { title: "收货/上架", body: "收货时录批次属性；质检不合格批次自动冻结；上架后才进入可用口径。" },
+              { title: "出库/售卖", body: "订单分配时按 FEFO 选批次；出库回传批次用于对账、召回、毛利与损耗分析。" },
+            ],
+            pains: [
+              { title: "字段归属错", body: "把“产地/效期”放 SKU 上会导致同 SKU 多供应商时冲突；应落批次属性。" },
+              { title: "口径不一致", body: "OMS 把批次库存当可售，WMS 还在待检，导致超卖/缺货投诉。要定义“可售口径”与同步点。" },
+              { title: "历史变更难", body: "批次号/效期改动会影响追溯与财务对账。优先“新增批次+迁移”而非原地改。" },
+            ],
+            quiz: [
+              { q: "启用批次后，库存最小颗粒通常是什么？", a: "常见为（SKU + 批次 + 库位/容器），具体取决于是否启用库位/容器管理。", open: true },
+              { q: "为什么不建议直接修改批次号？", a: "批次号是追溯链路的主键之一；改名会导致历史单据、报表与追溯断链。应做更正记录或新批次迁移。", open: false },
+              { q: "变更题：库存不为 0 的批次能否物理删除？", a: "不建议。应先清零库存并确保无未完结单据引用；更推荐软删除（停用）保留历史引用。", open: false },
+            ],
+          },
+          {
+            id: "expiry",
+            name: "效期管理",
+            tag: "规则/拣选策略",
+            introCase:
+              "同一款面包不同到期日。仓库如果按“先进先出”而不是“先到期先出”，会产生大批报损；门店也会因为临期处理不及时而损失毛利。",
+            whatIs:
+              "效期管理是围绕生产日期/到期日/保质期等字段，定义入库校验、临期预警、FEFO 拣选、禁发规则与报损处置，并在库存口径中体现。",
+            whatNot: "不是简单的“显示到期日”。效期管理必须与作业校验、拣选、冻结、报表、对账规则联动。",
+            objects: [
+              { id: "SKU", label: "SKU" },
+              { id: "RULE", label: "效期规则" },
+              { id: "BATCH", label: "批次/效期批" },
+              { id: "WMS", label: "WMS策略" },
+              { id: "INV", label: "库存" },
+              { id: "SO", label: "订单" },
+            ],
+            relations: [
+              { id: "e1", from: "SKU", to: "RULE", label: "绑定" },
+              { id: "RULE", from: "RULE", to: "WMS", label: "驱动" },
+              { id: "e2", from: "RULE", to: "BATCH", label: "计算" },
+              { id: "e3", from: "BATCH", to: "INV", label: "沉淀" },
+              { id: "e4", from: "SO", to: "BATCH", label: "禁发/选取" },
+            ],
+            keyFields: [
+              { key: "shelf_life_days", desc: "保质期天数；可按品类配置", source: "ERP/主数据", sourceTone: "violet" },
+              { key: "mfg_date", desc: "生产日期；入库校验必填", source: "实物/上游", sourceTone: "amber" },
+              { key: "exp_date", desc: "到期日；可由规则计算", source: "系统", sourceTone: "blue" },
+              { key: "min_ship_days", desc: "最小发货剩余天数；防止临期发出", source: "策略", sourceTone: "slate" },
+              { key: "warn_days", desc: "临期预警阈值；用于看板/预警", source: "策略", sourceTone: "slate" },
+            ],
+            antiCase: {
+              title: "反面案例：只做报表预警，不做作业校验",
+              body: "结果：临期/过期货仍被分配出库；问题暴露时已经发生客诉与罚款。",
+            },
+            createFlow: [
+              { title: "配置效期规则", tag: "配置", tone: "slate", body: "按品类/温区定义保质期、最小发货剩余天数、临期预警阈值。" },
+              { title: "入库校验与计算", tag: "作业", tone: "emerald", body: "收货录入生产日期/到期日；系统计算并校验（不得过期/不得异常）。" },
+              { title: "拣选策略", tag: "策略", tone: "blue", body: "启用 FEFO；出库分配优先到期更近的批次，并对临期禁发。" },
+              { title: "临期处置闭环", tag: "运营", tone: "amber", body: "临期预警→促销/退供/调拨→报损，并沉淀原因分析。" },
+            ],
+            changeRules: {
+              add: { checks: ["新商品/新品类是否需要效期规则", "温区与保质期是否匹配"], flow: ["新增规则并绑定 SKU", "验证入库校验与出库禁发", "同步 OMS 可售口径"], taboo: ["规则未同步导致 OMS 仍可售"] },
+              edit: { checks: ["是否已有在库批次按旧规则生成", "历史预警与报表口径是否要重算"], flow: ["新规则只对新入库生效（常见做法）", "必要时做批次级更正", "通知下游口径变更"], taboo: ["全量重算导致历史口径翻盘"] },
+              del: { checks: ["是否还有启用该规则的 SKU", "是否有在库批次依赖"], flow: ["先解除绑定，再停用规则", "保留历史版本用于审计"], taboo: ["直接删除导致追溯与审计缺失"] },
+              disaster:
+                "灾难：把“最小发货剩余天数”从 10 天改成 1 天并立即生效，导致临期货大量发出；平台收到临期品被罚，仓库反而因退货爆仓。",
+            },
+            decision: {
+              framework: [
+                { q: "商品是否有保质期且风险高（食品/药品/化妆品）？", yes: "必须做效期管理", no: "可简化为批次/日期记录" },
+                { q: "是否有临期禁发/渠道限制？", yes: "需要策略联动 OMS/拣选", no: "可只做预警与报表" },
+                { q: "是否存在退供/调拨/促销等处置动作？", yes: "要做闭环流程", no: "避免过度设计" },
+              ],
+              boundary: "效期管理不是“字段越多越好”，关键在于：校验点、禁发点、处置点与口径一致性。",
+            },
+            usageScenarios: [
+              { title: "入库", body: "收货录生产日期，系统算到期日；过期拒收，临期按策略处置。" },
+              { title: "出库", body: "FEFO 拣选；剩余天数低于阈值的批次不可分配到特定渠道。" },
+              { title: "报表", body: "临期看板、报损原因分析、供应商质量分析。" },
+            ],
+            pains: [
+              { title: "渠道口径不一致", body: "线下可卖、线上禁发，必须在 OMS 层做渠道可售口径，而不是只在 WMS 层禁发。" },
+              { title: "规则版本化缺失", body: "效期规则变更没有版本，审计与争议无法解释。建议规则版本化并记录生效范围。" },
+              { title: "处置不闭环", body: "只预警不处置，会把问题延后变成报损。建议预警绑定动作单据与责任人。" },
+            ],
+            quiz: [
+              { q: "效期管理最关键的三个“点”是什么？", a: "校验点（入库/上架）、禁发点（分配/拣选）、处置点（促销/退供/报损闭环）。", open: true },
+              { q: "变更题：效期规则修改后是否要全量重算历史批次？", a: "通常不建议全量重算；更常见做法是“新入库按新规则、存量按旧规则”，必要时做批次级更正并公告口径变化。", open: false },
+              { q: "FEFO 与 FIFO 的差别？", a: "FIFO 按入库先后，FEFO 按到期先后；效期品优先 FEFO。", open: false },
+            ],
+          },
+          {
+            id: "invStatus",
+            name: "库存状态",
+            tag: "口径/权限",
+            introCase:
+              "仓库里有一批手机在“待质检”，客服却在 OMS 看到了“有库存可卖”，下单后仓库无法出库，形成超卖。根因：库存状态与可售口径未统一。",
+            whatIs:
+              "库存状态是对库存可用性的业务标签（如：可用、待检、冻结、损坏、在途、已分配等），用于在不同流程节点控制是否可分配、可售、可盘点、可报表。",
+            whatNot: "不是库存数量本身，也不是唯一的口径。状态必须与系统动作（质检、冻结、分配、拣货）强绑定。",
+            objects: [
+              { id: "INV", label: "库存" },
+              { id: "STATUS", label: "状态" },
+              { id: "ALLOC", label: "分配" },
+              { id: "QC", label: "质检" },
+              { id: "OMS", label: "OMS口径" },
+              { id: "WMS", label: "WMS口径" },
+            ],
+            relations: [
+              { id: "e1", from: "INV", to: "STATUS", label: "标记" },
+              { id: "e2", from: "QC", to: "STATUS", label: "驱动变更" },
+              { id: "e3", from: "ALLOC", to: "STATUS", label: "占用" },
+              { id: "e4", from: "WMS", to: "OMS", label: "同步" },
+            ],
+            keyFields: [
+              { key: "on_hand_qty", desc: "实物在库数量", source: "WMS", sourceTone: "emerald" },
+              { key: "status", desc: "库存状态（可用/待检/冻结/损坏…）", source: "系统", sourceTone: "blue" },
+              { key: "alloc_qty", desc: "已分配数量（预留给订单）", source: "系统", sourceTone: "slate" },
+              { key: "available_rule", desc: "可用口径规则（按状态过滤/扣减）", source: "策略", sourceTone: "amber" },
+            ],
+            antiCase: {
+              title: "反面案例：只在 OMS 做“可售”，WMS 不做禁发",
+              body: "结果：订单改渠道/改仓时绕过 OMS 限制，WMS 仍可能把待检库存拣出，形成质量风险。",
+            },
+            createFlow: [
+              { title: "定义状态字典", tag: "配置", tone: "slate", body: "明确每个状态的含义、可否分配、可否出库、可否盘点。" },
+              { title: "绑定触发动作", tag: "流程", tone: "blue", body: "质检、冻结、损坏、盘亏等动作必须自动变更状态并留痕。" },
+              { title: "定义可用/可售口径", tag: "口径", tone: "amber", body: "明确 WMS 可分配口径、OMS 可售口径、财务口径差异与同步点。" },
+              { title: "监控与审计", tag: "治理", tone: "emerald", body: "状态变更流水、异常冻结率、待检滞留时长看板。" },
+            ],
+            changeRules: {
+              add: { checks: ["新增状态是否会影响口径计算", "上下游系统是否支持新状态"], flow: ["新增状态字典并配置权限", "更新口径规则与同步映射", "灰度发布并回归关键场景"], taboo: ["新增状态但未同步 OMS 导致口径断层"] },
+              edit: { checks: ["状态语义是否改变（高风险）", "历史状态是否要迁移"], flow: ["改描述不改语义：低风险", "改语义：新增新状态+迁移更稳", "同步更新报表口径说明"], taboo: ["直接改枚举含义导致历史报表翻车"] },
+              del: { checks: ["是否仍有库存处于该状态", "是否有历史审计需要保留"], flow: ["先迁移存量库存状态", "再停用（软删）字典项", "保留历史映射用于审计"], taboo: ["物理删除导致历史流水无法解析"] },
+              disaster:
+                "灾难：把“冻结”从不可分配改为可分配以追求出库率，短期出库提升，长期出现大量售后/质量事故，且冻结原因无法追溯。",
+            },
+            decision: {
+              framework: [
+                { q: "是否需要对“质量/风险”进行强隔离？", yes: "用状态（冻结/待检）强控制", no: "可用轻量标签+报表" },
+                { q: "是否存在多系统口径（OMS/WMS/财务）？", yes: "必须定义状态映射与同步点", no: "可单系统闭环" },
+                { q: "是否需要审计追责？", yes: "状态变更流水必做", no: "可简化" },
+              ],
+              boundary: "状态太多会增加维护成本；建议把“状态”用于强约束，把“标签/原因码”用于解释。",
+            },
+            usageScenarios: [
+              { title: "质检", body: "待检→合格（可用）/不合格（冻结/损坏），并记录原因。" },
+              { title: "分配出库", body: "仅从可用状态分配；冻结/待检不参与可用口径。" },
+              { title: "盘点/报损", body: "盘点差异生成状态变更与财务处理单据。" },
+            ],
+            pains: [
+              { title: "口径说明缺失", body: "同一个“可用库存”在不同系统不同口径，必须在产品文档与页面展示中明确。" },
+              { title: "状态+原因码混用", body: "把原因码当状态用会爆炸（枚举太多）。建议：状态少而稳，原因码可扩展。" },
+              { title: "同步不完整", body: "状态变化没同步到 OMS 会导致超卖；反之 OMS 变化没同步 WMS 会导致禁发失效。" },
+            ],
+            quiz: [
+              { q: "库存状态和库存数量的关系是什么？", a: "数量回答“有多少”，状态回答“能不能用/能不能卖/能不能发”。口径计算通常是数量按状态过滤/扣减。", open: true },
+              { q: "变更题：新增一个状态时最先检查什么？", a: "检查上下游是否支持该状态以及可用/可售口径公式是否需要更新，否则会出现口径断层。", open: false },
+              { q: "为什么建议状态少而稳？", a: "状态会贯穿流程与同步映射；状态越多，流程越复杂、对账越难。原因解释用原因码更合适。", open: false },
+            ],
+          },
+          {
+            id: "availableInv",
+            name: "可用库存",
+            tag: "口径计算",
+            introCase:
+              "客服说“你们系统显示有库存”，仓库却说“发不了”。因为“在库”不等于“可用”：待检、冻结、已分配、在途都可能被算进去了。",
+            whatIs:
+              "可用库存是一个口径：在某一时点、某一渠道/仓/库位范围内，可以被“分配/出库”的库存数量。它是计算出来的，不是天然字段。",
+            whatNot: "不是在库数量，也不等于可售库存（可售往往还要扣安全库存、渠道限制等）。",
+            objects: [
+              { id: "ONHAND", label: "在库" },
+              { id: "HOLD", label: "冻结/待检" },
+              { id: "ALLOC", label: "已分配" },
+              { id: "SAFETY", label: "安全库存" },
+              { id: "AVAIL", label: "可用库存" },
+              { id: "SALE", label: "可售库存" },
+            ],
+            relations: [
+              { id: "e1", from: "ONHAND", to: "AVAIL", label: "基础" },
+              { id: "e2", from: "HOLD", to: "AVAIL", label: "扣减" },
+              { id: "e3", from: "ALLOC", to: "AVAIL", label: "扣减" },
+              { id: "e4", from: "AVAIL", to: "SALE", label: "进一步约束" },
+              { id: "e5", from: "SAFETY", to: "SALE", label: "扣减" },
+            ],
+            keyFields: [
+              { key: "available_qty", desc: "可用库存（口径结果）", source: "计算", sourceTone: "blue" },
+              { key: "on_hand_qty", desc: "在库数量（实物+台账）", source: "WMS", sourceTone: "emerald" },
+              { key: "hold_qty", desc: "冻结/待检等不可用数量", source: "WMS/系统", sourceTone: "amber" },
+              { key: "alloc_qty", desc: "已分配数量（预占）", source: "系统", sourceTone: "slate" },
+            ],
+            antiCase: {
+              title: "反面案例：把“可用库存”做成可手工改的字段",
+              body: "结果：对账无法解释；库存被手工调大导致超卖；应以流水与公式可追溯地计算。",
+            },
+            createFlow: [
+              { title: "定义口径公式", tag: "口径", tone: "slate", body: "例如：可用 = 在库 - 冻结/待检 - 已分配（按仓/渠道范围）。" },
+              { title: "定义计算时点", tag: "时点", tone: "blue", body: "实时/准实时/批处理；并明确延迟对业务影响（超卖/缺货）。" },
+              { title: "定义同步与展示", tag: "展示", tone: "amber", body: "OMS 展示可售/可用时，必须能解释口径与拆分项。" },
+              { title: "监控口径漂移", tag: "治理", tone: "emerald", body: "监控可用=负数、口径拆分项异常、同步延迟等。" },
+            ],
+            changeRules: {
+              add: { checks: ["新增扣减项是否必要（如安全库存）", "是否影响订单承诺"], flow: ["新增拆分项并回归场景", "更新报表与页面说明", "同步下游口径与 API"], taboo: ["只改公式不改说明导致一线误解"] },
+              edit: { checks: ["口径变更是否导致历史数据不可比", "是否需版本化"], flow: ["口径版本化（推荐）", "新旧口径并行展示一段时间", "通知业务变更点"], taboo: ["直接替换口径造成指标断崖式变化"] },
+              del: { checks: ["删除扣减项是否会引发超卖", "是否有合规/财务要求"], flow: ["评估风险后停用", "保留历史口径与审计"], taboo: ["为提高可用而取消关键扣减项"] },
+              disaster:
+                "灾难：为了冲销量把安全库存扣减取消，OMS 可售瞬间放大，结果仓库缺货大量延期交付，平台罚款与评分下滑。",
+            },
+            decision: {
+              framework: [
+                { q: "是否需要对外承诺交期/库存？", yes: "可用/可售口径必须可解释且稳定", no: "可简化但仍要避免超卖" },
+                { q: "是否存在多仓/多渠道？", yes: "口径要带范围维度（仓/渠道/温区）", no: "单仓可简化" },
+                { q: "是否允许超卖？", yes: "可用口径可更激进", no: "口径更保守并加强预占/锁库" },
+              ],
+              boundary: "口径越复杂，越需要拆分项与解释能力，否则一线会把所有问题归咎于“系统不准”。",
+            },
+            usageScenarios: [
+              { title: "下单承诺", body: "OMS 用可售库存承诺；WMS 用可用库存分配拣货。" },
+              { title: "调拨/补货", body: "补货基于可用+未来供给（在途/生产）计算缺口。" },
+              { title: "报表对账", body: "拆分项用于解释差异：冻结、待检、预占、盘亏等。" },
+            ],
+            pains: [
+              { title: "口径拆分不透明", body: "只给一个数字会引发大量争议。建议页面展示拆分项与来源系统。" },
+              { title: "实时性与一致性冲突", body: "越实时越复杂；要明确延迟容忍与补偿机制（如订单超卖补偿）。" },
+              { title: "负库存与异常", body: "可用出现负数通常是同步延迟或流水漏记，需要监控与修复。" },
+            ],
+            quiz: [
+              { q: "可用库存与可售库存的区别？", a: "可用用于仓内分配/出库；可售用于对外销售承诺，通常在可用基础上再扣减安全库存、渠道限制等。", open: true },
+              { q: "变更题：口径公式变更要不要版本化？", a: "建议版本化并保留新旧并行期，否则历史指标不可比且争议难解释。", open: false },
+              { q: "为什么不建议让业务手工改可用库存？", a: "会破坏可追溯性，导致对账与审计失败；应该通过流水与差异单据调整。", open: false },
+            ],
+          },
+          {
+            id: "reserved",
+            name: "预占库存（锁库/预留）",
+            tag: "订单保障",
+            introCase:
+              "双 11 秒杀：订单刚创建，仓库还没拣货。如果不预占，库存会被其他订单抢走；如果预占太早、释放太慢，又会造成“有库存卖不出”。",
+            whatIs:
+              "预占库存是把一部分可用库存临时“预留”给特定需求（订单、波次、渠道），以保障履约。通常表现为 alloc/reserved 数量，影响可用/可售口径。",
+            whatNot: "不是实物移动，也不等同于出库。预占必须可释放、可回滚，并与取消/超时/拆单等场景联动。",
+            objects: [
+              { id: "OMS", label: "订单" },
+              { id: "RES", label: "预占" },
+              { id: "INV", label: "可用库存" },
+              { id: "WAVE", label: "波次" },
+              { id: "PICK", label: "拣货" },
+              { id: "CANCEL", label: "取消/超时" },
+            ],
+            relations: [
+              { id: "e1", from: "OMS", to: "RES", label: "触发" },
+              { id: "e2", from: "INV", to: "RES", label: "占用" },
+              { id: "e3", from: "RES", to: "WAVE", label: "汇总" },
+              { id: "e4", from: "WAVE", to: "PICK", label: "转作业" },
+              { id: "e5", from: "CANCEL", to: "RES", label: "释放" },
+            ],
+            keyFields: [
+              { key: "reserved_qty", desc: "预占数量；从可用中扣减", source: "系统", sourceTone: "blue" },
+              { key: "reserve_scope", desc: "预占范围（仓/渠道/批次/库位）", source: "策略", sourceTone: "amber" },
+              { key: "ttl", desc: "预占有效期（超时自动释放）", source: "策略", sourceTone: "slate" },
+              { key: "reserve_reason", desc: "预占原因（订单/波次/渠道）", source: "系统", sourceTone: "slate" },
+            ],
+            antiCase: {
+              title: "反面案例：不设置预占超时（TTL）",
+              body: "结果：取消订单未释放预占，长期“有库存但不可卖”，最终形成滞销与假缺货。",
+            },
+            createFlow: [
+              { title: "预占触发点", tag: "设计", tone: "slate", body: "下单即占 / 审核后占 / 波次生成占（不同业务不同）。" },
+              { title: "预占范围", tag: "策略", tone: "blue", body: "预占到仓还是到批次/库位？越细越准但成本越高。" },
+              { title: "释放机制", tag: "关键", tone: "amber", body: "取消/超时/拆单/改仓都要释放或重新预占，并留痕。" },
+              { title: "与 WMS 作业衔接", tag: "执行", tone: "emerald", body: "预占→波次→拣货→发运；每一步都要校验一致性。" },
+            ],
+            changeRules: {
+              add: { checks: ["新增预占类型是否影响口径", "上下游是否支持释放回滚"], flow: ["新增预占类型与 TTL", "更新可用/可售公式", "回归取消/改仓/拆单场景"], taboo: ["只做占用不做释放"] },
+              edit: { checks: ["改触发点会影响履约体验", "改范围会影响系统复杂度"], flow: ["灰度调整触发点", "先保证释放与幂等", "更新监控指标（预占命中率/释放延迟）"], taboo: ["直接全量改导致大促故障"] },
+              del: { checks: ["是否仍依赖预占保障履约", "是否允许超卖"], flow: ["逐步降低预占力度（更保守→更激进）", "保留紧急开关"], taboo: ["一次性移除导致超卖爆炸"] },
+              disaster:
+                "灾难：大促期间把“下单预占”改为“波次预占”以减少锁库存，结果 OMS 在波次前仍对外承诺，短时间超卖，仓库被迫大量拆单与取消。",
+            },
+            decision: {
+              framework: [
+                { q: "是否高并发抢购且不允许超卖？", yes: "需要早预占+TTL+强一致", no: "可晚预占或弱一致" },
+                { q: "是否允许拆单/改仓？", yes: "必须支持释放与重占", no: "可简化范围" },
+                { q: "库存是否精细到批次/库位？", yes: "可考虑细粒度预占", no: "仓级预占更稳" },
+              ],
+              boundary: "预占越早越保守、越稳但越影响销量；越晚越激进、越容易超卖。核心在于 TTL、释放与幂等。",
+            },
+            usageScenarios: [
+              { title: "创建销售单", body: "OMS 创建订单并预占库存，展示“已锁定”提示。" },
+              { title: "拣货", body: "波次把预占转为拣货任务，拣货差异要回写预占与订单承诺。" },
+              { title: "取消/超时", body: "订单取消或支付超时，系统自动释放预占并恢复可售。" },
+            ],
+            pains: [
+              { title: "释放不及时", body: "最常见痛点。建议：TTL + 事件驱动释放 + 定时兜底修复。" },
+              { title: "幂等缺失", body: "重复消息会导致预占加倍/释放加倍。建议预占流水带幂等键。" },
+              { title: "可解释性差", body: "页面应能看到“预占来源与剩余 TTL”，否则一线无法处理客诉。" },
+            ],
+            quiz: [
+              { q: "预占库存会影响哪两个口径？", a: "通常会从可用/可售中扣减（视系统设计），并最终影响承诺与分配。", open: true },
+              { q: "变更题：为什么预占必须要 TTL？", a: "因为取消/异常流程可能不触发释放；TTL 是防止“永久锁死”的最后保险。", open: false },
+              { q: "预占到库位的利弊？", a: "利：更准确、更少二次分配；弊：实现成本高、对作业与库位准确性要求高。", open: false },
+            ],
+          },
+          {
+            id: "po",
+            name: "采购订单（PO）",
+            tag: "单据链路",
+            introCase:
+              "你跟供应商下了采购订单，供应商承诺 5 月 10 日到货。但仓库实际收货数量与到货时间经常偏差。产品经理要让系统能追踪：下单→发货→到货→对账→结算。",
+            whatIs:
+              "采购订单是企业对供应商的采购承诺单据，定义采购商品、数量、价格、交期、收货仓、结算条款等，是入库、对账、结算的上游来源。",
+            whatNot: "不是入库单。PO 代表“计划与承诺”，入库单代表“实际到货与作业结果”。",
+            objects: [
+              { id: "PO", label: "PO" },
+              { id: "ASN", label: "ASN/到货通知" },
+              { id: "GRN", label: "收货/入库" },
+              { id: "INV", label: "库存" },
+              { id: "AP", label: "应付/结算" },
+              { id: "SUP", label: "供应商" },
+            ],
+            relations: [
+              { id: "e1", from: "SUP", to: "PO", label: "签订" },
+              { id: "e2", from: "PO", to: "ASN", label: "派生" },
+              { id: "e3", from: "ASN", to: "GRN", label: "执行" },
+              { id: "e4", from: "GRN", to: "INV", label: "入账" },
+              { id: "e5", from: "GRN", to: "AP", label: "对账" },
+            ],
+            keyFields: [
+              { key: "po_no", desc: "采购单号；唯一", source: "ERP", sourceTone: "violet" },
+              { key: "supplier_id", desc: "供应商；主数据引用", source: "ERP", sourceTone: "violet" },
+              { key: "eta_date", desc: "预计到货日期；用于到货监控", source: "计划/供应商", sourceTone: "amber" },
+              { key: "qty_ordered", desc: "下单数量；计划值", source: "ERP", sourceTone: "violet" },
+              { key: "price", desc: "含税/未税单价；对账基准", source: "ERP", sourceTone: "violet" },
+            ],
+            antiCase: {
+              title: "反面案例：用入库单当采购订单",
+              body: "结果：计划不可追踪、供应商绩效无法评估、结算缺少基准，最终导致采购黑盒。",
+            },
+            createFlow: [
+              { title: "创建 PO", tag: "ERP", tone: "slate", body: "采购创建 PO（供应商、交期、价格、数量、收货仓）。" },
+              { title: "到货通知/ASN", tag: "协同", tone: "blue", body: "供应商回传发货信息，生成 ASN 或预约到货。" },
+              { title: "收货与差异", tag: "WMS", tone: "emerald", body: "收货按 ASN/PO 校验；短收/超收/破损记录差异原因。" },
+              { title: "对账结算", tag: "财务", tone: "amber", body: "按收货结果对账，触发应付与结算流程。" },
+            ],
+            changeRules: {
+              add: { checks: ["新增行项目是否影响预算", "是否已发货/已收货"], flow: ["变更走 PO 变更单/版本", "同步到 ASN/预约", "通知仓库与财务"], taboo: ["口头改 PO 不留痕"] },
+              edit: { checks: ["改交期是否影响缺货", "改价格是否需审批", "历史已收货如何处理"], flow: ["交期变更→重排补货", "价格变更→审批+版本", "已收货部分按历史价格对账"], taboo: ["直接覆盖导致对账争议"] },
+              del: { checks: ["是否存在已收货/在途", "是否已生成结算"], flow: ["建议取消（软删）并保留原因", "解除关联 ASN", "通知下游关闭任务"], taboo: ["物理删除导致对账链断裂"] },
+              disaster:
+                "灾难：采购把 PO 价格直接改低覆盖历史记录，财务对账无法还原原价，供应商投诉并停止供货，导致缺货与停产。",
+            },
+            decision: {
+              framework: [
+                { q: "是否需要对供应商绩效（到货准时率/差异率）？", yes: "PO/ASN/收货链路必建", no: "可简化" },
+                { q: "是否有严格结算审计？", yes: "PO 必须版本化与审批", no: "可弱化但仍要留痕" },
+                { q: "采购是否跨系统协同？", yes: "要明确主从系统与字段归属", no: "可单 ERP 闭环" },
+              ],
+              boundary: "PO 的核心价值是“计划与承诺可追踪”，别让它变成“只为开单”的形式主义。",
+            },
+            usageScenarios: [
+              { title: "创建采购单", body: "采购创建 PO，生成到货计划与预算占用。" },
+              { title: "收货入库", body: "仓库按 PO/ASN 校验收货，差异回写采购与供应商绩效。" },
+              { title: "对账结算", body: "财务按收货与 PO 价格条款对账，异常需走差异单。" },
+            ],
+            pains: [
+              { title: "字段归属争议", body: "交期、价格谁改？建议：ERP 为主，WMS 只记录实际收货，OMS 不写 PO。" },
+              { title: "差异原因不结构化", body: "短收/破损原因不结构化会导致绩效无法分析。建议原因码标准化。" },
+              { title: "版本与审批缺失", body: "PO 变更没有版本与审批会造成财务与供应商纠纷。" },
+            ],
+            quiz: [
+              { q: "PO 与入库单的区别？", a: "PO 是计划/承诺与结算基准；入库单是实际收货与作业结果。", open: true },
+              { q: "变更题：PO 价格改动如何处理已收货部分？", a: "已收货部分应按历史版本价格对账；价格变更要版本化与审批，避免覆盖历史。", open: false },
+              { q: "为什么要记录差异原因？", a: "用于供应商绩效与流程改进，否则只能“吵架”不能“改进”。", open: false },
+            ],
+          },
+          {
+            id: "asn",
+            name: "入库通知单（ASN/到货通知）",
+            tag: "到货协同",
+            introCase:
+              "仓库每天一堆车到门口，没有预约与到货明细，排队爆仓。ASN 用来让仓库提前知道“谁、什么时候、带什么来、多少、哪些批次/箱码”。",
+            whatIs:
+              "ASN（Advance Shipping Notice）是到货预告单据，通常由供应商/ERP 生成，包含预计到货时间、箱数/明细、运输信息、批次/效期等，用于预约、收货校验与效率提升。",
+            whatNot: "不是收货结果；也不是采购订单本身。它是“到货预告”，能显著降低收货不确定性。",
+            objects: [
+              { id: "PO", label: "PO" },
+              { id: "ASN", label: "ASN" },
+              { id: "APPT", label: "预约" },
+              { id: "RCV", label: "收货" },
+              { id: "QC", label: "质检" },
+              { id: "INV", label: "库存" },
+            ],
+            relations: [
+              { id: "e1", from: "PO", to: "ASN", label: "派生/关联" },
+              { id: "e2", from: "ASN", to: "APPT", label: "预约" },
+              { id: "e3", from: "APPT", to: "RCV", label: "到货执行" },
+              { id: "e4", from: "RCV", to: "QC", label: "触发" },
+              { id: "e5", from: "QC", to: "INV", label: "入账" },
+            ],
+            keyFields: [
+              { key: "asn_no", desc: "到货通知单号；唯一", source: "ERP/供应商", sourceTone: "violet" },
+              { key: "eta_time", desc: "预计到货时间；用于预约与排班", source: "供应商", sourceTone: "amber" },
+              { key: "lines", desc: "明细行（SKU/数量/箱数）", source: "上游", sourceTone: "violet" },
+              { key: "lot/expiry", desc: "批次/效期信息（如适用）", source: "上游/实物", sourceTone: "amber" },
+              { key: "transport", desc: "车牌/承运/运单号等", source: "供应链协同", sourceTone: "slate" },
+            ],
+            antiCase: {
+              title: "反面案例：ASN 只填一个总数量",
+              body: "结果：收货无法校验、差异无法定位、上架效率低；ASN 的价值在于“提前结构化明细”。",
+            },
+            createFlow: [
+              { title: "生成 ASN", tag: "上游", tone: "slate", body: "由供应商/ERP 基于 PO 生成并回传明细。" },
+              { title: "预约与排班", tag: "仓配", tone: "blue", body: "按 ASN 做预约时间窗、月台、人员排班，防止拥堵。" },
+              { title: "收货校验", tag: "WMS", tone: "emerald", body: "到货按 ASN 校验 SKU/数量/箱码/批次；差异记录原因。" },
+              { title: "入账与回传", tag: "闭环", tone: "amber", body: "收货结果回传 ERP/供应商，驱动对账与绩效。" },
+            ],
+            changeRules: {
+              add: { checks: ["新增明细是否已装车", "是否影响预约资源"], flow: ["变更 ASN 走版本或变更单", "更新预约与仓库排班", "通知收货校验规则"], taboo: ["到货当天临时改明细不通知仓库"] },
+              edit: { checks: ["改 ETA 是否影响月台/人员", "改批次/效期是否需重校验"], flow: ["改 ETA 触发重排预约", "改批次/效期触发质检策略", "同步 OMS 可售预期（如需）"], taboo: ["ETA 频繁改导致仓库不可控"] },
+              del: { checks: ["是否已收货/部分收货", "是否已触发结算"], flow: ["建议取消 ASN 并保留原因", "释放预约资源", "已收货部分转入收货单据继续闭环"], taboo: ["删除导致收货对账缺来源"] },
+              disaster:
+                "灾难：供应商把 ASN ETA 从上午改到晚上但未同步，仓库按上午排班，晚上无人收货造成滞留与罚款。",
+            },
+            decision: {
+              framework: [
+                { q: "到货是否存在拥堵与排队？", yes: "ASN + 预约价值高", no: "可轻量" },
+                { q: "是否需要批次/箱码校验？", yes: "ASN 明细必须结构化", no: "可只到 SKU 级" },
+                { q: "供应商协同能力如何？", yes: "可强制 ASN 规则", no: "可先从重点供应商试点" },
+              ],
+              boundary: "ASN 的成本在于协同与数据质量；要先抓住关键字段（ETA、明细、批次/箱码），再逐步精细化。",
+            },
+            usageScenarios: [
+              { title: "创建 ASN", body: "供应商回传发货信息，系统生成到货预告并预约。" },
+              { title: "收货/质检", body: "按 ASN 校验，差异生成异常单；质检策略与批次/效期联动。" },
+              { title: "报表", body: "到货准时率、差异率、收货效率看板。" },
+            ],
+            pains: [
+              { title: "数据质量差", body: "明细不准/ETA 不准会让仓库对 ASN 失去信任。建议与绩效绑定并做校验规则。" },
+              { title: "变更不留痕", body: "ASN 变更必须留版本与变更原因，否则对账与协同失败。" },
+              { title: "预约与执行脱节", body: "有预约但到货不按预约执行，需要月台签到、迟到处理与惩罚机制。" },
+            ],
+            quiz: [
+              { q: "ASN 的核心价值是什么？", a: "把“到货不确定性”前置结构化，让预约、收货校验与排班可执行。", open: true },
+              { q: "变更题：ASN 变更 ETA 为什么是高风险？", a: "会影响月台与人员排班；变更若不同步会造成拥堵、无人收货或罚款。", open: false },
+              { q: "ASN 与 PO 的关系？", a: "ASN 常由 PO 派生/关联，但 ASN 表示“发货/到货预告”，PO 表示“采购承诺”。", open: false },
+            ],
+          },
+          {
+            id: "transfer",
+            name: "调拨单（Transfer）",
+            tag: "多仓补货",
+            introCase:
+              "华东仓缺货，华南仓有货。你要从华南调拨到华东；但在途时间、在途丢损、到货差异、途中冻结都需要系统能追踪。",
+            whatIs:
+              "调拨单是组织内部库存转移的计划与执行单据，定义来源仓、目标仓、调拨明细、发运与到货信息，并驱动“出库→在途→入库”的库存变化。",
+            whatNot: "不是采购，也不是销售。调拨是内部流转，重点在在途可视与差异闭环。",
+            objects: [
+              { id: "TR", label: "调拨单" },
+              { id: "OUT", label: "调拨出库" },
+              { id: "IN", label: "调拨入库" },
+              { id: "TRANSIT", label: "在途库存" },
+              { id: "INV", label: "仓库存" },
+              { id: "LOSS", label: "差异/丢损" },
+            ],
+            relations: [
+              { id: "e1", from: "TR", to: "OUT", label: "驱动" },
+              { id: "e2", from: "OUT", to: "TRANSIT", label: "形成" },
+              { id: "e3", from: "TRANSIT", to: "IN", label: "到货" },
+              { id: "e4", from: "IN", to: "INV", label: "入账" },
+              { id: "e5", from: "LOSS", to: "TR", label: "差异闭环" },
+            ],
+            keyFields: [
+              { key: "from_wh/to_wh", desc: "来源仓/目标仓", source: "系统/计划", sourceTone: "slate" },
+              { key: "qty_plan", desc: "计划调拨数量", source: "计划", sourceTone: "amber" },
+              { key: "qty_ship", desc: "实际发运数量", source: "WMS", sourceTone: "emerald" },
+              { key: "qty_receive", desc: "实际到货数量", source: "WMS", sourceTone: "emerald" },
+              { key: "transit_status", desc: "在途状态（运输中/到货/异常）", source: "系统", sourceTone: "blue" },
+            ],
+            antiCase: {
+              title: "反面案例：把调拨当“直接加减库存”",
+              body: "结果：在途不可视、丢损无法追责、目标仓提前承诺导致缺货。",
+            },
+            createFlow: [
+              { title: "创建调拨计划", tag: "计划", tone: "slate", body: "基于缺口/补货策略生成调拨单（来源仓、目标仓、明细、预计到货）。" },
+              { title: "来源仓出库", tag: "WMS", tone: "emerald", body: "波次/拣货/复核后发运，记录实发数量与运输信息。" },
+              { title: "在途管理", tag: "可视化", tone: "blue", body: "形成在途库存；支持异常（延误/破损/丢失）处理与冻结。" },
+              { title: "目标仓入库", tag: "WMS", tone: "amber", body: "到货收货，记录实收与差异，完成闭环对账。" },
+            ],
+            changeRules: {
+              add: { checks: ["新增明细是否影响来源仓可用", "目标仓是否已承诺"], flow: ["变更调拨单版本", "重新计算在途与 ETA", "通知两端仓库排班"], taboo: ["临时加量导致来源仓缺货"] },
+              edit: { checks: ["改仓/改 ETA 是否影响承诺", "是否已有部分发运"], flow: ["已发运部分保持原链路", "未发运部分可拆单重建", "同步在途与报表口径"], taboo: ["直接改单导致在途对不上"] },
+              del: { checks: ["是否已发运/在途", "是否已入库部分"], flow: ["建议取消未执行部分", "在途需先处理（退回/异常）", "保留历史用于审计"], taboo: ["删除导致在途孤儿库存"] },
+              disaster:
+                "灾难：目标仓按计划到货承诺促销，但调拨在途延误未预警，门店断货引发大规模缺货投诉。",
+            },
+            decision: {
+              framework: [
+                { q: "是否多仓且存在区域缺口？", yes: "调拨单必需", no: "可简化" },
+                { q: "是否需要在途可视与追责？", yes: "必须建在途库存与状态", no: "可弱化但仍要留痕" },
+                { q: "是否存在跨组织调拨结算？", yes: "要扩展为内部交易/对账", no: "可只做物流维度" },
+              ],
+              boundary: "调拨的难点是“在途”与“差异”，设计时要把这两块当主角。",
+            },
+            usageScenarios: [
+              { title: "创建调拨单", body: "补货策略生成调拨计划，锁定来源仓可用库存（可选预占）。" },
+              { title: "发运/在途", body: "来源仓出库后形成在途库存，支持延误预警与异常冻结。" },
+              { title: "到货/对账", body: "目标仓收货，差异生成丢损/破损单并回写调拨绩效。" },
+            ],
+            pains: [
+              { title: "在途不可视", body: "没有在途库存导致承诺与补货计算失真。建议在途作为独立口径与状态。" },
+              { title: "差异无闭环", body: "实发≠实收要有原因码与责任归属，否则永远对不上账。" },
+              { title: "拆单与部分执行复杂", body: "调拨常出现部分发运/部分到货，系统需要支持拆单与版本链路。" },
+            ],
+            quiz: [
+              { q: "调拨与采购/销售最大的不同？", a: "调拨是内部流转，核心是“在途可视与差异闭环”；采购/销售是对外交易。", open: true },
+              { q: "变更题：调拨单已部分发运还能改目标仓吗？", a: "已发运部分应保持原链路；未发运部分可拆单重建，否则在途与对账会混乱。", open: false },
+              { q: "为什么要建在途库存？", a: "让补货/承诺/报表反映真实供给状态，并支持延误预警与异常处理。", open: false },
+            ],
+          },
+        ];
+      }
+
+      function computeImpact({ theme, op, payload }) {
+        // 根据操作类型输出影响分析（教学用）
+        const impacts = [];
+        const warnings = [];
+        const sync = [];
+        const highlight = { nodes: [], edges: [] };
+
+        const add = (title, body, tone = "slate") => impacts.push({ title, body, tone });
+        const warn = (body) => warnings.push(body);
+        const syncTo = (sys, why) => sync.push({ sys, why });
+
+        if (!theme) return { impacts, warnings, sync, highlight };
+
+        // 根据主题提供共性规则
+        if (op === "add") {
+          add("你在做“新增”", "新增通常意味着：创建新的主数据值/规则版本，或创建新的批次/单据行。重点检查唯一性、上下游支持、口径计算是否需要更新。", "blue");
+          warn("新增后要检查：是否会引发口径断层（OMS 可售 vs WMS 可用）？");
+        } else if (op === "edit") {
+          add("你在做“修改”", "修改是风险最高的操作：历史数据引用、审计可追溯性、对账口径都可能被破坏。推荐：版本化/更正记录/新增迁移。", "amber");
+          warn("如果该值已被库存/单据引用，优先用“版本化/迁移”替代“原地改值”。");
+        } else if (op === "del") {
+          add("你在做“删除/停用”", "删除前务必做前置校验：库存是否清零、是否有未完结单据引用、是否有审计要求。多数情况下推荐软删除（停用）。", "rose");
+          warn("物理删除通常会破坏历史报表/追溯/对账。");
+        }
+
+        // 主题个性化：用 nodes/edges 高亮几个关键关系
+        const t = theme.id;
+        if (t === "batch") {
+          highlight.nodes = ["BATCH", "INV", "ASN"];
+          highlight.edges = ["e3", "e4"];
+          syncTo("WMS", "批次属性影响质检/冻结/FEFO 拣选策略");
+          syncTo("OMS", "若 OMS 以批次可售承诺，需要同步批次口径与禁发规则");
+          if (op === "edit") warn("修改批次号会断开追溯链路，建议新建批次并迁移库存。");
+          add("口径提示", "批次相关库存要按（SKU+批次）维度解释“可用/可售/冻结”。", "slate");
+        } else if (t === "expiry") {
+          highlight.nodes = ["RULE", "BATCH", "SO"];
+          highlight.edges = ["e2", "e4"];
+          syncTo("WMS", "效期规则决定入库校验与 FEFO/禁发");
+          syncTo("OMS", "渠道可售与临期禁发往往在 OMS 层体现");
+          if (op === "edit") warn("效期规则变更建议版本化：新入库按新规则，存量按旧规则。");
+          add("常见验证", "拿 1 个 SKU 跑通：入库校验→临期预警→出库禁发→报表。", "emerald");
+        } else if (t === "invStatus") {
+          highlight.nodes = ["STATUS", "INV", "OMS", "WMS"];
+          highlight.edges = ["e1", "e4"];
+          syncTo("WMS", "状态决定可分配/可出库/可盘点");
+          syncTo("OMS", "状态映射影响可售口径，必须同步");
+          if (op !== "add") warn("不要改枚举语义；改语义建议新增新状态并迁移。");
+          add("设计建议", "状态少而稳，用原因码解释；状态变更必须有流水与审计。", "violet");
+        } else if (t === "availableInv") {
+          highlight.nodes = ["AVAIL", "ONHAND", "ALLOC"];
+          highlight.edges = ["e1", "e3"];
+          syncTo("OMS", "对外承诺用可售/可用口径，必须可解释");
+          syncTo("WMS", "仓内分配用可用口径，需实时或准实时");
+          if (op === "edit") warn("口径变更强烈建议版本化，并保留新旧并行期。");
+          add("拆分项", "建议页面展示：在库、冻结/待检、已分配、安全库存等拆分项。", "slate");
+        } else if (t === "reserved") {
+          highlight.nodes = ["RES", "INV", "OMS"];
+          highlight.edges = ["e1", "e2"];
+          syncTo("OMS", "预占影响可售承诺与取消/超时释放");
+          syncTo("WMS", "预占转波次/拣货时要校验一致性");
+          warn("预占必须有 TTL + 释放兜底 + 幂等键，否则会形成“永久锁死”。");
+          add("推荐指标", "预占命中率、释放延迟、预占库存占比、取消释放成功率。", "emerald");
+        } else if (t === "po") {
+          highlight.nodes = ["PO", "ASN", "GRN", "AP"];
+          highlight.edges = ["e2", "e5"];
+          syncTo("ERP", "PO 是计划与结算基准，字段归属通常在 ERP");
+          syncTo("WMS", "收货差异回写 PO/供应商绩效");
+          if (op === "edit") warn("价格/交期等关键字段变更应走审批与版本，避免覆盖历史。");
+          add("对账建议", "以“PO 版本 + 收货结果”对账，差异结构化原因码。", "slate");
+        } else if (t === "asn") {
+          highlight.nodes = ["ASN", "APPT", "RCV"];
+          highlight.edges = ["e2", "e3"];
+          syncTo("ERP", "ASN 常由 ERP/供应商生成并回传");
+          syncTo("WMS", "收货校验与质检策略依赖 ASN 明细与批次/效期");
+          warn("ETA 变更是高风险：要触发预约重排与仓库排班通知。");
+          add("数据质量抓手", "校验规则 + 供应商绩效绑定 + 异常原因码。", "emerald");
+        } else if (t === "transfer") {
+          highlight.nodes = ["TR", "TRANSIT", "IN", "OUT"];
+          highlight.edges = ["e2", "e3"];
+          syncTo("WMS", "调拨出库/入库与差异闭环");
+          syncTo("ERP", "跨组织可能涉及内部结算/对账");
+          warn("已部分发运时不要直接改单，优先拆单处理未发运部分。");
+          add("关键口径", "在途库存要作为独立口径与状态，用于承诺与补货计算。", "slate");
+        }
+
+        // 把 payload 的关键信息映射成解释
+        if (payload?.name) {
+          add("你操作的对象", `对象名称/编号：${payload.name}`, "slate");
+        }
+        if (payload?.scope) {
+          add("范围", `影响范围：${payload.scope}`, "slate");
+        }
+        if (payload?.reason) {
+          add("原因/备注", payload.reason, "slate");
+        }
+
+        return { impacts, warnings, sync, highlight };
+      }
+
+      function Sandbox({ theme, onHighlight, onLog }) {
+        const [op, setOp] = useState("add"); // add/edit/del
+        const [payload, setPayload] = useState({ name: "", scope: "全局", reason: "" });
+        const [result, setResult] = useState(null);
+
+        useEffect(() => {
+          // 主题切换时重置结果
+          setResult(null);
+          onHighlight?.(null);
+        }, [theme?.id]);
+
+        const run = () => {
+          const r = computeImpact({ theme, op, payload });
+          setResult(r);
+          onHighlight?.(r.highlight);
+          onLog?.({
+            id: uid("evt"),
+            time: new Date().toLocaleString(),
+            themeId: theme?.id,
+            themeName: theme?.name,
+            op,
+            payload,
+            summary: `${opLabel(op)}：${payload.name || "(未命名)"}（${payload.scope}）`,
+          });
+        };
+
+        return (
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <div className="text-base font-semibold tracking-tight">模拟操作沙盘</div>
+                <div className="mt-1 text-sm text-slate-600">选择一个操作（新增/修改/删除），填写信息后执行，页面会动态给出影响分析，并高亮关系图关键对象。</div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Pill tone="slate">主题：{theme?.name || "未选择"}</Pill>
+                <Pill tone={op === "add" ? "blue" : op === "edit" ? "amber" : "rose"}>操作：{opLabel(op)}</Pill>
+              </div>
+            </div>
+
+            <div className="px-5 py-4">
+              <div className="grid gap-3 lg:grid-cols-12">
+                <div className="lg:col-span-3">
+                  <div className="text-xs font-medium text-slate-500">操作类型</div>
+                  <div className="mt-2 grid grid-cols-3 gap-2 lg:grid-cols-1">
+                    {[
+                      { k: "add", label: "新增", tone: "blue" },
+                      { k: "edit", label: "修改", tone: "amber" },
+                      { k: "del", label: "删除/停用", tone: "rose" },
+                    ].map((x) => (
+                      <button
+                        key={x.k}
+                        type="button"
+                        onClick={() => setOp(x.k)}
+                        className={classNames(
+                          "rounded-xl border px-3 py-2 text-left text-sm transition",
+                          op === x.k ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white hover:bg-slate-50"
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{x.label}</span>
+                          <span className={classNames("h-2 w-2 rounded-full", x.k === "add" ? "bg-blue-400" : x.k === "edit" ? "bg-amber-400" : "bg-rose-400")} />
+                        </div>
+                        <div className={classNames("mt-1 text-xs", op === x.k ? "text-slate-200" : "text-slate-500")}>
+                          {x.k === "add" ? "创建新值/新规则/新批次" : x.k === "edit" ? "更改现有值（高风险）" : "停用/取消（推荐软删）"}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="lg:col-span-5">
+                  <div className="grid gap-3">
+                    <div>
+                      <div className="text-xs font-medium text-slate-500">对象名称/编号</div>
+                      <input
+                        value={payload.name}
+                        onChange={(e) => setPayload((p) => ({ ...p, name: e.target.value }))}
+                        placeholder={theme?.id === "batch" ? "例如：BATCH-20260430-A01" : theme?.id === "po" ? "例如：PO-240430-001" : "例如：规则V2 / 状态-待检 / 调拨单-TR001"}
+                        className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none ring-0 focus:border-slate-400"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-xs font-medium text-slate-500">影响范围</div>
+                        <select
+                          value={payload.scope}
+                          onChange={(e) => setPayload((p) => ({ ...p, scope: e.target.value }))}
+                          className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-slate-400"
+                        >
+                          {["全局", "单仓", "单渠道", "单SKU", "单批次/效期", "单供应商", "单调拨链路"].map((x) => (
+                            <option key={x} value={x}>
+                              {x}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-slate-500">常用提示</div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <Pill tone="slate">先检查</Pill>
+                          <Pill tone="amber">再变更</Pill>
+                          <Pill tone="emerald">留痕审计</Pill>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-slate-500">原因/备注（用于课堂讲解）</div>
+                      <textarea
+                        value={payload.reason}
+                        onChange={(e) => setPayload((p) => ({ ...p, reason: e.target.value }))}
+                        placeholder="例如：供应商改批次规则；临期策略调整；新增状态用于隔离待检库存…"
+                        rows="3"
+                        className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-slate-400"
+                      ></textarea>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={run}
+                        className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800"
+                      >
+                        执行并分析影响
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPayload({ name: "", scope: "全局", reason: "" });
+                          setResult(null);
+                          onHighlight?.(null);
+                        }}
+                        className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        重置
+                      </button>
+                      <div className="text-xs text-slate-500">提示：为了演示，建议你先点一次“修改”。</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-4">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="text-sm font-semibold text-slate-900">影响分析（动态）</div>
+                    {!result ? (
+                      <div className="mt-2 text-sm leading-relaxed text-slate-600">
+                        还没有执行操作。执行后这里会显示：
+                        <ul className="mt-2 space-y-1">
+                          {["检查清单", "受影响对象与口径", "需要同步的系统", "禁忌做法与风险提示"].map((x) => (
+                            <li key={x} className="flex gap-2">
+                              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-slate-300"></span>
+                              <span>{x}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <div className="mt-3 space-y-3">
+                        <div className="space-y-2">
+                          {result.impacts.map((it) => (
+                            <div key={it.title} className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="text-sm font-semibold">{it.title}</div>
+                                <Pill tone={it.tone}>{toneLabel(it.tone)}</Pill>
+                              </div>
+                              <div className="mt-1 text-sm leading-relaxed text-slate-700">{it.body}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {result.sync?.length ? (
+                          <div className="rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <div className="text-sm font-semibold">需要同步/联动的系统</div>
+                            <div className="mt-2 space-y-2">
+                              {result.sync.map((s, idx) => (
+                                <div key={`${s.sys}_${idx}`} className="flex items-start gap-2 text-sm">
+                                  <Pill tone="violet">{s.sys}</Pill>
+                                  <div className="text-slate-700">{s.why}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {result.warnings?.length ? (
+                          <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2">
+                            <div className="text-sm font-semibold text-rose-900">风险提示</div>
+                            <ul className="mt-2 space-y-1 text-sm text-rose-800">
+                              {result.warnings.map((w) => (
+                                <li key={w} className="flex gap-2">
+                                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-rose-300"></span>
+                                  <span>{w}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function opLabel(op) {
+        if (op === "add") return "新增";
+        if (op === "edit") return "修改";
+        return "删除/停用";
+      }
+
+      function toneLabel(tone) {
+        if (tone === "blue") return "建议";
+        if (tone === "amber") return "高风险";
+        if (tone === "rose") return "强提醒";
+        if (tone === "emerald") return "实践";
+        if (tone === "violet") return "设计";
+        return "说明";
+      }
+
+      function DecisionFramework({ items, boundary }) {
+        return (
+          <div className="space-y-3">
+            <div className="grid gap-3 lg:grid-cols-3">
+              {items.map((it) => (
+                <div key={it.q} className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="text-sm font-semibold">{it.q}</div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                      <div className="font-semibold text-emerald-900">是</div>
+                      <div className="mt-1 text-emerald-800">{it.yes}</div>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <div className="font-semibold text-slate-900">否</div>
+                      <div className="mt-1 text-slate-700">{it.no}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">
+              <span className="font-semibold text-slate-900">边界提醒：</span>
+              {boundary}
+            </div>
+          </div>
+        );
+      }
+
+      function EventLog({ items, onClear }) {
+        return (
+          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+              <div>
+                <div className="text-base font-semibold tracking-tight">课堂演示日志</div>
+                <div className="mt-1 text-sm text-slate-600">每次执行沙盘操作会记录一条日志，方便你课堂复盘“这个操作影响了什么”。</div>
+              </div>
+              <button
+                type="button"
+                onClick={onClear}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                清空
+              </button>
+            </div>
+            <div className="max-h-[260px] overflow-auto px-5 py-4 scrollbar-thin">
+              {items.length === 0 ? (
+                <div className="text-sm text-slate-600">还没有日志。你可以在上面的沙盘中执行一次“修改”，这里会出现记录。</div>
+              ) : (
+                <div className="space-y-2">
+                  {items.slice().reverse().map((it) => (
+                    <div key={it.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-sm font-semibold text-slate-900">{it.summary}</div>
+                        <div className="text-xs text-slate-500">{it.time}</div>
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-600">
+                        <Pill tone="slate">{it.themeName}</Pill>
+                        <Pill tone={it.op === "add" ? "blue" : it.op === "edit" ? "amber" : "rose"}>{opLabel(it.op)}</Pill>
+                        {it.payload?.reason ? <Pill tone="slate">含备注</Pill> : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      function App() {
+        const themes = useMemo(() => makeThemes(), []);
+        const [themeId, setThemeId] = useState(() => localStorage.getItem("teaching_theme") || themes[0]?.id);
+        const theme = useMemo(() => themes.find((t) => t.id === themeId) || themes[0], [themes, themeId]);
+        const [highlight, setHighlight] = useState(null);
+        const [events, setEvents] = useState(() => {
+          try {
+            const raw = localStorage.getItem("teaching_events");
+            return raw ? JSON.parse(raw) : [];
+          } catch {
+            return [];
+          }
+        });
+        const rightRef = useRef(null);
+
+        useEffect(() => {
+          localStorage.setItem("teaching_theme", themeId);
+        }, [themeId]);
+        useEffect(() => {
+          localStorage.setItem("teaching_events", JSON.stringify(events.slice(-50)));
+        }, [events]);
+
+        const jump = (id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        };
+
+        const onLog = (evt) => setEvents((arr) => [...arr, evt].slice(-50));
+
+        return (
+          <div className="min-h-screen">
+            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/80 backdrop-blur">
+              <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="text-base font-semibold tracking-tight">供应链概念教学（交互版）</div>
+                    <Pill tone="slate">单文件：teaching.html</Pill>
+                    <Pill tone="emerald">适合课堂演示/录屏</Pill>
+                  </div>
+                  <div className="mt-1 text-xs text-slate-600">
+                    提示：左侧切换主题；顶部沙盘执行“新增/修改/删除”后会高亮关系图并输出影响分析；下方有完整章节与小测验。
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHighlight(null);
+                      setEvents([]);
+                      localStorage.removeItem("teaching_events");
+                      localStorage.removeItem("teaching_theme");
+                    }}
+                    className="hidden rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 sm:block"
+                  >
+                    清空本地记录
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            <main className="mx-auto grid max-w-7xl gap-4 px-4 py-4 lg:grid-cols-12">
+              {/* Left */}
+              <aside className="lg:col-span-3">
+                <div className="sticky top-[72px] space-y-3">
+                  <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="border-b border-slate-100 px-4 py-3">
+                      <div className="text-sm font-semibold">主题</div>
+                      <div className="mt-1 text-xs text-slate-600">覆盖多个常见概念；内容为通用教学示例，可后续替换为你的口径。</div>
+                    </div>
+                    <div className="max-h-[280px] overflow-auto px-3 py-3 scrollbar-thin">
+                      <div className="space-y-2">
+                        {themes.map((t) => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() => {
+                              setThemeId(t.id);
+                              setHighlight(null);
+                              // 主题切换后滚动到顶部沙盘
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                            className={classNames(
+                              "w-full rounded-2xl border px-3 py-2 text-left transition",
+                              themeId === t.id ? "border-slate-900 bg-slate-900 text-white" : "border-slate-200 bg-white hover:bg-slate-50"
+                            )}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="text-sm font-semibold">{t.name}</div>
+                              <span className={classNames("text-xs", themeId === t.id ? "text-slate-200" : "text-slate-500")}>{t.tag}</span>
+                            </div>
+                            <div className={classNames("mt-1 line-clamp-2 text-xs leading-relaxed", themeId === t.id ? "text-slate-200" : "text-slate-600")}>
+                              {t.introCase}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="border-b border-slate-100 px-4 py-3">
+                      <div className="text-sm font-semibold">目录</div>
+                      <div className="mt-1 text-xs text-slate-600">点击快速跳转章节（适合讲解时控节奏）。</div>
+                    </div>
+                    <div className="px-3 py-3">
+                      <div className="grid gap-2">
+                        {SECTIONS.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => jump(s.id)}
+                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm hover:bg-slate-50"
+                          >
+                            {s.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-slate-900 text-white shadow-sm">
+                    <div className="px-4 py-3">
+                      <div className="text-sm font-semibold">讲解建议</div>
+                      <ul className="mt-2 space-y-1 text-sm text-slate-200">
+                        {[
+                          "先讲一个贯穿案例，再讲定义与反例。",
+                          "用“沙盘修改”引出变更管理与灾难故事。",
+                          "强调：对象、字段、口径、同步点。",
+                          "最后用小测验收尾。",
+                        ].map((x) => (
+                          <li key={x} className="flex gap-2">
+                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                            <span>{x}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+
+              {/* Right */}
+              <div className="space-y-4 lg:col-span-9" ref={rightRef}>
+                <Sandbox theme={theme} onHighlight={setHighlight} onLog={onLog} />
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <RelationshipGraph nodes={theme.objects} edges={theme.relations} highlight={highlight} />
+                  <EventLog items={events} onClear={() => setEvents([])} />
+                </div>
+
+                <SectionCard
+                  id="scene"
+                  title="1. 场景引入"
+                  subtitle="用一个具体案例贯穿讲解，让学员先有“痛感”。"
+                  right={<Pill tone="emerald">贯穿案例</Pill>}
+                >
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">
+                    {theme.introCase}
+                  </div>
+                  <div className="mt-3 grid gap-3 lg:grid-cols-3">
+                    {[
+                      { k: "学员常见误区", v: "把概念当定义背下来，但不知道在系统里怎么用、改了会怎样。", tone: "amber" },
+                      { k: "讲解目标", v: "让你能说清：解决什么问题、对象/字段是什么、上下游怎么用、变更怎么做。", tone: "blue" },
+                      { k: "课堂演示点", v: "上方沙盘随便做一次“修改”，就能把变更风险讲透。", tone: "emerald" },
+                    ].map((x) => (
+                      <div key={x.k} className="rounded-2xl border border-slate-200 bg-white p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-semibold">{x.k}</div>
+                          <Pill tone={x.tone}>{x.k.includes("误区") ? "高频" : "重点"}</Pill>
+                        </div>
+                        <div className="mt-2 text-sm leading-relaxed text-slate-700">{x.v}</div>
+                      </div>
+                    ))}
+                  </div>
+                </SectionCard>
+
+                <SectionCard
+                  id="concept"
+                  title="2. 概念拆解"
+                  subtitle="讲清楚：是什么 / 不是什么 / 解决什么问题 / 对应什么对象 / 关键字段 / 上下游关联。"
+                  right={<Pill tone="violet">产品经理视角</Pill>}
+                >
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-semibold">是什么</div>
+                        <Pill tone="blue">定义+价值</Pill>
+                      </div>
+                      <div className="mt-2 text-sm leading-relaxed text-slate-700">{theme.whatIs}</div>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-semibold">不是什么</div>
+                        <Pill tone="rose">避坑</Pill>
+                      </div>
+                      <div className="mt-2 text-sm leading-relaxed text-slate-700">{theme.whatNot}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-semibold text-rose-900">{theme.antiCase.title}</div>
+                      <Pill tone="rose">反面案例</Pill>
+                    </div>
+                    <div className="mt-2 text-sm leading-relaxed text-rose-800">{theme.antiCase.body}</div>
+                  </div>
+
+                  <div className="mt-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="text-sm font-semibold">关键字段（示例）</div>
+                      <div className="flex flex-wrap gap-2">
+                        <Pill tone="violet">字段归属</Pill>
+                        <Pill tone="amber">约束</Pill>
+                        <Pill tone="emerald">作业引用</Pill>
+                      </div>
+                    </div>
+                    <KeyValueTable rows={theme.keyFields} />
+                  </div>
+                </SectionCard>
+
+                <SectionCard
+                  id="create"
+                  title="3. 创建流程"
+                  subtitle="按“先创建什么→再维护什么→字段来源/必填/系统生成→后续被哪些单据/库存/报表使用”讲清楚。"
+                  right={<Pill tone="emerald">流程卡片</Pill>}
+                >
+                  <MiniFlow steps={theme.createFlow} />
+                </SectionCard>
+
+                <SectionCard
+                  id="change"
+                  title="4. 变更管理（重点）"
+                  subtitle="新增/修改/删除：变更前检查、变更后同步、推荐流程与禁忌做法；并包含“变更引发的灾难”故事。"
+                  right={<Pill tone="amber">高频翻车点</Pill>}
+                >
+                  <div className="grid gap-3 lg:grid-cols-3">
+                    {[
+                      { k: "add", title: "新增", tone: "blue" },
+                      { k: "edit", title: "修改", tone: "amber" },
+                      { k: "del", title: "删除/停用", tone: "rose" },
+                    ].map((x) => {
+                      const r = theme.changeRules[x.k];
+                      return (
+                        <div key={x.k} className="rounded-2xl border border-slate-200 bg-white p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm font-semibold">{x.title}</div>
+                            <Pill tone={x.tone}>{x.title}</Pill>
+                          </div>
+                          <div className="mt-3 text-xs font-medium text-slate-500">变更前检查</div>
+                          <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                            {r.checks.map((c) => (
+                              <li key={c} className="flex gap-2">
+                                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-slate-300"></span>
+                                <span>{c}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          <div className="mt-3 text-xs font-medium text-slate-500">推荐流程</div>
+                          <ol className="mt-2 space-y-1 text-sm text-slate-700">
+                            {r.flow.map((c, idx) => (
+                              <li key={`${c}_${idx}`} className="flex gap-2">
+                                <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+                                  {idx + 1}
+                                </span>
+                                <span>{c}</span>
+                              </li>
+                            ))}
+                          </ol>
+                          <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+                            <span className="font-semibold">禁忌：</span>
+                            {r.taboo}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-900 p-4 text-white">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-semibold">变更引发的灾难（故事）</div>
+                      <Pill tone="rose">警示</Pill>
+                    </div>
+                    <div className="mt-2 text-sm leading-relaxed text-slate-200">{theme.changeRules.disaster}</div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard
+                  id="decision"
+                  title="5. 设计边界 / 使用决策"
+                  subtitle="给学员一个判断框架：什么时候该用、什么时候不该用；避免“为了精细而精细”。"
+                  right={<Pill tone="violet">判断框架</Pill>}
+                >
+                  <DecisionFramework items={theme.decision.framework} boundary={theme.decision.boundary} />
+                </SectionCard>
+
+                <SectionCard
+                  id="usage"
+                  title="6. 使用场景"
+                  subtitle="至少 3 个业务场景，演示这个概念在主数据/单据/作业/库存/报表中的实际用法。"
+                  right={<Pill tone="emerald">演示</Pill>}
+                >
+                  <div className="grid gap-3 lg:grid-cols-3">
+                    {theme.usageScenarios.map((s) => (
+                      <div key={s.title} className="rounded-2xl border border-slate-200 bg-white p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm font-semibold">{s.title}</div>
+                          <Pill tone="slate">场景</Pill>
+                        </div>
+                        <div className="mt-2 text-sm leading-relaxed text-slate-700">{s.body}</div>
+                      </div>
+                    ))}
+                  </div>
+                </SectionCard>
+
+                <SectionCard
+                  id="graph"
+                  title="7. 关系图"
+                  subtitle="这个概念与上下游对象的关系、数据沉淀点，以及哪些系统读写它。"
+                  right={<Pill tone="blue">结构化</Pill>}
+                >
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <div className="text-sm font-semibold">对象关系（摘要）</div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {theme.objects.map((n) => (
+                          <Pill key={n.id} tone={highlight?.nodes?.includes(n.id) ? "blue" : "slate"}>
+                            {n.label}
+                          </Pill>
+                        ))}
+                      </div>
+                      <div className="mt-3 text-sm text-slate-700">
+                        <span className="font-semibold">讲解技巧：</span>先说“谁是主角（本概念）”，再说“谁产生它、谁引用它、最终沉淀在哪个台账/流水”。
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <div className="text-sm font-semibold">读写系统（通用示例）</div>
+                      <div className="mt-2 grid gap-2">
+                        {SYSTEMS.map((s) => (
+                          <div key={s.key} className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                            <Pill tone="violet">{s.label}</Pill>
+                            <div className="text-sm text-slate-700">
+                              {s.key === "ERP"
+                                ? "偏主数据与计划/结算（如 PO/规则/价格/供应商）。"
+                                : s.key === "WMS"
+                                ? "偏作业执行与库存台账（收货/质检/上架/拣货/出库）。"
+                                : "偏销售承诺与履约（可售口径、订单分配、渠道限制）。"}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 text-xs text-slate-500">注：不同公司主从系统不同，这里用于教学示例。实际口径建议做一张“字段归属表”。</div>
+                    </div>
+                  </div>
+                </SectionCard>
+
+                <SectionCard
+                  id="pains"
+                  title="8. 常见痛点"
+                  subtitle="从产品设计角度总结常见问题，并给出建议（尤其关注口径与变更）。"
+                  right={<Pill tone="amber">经验</Pill>}
+                >
+                  <div className="grid gap-3 lg:grid-cols-3">
+                    {theme.pains.map((p) => (
+                      <div key={p.title} className="rounded-2xl border border-slate-200 bg-white p-4">
+                        <div className="text-sm font-semibold">{p.title}</div>
+                        <div className="mt-2 text-sm leading-relaxed text-slate-700">{p.body}</div>
+                      </div>
+                    ))}
+                  </div>
+                </SectionCard>
+
+                <SectionCard
+                  id="quiz"
+                  title="9. 小测验"
+                  subtitle="3-5 题，点击展开答案；至少包含 1 道关于变更场景的题目。"
+                  right={<Pill tone="emerald">互动</Pill>}
+                >
+                  <div className="space-y-3">
+                    {theme.quiz.map((q) => (
+                      <CollapsibleQA key={q.q} q={q.q} a={q.a} defaultOpen={q.open} />
+                    ))}
+                  </div>
+                </SectionCard>
+
+                <footer className="pb-10 pt-4 text-center text-xs text-slate-500">
+                  <div>本页为教学演示原型（单文件）。如需替换为你们公司口径：把各主题的数据替换为你们字段/对象/流程即可。</div>
+                </footer>
+              </div>
+            </main>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
+
