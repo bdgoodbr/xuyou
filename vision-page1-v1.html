@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif; }
+        .input-readonly {
+            background-color: #BFC9D7 !important;
+            border-color: #7C8DA1 !important;
+            color: #334155 !important;
+            cursor: not-allowed;
+            font-weight: 700;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        }
+        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 8rem; color: rgba(200, 200, 200, 0.3); pointer-events: none; z-index: 9999; display: none;}
+        .show-watermark { display: block; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .nav-shell { background: #f3edd8; border-right: 1px solid #ded7bf; }
+        .nav-item.active { color: #111827; font-weight: 600; background: transparent; }
+        .nav-item:hover:not(.active) { color: #08a6a6; background: rgba(255,255,255,0.28); }
+        .nav-parent { color: #08a6a6; font-weight: 700; }
+        .nav-child { color: #111827; font-weight: 500; }
+        .sticky-right-status { position: sticky; right: 104px; z-index: 8; border-left: 1px solid #d5dee1; box-shadow: -8px 0 10px -9px rgba(15, 23, 42, 0.45); }
+        .sticky-right-action { position: sticky; right: 0; z-index: 9; border-left: 1px solid #d8e1ea; box-shadow: -12px 0 18px -14px rgba(15, 23, 42, 0.42); }
+        .sticky-body { background: #fff; }
+        .sticky-head { background: #F3F7FB; }
+        .filter-control { height: 36px; border: 1px solid #D1D5DB; border-radius: 8px; padding: 0 12px; font-size: 12px; background: #fff; outline: none; color: #111827; }
+        .filter-label { font-size: 12px; color: #4B5563; white-space: nowrap; margin-right: 8px; }
+        .filter-item { display: flex; align-items: center; }
+        .multi-select-wrap { position: relative; }
+        .multi-select-trigger { height: 36px; min-width: 170px; border: 1px solid #D1D5DB; border-radius: 8px; padding: 0 12px; font-size: 12px; background: #fff; color: #374151; display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; }
+        .multi-select-trigger.placeholder { color: #9CA3AF; }
+        .multi-select-panel { position: absolute; top: calc(100% + 4px); left: 0; z-index: 30; width: 170px; background: #fff; border: 1px solid #D1D5DB; border-radius: 6px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12); padding: 8px 0; }
+        .multi-select-option { display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-size: 12px; color: #374151; cursor: pointer; }
+        .multi-select-option:hover { background: #F9FAFB; }
+        
+        /* 列表紧凑样式 */
+        .compact-cell { padding: 0.8rem 0.55rem; white-space: nowrap; font-size: 12px; vertical-align: middle; border-bottom: 1px solid #E5E7EB; }
+        .qty-input-wrapper input:focus { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+        .required-star { color: #ef4444; margin-left: 2px; }
+        
+        /* Page 2 Specific Styles */
+        .p2-label { font-size: 12px; color: #4B5563; margin-bottom: 6px; display: block; font-weight: 600; }
+        .p2-input { width: 100%; height: 34px; border: 1px solid #D1D5DB; border-radius: 4px; padding: 0 10px; font-size: 12px; outline: none; transition: border-color 0.2s; background-color: #fff; color: #111827; }
+        .p2-input:focus { border-color: #3B82F6; ring: 1px solid #3B82F6; }
+        .p2-input:disabled, .beautified-textarea:disabled { background-color: #BFC9D7; border-color: #7C8DA1; color: #334155; cursor: not-allowed; }
+        .p2-input[readonly].input-readonly { background-color: #BFC9D7 !important; border-color: #7C8DA1 !important; color: #334155 !important; }
+        .p2-helper-text { font-size: 10px; color: #9CA3AF; margin-top: 2px; text-align: center; line-height: 1.2; display: block; }
+        
+        /* UI统一：卡片容器 */
+        .info-box { background-color: #fff; border-radius: 0.5rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); border: 1px solid #E5E7EB; padding: 1.5rem; margin-bottom: 1.5rem; }
+
+        /* UI统一：美化文本域 */
+        .beautified-textarea {
+            width: 100%;
+            height: 6rem; /* h-24 */
+            border: 1px solid #E2E8F0;
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.875rem; /* text-sm */
+            background-color: #F8FAFC;
+            transition: all 0.2s ease-in-out;
+            resize: none;
+            outline: none;
+        }
+        .beautified-textarea:focus {
+            background-color: #FFFFFF;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Action Buttons */
+        .action-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #E5E7EB; transition: all 0.2s; }
+        .btn-sync { color: #3B82F6; border-color: #BFDBFE; }
+        .btn-sync:hover { background-color: #EFF6FF; }
+        .btn-del { color: #EF4444; border-color: #FECACA; }
+        .btn-del:hover { background-color: #FEF2F2; }
+
+        .bg-section-header { background-color: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 6px; padding: 8px 12px; margin-bottom: 16px; }
+        .template-select { border: 1px solid #D1D5DB; border-radius: 4px; padding: 4px 8px; font-size: 12px; color: #4B5563; outline: none; }
+        .save-tpl-btn { color: #2563EB; font-size: 12px; font-weight: 500; margin-left: 8px; cursor: pointer; }
+        .save-tpl-btn:hover { text-decoration: underline; }
+        .section-panel { background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05); overflow: hidden; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 20px; background: linear-gradient(180deg, #F8FBFF 0%, #F4F8FC 100%); border-bottom: 1px solid #E5E7EB; }
+        .section-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #0F766E; }
+        .section-body { padding: 22px 24px; }
+        .table-toolbar-btn { height: 34px; padding: 0 14px; border-radius: 6px; font-size: 12px; font-weight: 700; border: 1px solid #D1D5DB; background: #fff; color: #374151; }
+        .table-toolbar-btn:hover { background: #F9FAFB; }
+        .table-toolbar-btn.primary { color: #0F766E; border-color: #99F6E4; background: #F0FDFA; }
+        .table-toolbar-btn.primary:hover { background: #CCFBF1; }
+        .edit-topbar { padding: 16px 22px; border-radius: 12px; }
+        .edit-topbar-left { display: flex; align-items: center; gap: 18px; }
+        .edit-topbar-back { display: inline-flex; align-items: center; gap: 8px; color: #6B7280; font-size: 14px; font-weight: 600; }
+        .edit-topbar-back:hover { color: #111827; }
+        .edit-topbar-divider { width: 1px; height: 28px; background: #E5E7EB; }
+        .edit-topbar-meta { display: flex; flex-direction: column; gap: 4px; }
+        .edit-topbar-actions { display: flex; align-items: center; gap: 14px; }
+        .edit-header-btn { height: 42px; padding: 0 26px; border-radius: 8px; border: 1px solid #D1D5DB; background: #fff; color: #374151; font-size: 14px; font-weight: 700; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); }
+        .edit-header-btn:hover { background: #F8FAFC; }
+        .edit-header-btn.reference { border-color: #E9D5FF; color: #9333EA; background: #FAF5FF; }
+        .edit-header-btn.reference:hover { background: #F3E8FF; }
+        .edit-header-btn.delete { border-color: #FECACA; color: #DC2626; background: #FEF2F2; }
+        .edit-header-btn.delete:hover { background: #FEE2E2; }
+        .edit-header-btn.recall { border-color: #FDE68A; color: #B45309; background: #FFFBEB; }
+        .edit-header-btn.recall:hover { background: #FEF3C7; }
+        .edit-header-btn.submit { border-color: #2563EB; background: #2563EB; color: #fff; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18); }
+        .edit-header-btn.submit:hover { background: #1D4ED8; }
+        .edit-header-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .edit-search-btn { display: inline-flex; align-items: center; height: 40px; padding: 0 16px; border-radius: 8px; font-size: 14px; font-weight: 700; border: 1px solid #BFDBFE; background: #EFF6FF; color: #2563EB; }
+        .edit-search-btn:hover { background: #DBEAFE; }
+        .list-shell { background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05); }
+        .list-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 20px; background: linear-gradient(180deg, #F8FBFF 0%, #F4F8FC 100%); border-bottom: 1px solid #E5E7EB; }
+        .list-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .list-btn { height: 36px; padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 700; border: 1px solid #D1D5DB; background: #fff; color: #374151; }
+        .list-btn:hover { background: #F8FAFC; }
+        .list-btn.primary { background: #0F766E; color: #fff; border-color: #0F766E; }
+        .list-btn.primary:hover { background: #0D9488; }
+        .list-btn.secondary { background: #EFF6FF; color: #2563EB; border-color: #BFDBFE; }
+        .list-btn.secondary:hover { background: #DBEAFE; }
+        .query-shell { background: #fff; border: 1px solid #E2E8F0; border-radius: 12px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05); }
+        .query-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 20px; background: linear-gradient(180deg, #F8FBFF 0%, #F4F8FC 100%); border-bottom: 1px solid #E5E7EB; }
+        .query-body { padding: 20px; }
+        .detail-select,
+        .detail-input,
+        .detail-date {
+            height: 36px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            padding: 0 9px;
+            font-size: 12px;
+            background: #fff;
+            color: #111827;
+        }
+        .detail-select:disabled,
+        .detail-input:disabled,
+        .detail-date:disabled {
+            background: #F8FAFC;
+            color: #475569;
+        }
+        .detail-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 78px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #DBEAFE;
+            background: #EFF6FF;
+            color: #2563EB;
+            font-weight: 700;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+        .detail-total {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-weight: 700;
+        }
+        .detail-batch { min-width: 144px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; color: #334155; font-weight: 700; }
+        .detail-head-muted { color: #475569; font-weight: 700; }
+        .detail-head-number { text-align: right; }
+        .detail-cell-number { text-align: right; font-variant-numeric: tabular-nums; }
+        .detail-cell-center { text-align: center; font-variant-numeric: tabular-nums; }
+        
+        /* 【新增】重置按钮样式 */
+        .reset-btn { color: #9CA3AF; font-size: 12px; font-weight: 500; margin-left: 12px; cursor: pointer; display: flex; align-items: center; }
+        .reset-btn:hover { color: #6B7280; }
+        
+        /* 状态机样式 */
+        .status-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
+        .status-none { background-color: #F3F4F6; color: #6B7280; }
+        .status-draft { background-color: #DBEAFE; color: #1E40AF; }
+        .status-executed { background-color: #D1FAE5; color: #065F46; }
+        .status-recalled { background-color: #FEF3C7; color: #92400E; }
+        .status-deleted { background-color: #FEE2E2; color: #991B1B; text-decoration: line-through; }
+
+        /* Print Style for PDF Export */
+        @media print {
+            .no-print, aside, .watermark { display: none !important; }
+            body, main { height: auto; overflow: visible; background-color: white; }
+            .p2-input, .beautified-textarea { border: 1px solid #ddd !important; background: white !important; }
+            .info-box { box-shadow: none; border: 1px solid #eee; break-inside: avoid; }
+            header { display: none; }
+            /* Show simple header for PDF */
+            .pdf-header { display: block !important; text-align: center; margin-bottom: 20px; font-size: 20px; font-weight: bold; }
+        }
+        .pdf-header { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 text-[12px] text-gray-800 h-screen flex overflow-hidden">
+
+    <div id="app" class="flex w-full h-full">
+
+        <aside class="w-60 nav-shell flex flex-col shrink-0 transition-all duration-300 no-print">
+            <div class="h-16 flex items-center px-5 text-gray-900 font-bold text-base shrink-0 border-b border-[#ded7bf]">
+                国际运输管理（HTM）
+            </div>
+            <div class="flex-1 overflow-y-auto py-4">
+                <nav class="space-y-1">
+                    <div class="mx-3 mt-2">
+                        <button type="button" @click="isOrderMenuOpen = !isOrderMenuOpen" class="w-full flex items-center px-3 py-3 nav-parent text-[15px] text-left">
+                            <span>物流订单管理</span>
+                            <span class="ml-auto text-lg leading-none">{{ isOrderMenuOpen ? '-' : '+' }}</span>
+                        </button>
+                        <div v-show="isOrderMenuOpen" class="pb-2 pt-1">
+                            <a href="#" @click.prevent="navigate('list')" class="nav-item nav-child block pl-11 pr-4 py-2 text-[14px] transition-colors rounded-md mx-1 mb-1 active">物流委托管理</a>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 bg-gray-50">
+            <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shadow-sm shrink-0 z-20 no-print">
+                <div class="flex items-center text-gray-500">
+                    <span class="mr-2">HTM</span> / <span class="mx-2">物流订单管理</span> / <span class="ml-2 font-bold text-gray-800">物流委托管理</span>
+                </div>
+                <div class="flex items-center gap-2 text-[12px] text-gray-600">
+                    <span>租户：</span>
+                    <select class="h-[30px] w-[90px] border border-gray-300 rounded bg-white px-2 text-[12px] text-gray-700 outline-none">
+                        <option>视像</option>
+                    </select>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-auto px-6 py-5 relative">
+                <div :class="{'show-watermark': showDraftWatermark}" class="watermark">DRAFT</div>
+                
+                <div class="pdf-header">订舱委托书 (Booking Confirmation)</div>
+
+                <div v-if="currentView === 'create'" class="max-w-[1460px] mx-auto space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <button @click="navigate('list')" class="edit-topbar-back no-print"><i class="fa-solid fa-arrow-left"></i> 返回列表</button>
+                            <div class="edit-topbar-divider"></div>
+                            <div class="flex items-center border-l-4 border-blue-600 pl-4 py-1">
+                                <h1 class="text-lg font-bold tracking-tight text-slate-900">查询新建</h1>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="query-shell">
+                        <div class="query-header">
+                            <div class="section-title"><i class="fa-solid fa-magnifying-glass-chart"></i> 查询条件</div>
+                        </div>
+                        <div class="query-body">
+                         <div class="flex items-start gap-5">
+                            <div class="flex items-center gap-2 pt-0.5">
+                                <label class="text-[12px] text-gray-700 font-medium whitespace-nowrap required-star">产品线</label>
+                                <select v-model="createFilters.productLine" class="filter-control w-[108px]">
+                                    <option value="">请选择</option>
+                                    <option v-for="opt in config.productLines" :value="opt.value">{{opt.label}}</option>
+                                </select>
+                            </div>
+                            <div class="flex items-start gap-2 flex-1 min-w-0">
+                                <label class="text-[12px] text-gray-700 font-medium whitespace-nowrap leading-[34px] required-star">滚动计划号</label>
+                                <textarea v-model="createFilters.batchNo" placeholder="可输入滚动计划号，支持批量输入；原型阶段随机返回 3-5 条" class="flex-1 h-[76px] border border-gray-300 rounded-lg px-3 py-2 outline-none text-xs resize-none bg-white"></textarea>
+                            </div>
+                            <div class="pt-0.5">
+                                <button @click="searchGSS" class="list-btn primary flex items-center justify-center"><i class="fa-solid fa-magnifying-glass mr-2"></i> 查询</button>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    <div class="list-shell overflow-hidden">
+                        <table class="w-full text-left text-[12px]">
+                            <thead class="bg-[#F3F7FB] text-gray-600 font-semibold border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 py-3 w-10"><input type="checkbox" v-model="selectAllPage1" @change="toggleSelectAll('create')" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"></th>
+                                    <th class="px-4 py-3 whitespace-nowrap">滚动计划号</th>
+                                    <th class="px-4 py-3 whitespace-nowrap">生产基地</th>
+                                    <th class="px-4 py-3 text-right whitespace-nowrap">排产总量</th>
+                                    <th class="px-4 py-3 text-right whitespace-nowrap">已做委托数量</th>
+                                    <th class="px-4 py-3 text-right whitespace-nowrap">剩余可用量</th>
+                                    <th class="px-4 py-3 w-32 bg-blue-50/50 text-blue-700 font-semibold border-l whitespace-nowrap">本次委托数量</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr v-for="item in sortedGssData" :key="item.id" class="hover:bg-blue-50/30 transition">
+                                    <td class="px-4 py-3 align-middle"><input type="checkbox" v-model="item.checked" @change="toggleCheck(item)" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"></td>
+                                    <td class="px-4 py-3 font-mono font-medium text-slate-700 align-middle whitespace-nowrap">{{ item.batchNo }}</td>
+                                    <td class="px-4 py-3 align-middle whitespace-nowrap">{{ item.baseName }}</td>
+                                    <td class="px-4 py-3 text-right font-mono text-gray-500 align-middle">{{ item.total }}</td>
+                                    <td class="px-4 py-3 text-right font-mono text-gray-500 align-middle">{{ item.usedTotal }}</td>
+                                    <td class="px-4 py-3 text-right font-mono font-bold align-middle" :class="item.remaining > 0 ? 'text-green-600' : 'text-red-400'">{{ item.remaining }}</td>
+                                    <td class="px-4 py-3 border-l bg-slate-50/30 align-middle"><div class="relative qty-input-wrapper"><input type="number" v-model.number="item.inputQty" @input="validateQty(item)" class="w-full border rounded px-2 py-1 text-right font-mono focus:ring-2 outline-none transition-colors text-sm" :class="{'border-red-500 bg-red-50': item.hasError, 'border-blue-500 ring-1 ring-blue-500 bg-white': item.checked && !item.hasError && item.inputQty > 0, 'border-gray-300 bg-white': !item.checked && !item.hasError}"><div v-if="item.hasError" class="absolute right-0 -bottom-4 text-[10px] text-red-500 whitespace-nowrap">需为整数且不超量</div></div></td>
+                                </tr>
+                                <tr v-if="!createHasSearched">
+                                    <td colspan="7" class="px-4 py-10 text-center text-sm text-gray-400">请选择产品线后点击查询；原型会随机返回 3-5 条滚动计划</td>
+                                </tr>
+                                <tr v-else-if="sortedGssData.length === 0">
+                                    <td colspan="7" class="px-4 py-10 text-center text-sm text-gray-400">未查询到对应滚动计划</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex justify-end pt-2"><button @click="goToEditFromCreate" :disabled="!hasValidSelection" :class="{'opacity-50 cursor-not-allowed': !hasValidSelection}" class="bg-teal-600 text-white px-6 py-2.5 rounded shadow-sm hover:bg-teal-700 transition flex items-center gap-2 text-sm font-medium">创建委托单 <i class="fa-solid fa-arrow-right ml-1"></i></button></div>
+                </div>
+
+                <div v-if="currentView === 'edit'" class="max-w-[1600px] mx-auto space-y-6 pb-20">
+                    <div class="edit-topbar flex justify-between items-center bg-white rounded-lg shadow-sm border border-gray-200 sticky top-0 z-30 no-print">
+                        <div class="edit-topbar-left">
+                            <button @click="navigate('list')" class="edit-topbar-back"><i class="fa-solid fa-arrow-left"></i> 返回列表</button>
+                            <div class="edit-topbar-divider"></div>
+                            <div class="edit-topbar-meta">
+                                <div class="text-xs text-gray-500">委托单号: <span class="font-mono text-gray-900 font-bold">{{ formData.commissionNo || '---' }}</span></div>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="status-badge" :class="statusBadgeClass">{{ statusMap[formData.status] }}</span>
+                                </div>
+                            </div>
+                            <button @click="showCommissionSearchModal=true" class="edit-search-btn ml-1"><i class="fa-solid fa-search mr-1"></i>查询单据</button>
+                        </div>
+                        <div class="edit-topbar-actions">
+                            <button v-if="showReferenceCreate" @click="referenceCreate" class="edit-header-btn reference">参考创建</button>
+                            <button v-if="showSaveDraft" @click="saveDraft(false)" class="edit-header-btn">暂存草稿</button>
+                            <button v-if="showRecall" @click="recallCommission" class="edit-header-btn recall">撤回</button>
+                            <button v-if="showDelete" @click="deleteCommission" class="edit-header-btn delete">删除单据</button>
+                            <button v-if="showSubmit" @click="submitCommission" :disabled="isSubmitting" class="edit-header-btn submit flex items-center">
+                                <i v-if="isSubmitting" class="fa-solid fa-spinner fa-spin mr-2"></i> 提交委托
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="section-panel">
+                        <div class="section-header">
+                            <h2 class="section-title"><i class="fa-regular fa-file-lines"></i> 基础信息</h2>
+                        </div>
+                        <div class="section-body">
+                        <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
+                            <div><span class="p2-label required-star">产品线</span><select v-model="formData.productLine" :disabled="isFieldLocked('productLine')" :class="[['p2-input', isFieldLocked('productLine') ? 'input-readonly' : ''], {'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.productLine}]"><option v-for="opt in config.productLines" :value="opt.value">{{opt.label}}</option></select></div>
+                            <div><span class="p2-label required-star">出口国家</span><select v-model="formData.country" :disabled="isReadOnly" :class="['p2-input', {'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.country}]"><option value="VN">越南</option><option value="JP">日本</option><option value="UK">英国</option><option value="TH">泰国</option></select></div>
+                            <div><span class="p2-label required-star">生产基地</span><select v-model="formData.base" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.base}"><option value="2000">黄岛</option><option value="2900">江门</option></select></div>
+                            <div><span class="p2-label required-star">报关主体</span><select v-model="formData.entity" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.entity}"><option value="REGZA_ENT">REGZA越南电子有限公司</option><option value="TVS_ENT">TVS REGZA CORPORATION</option></select></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
+                            <div><span class="p2-label required-star">销售组织</span><select v-model="formData.salesOrg" disabled class="p2-input input-readonly" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.salesOrg}"><option value="越南工厂">越南工厂</option><option value="TVS">TVS</option></select></div>
+
+                            <div><span class="p2-label required-star">运输方式</span><select v-model="formData.transportMode" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.transportMode}"><option value="BY SEA">BY SEA</option><option value="BY TRAIN">BY TRAIN</option><option value="BY TRUCK">BY TRUCK</option><option value="BY AIR">BY AIR</option></select></div>
+                            <div><span class="p2-label">贸易方式</span><select v-model="formData.tradeMode" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.tradeMode}"><option v-for="opt in config.tradeModes" :value="opt.value">{{opt.label}}</option></select></div>
+                            <div><span class="p2-label required-star">价格条款</span><select v-model="formData.priceTerms" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.priceTerms}"><option value="DAP">DAP</option><option value="FOB">FOB</option><option value="CIF">CIF</option><option value="CIP">CIP</option></select></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
+                            <div><span class="p2-label required-star">订单人</span><input type="text" v-model="formData.orderer" disabled class="p2-input input-readonly"></div>
+                            <div><span class="p2-label required-star">订舱人</span><select v-model="formData.booker" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.booker}"><option value="">-- 请选择 --</option><option v-for="name in config.bookers" :value="name">{{name}}</option></select></div>
+                            <div><span class="p2-label required-star">船期</span><input type="date" v-model="formData.etd" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.etd}"></div>
+                            <div><span class="p2-label required-star">落货日期</span><input type="date" v-model="formData.cutoff" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.cutoff}"></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
+                            <div><span class="p2-label required-star">起运港</span><select v-model="formData.pol" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.pol}"><option value="江门">江门</option><option value="青岛">青岛</option><option value="上海">上海</option></select></div>
+                            <div><span class="p2-label required-star">目的港</span><select v-model="formData.pod" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.pod}"><option value="海防">海防</option><option value="胡志明">胡志明</option><option value="岘港">岘港</option><option value="东京">东京</option><option value="大阪">大阪</option></select></div>
+                            <div><span class="p2-label">创建时间</span><input type="text" :value="formData.createTime" class="p2-input input-readonly" readonly></div>
+                            <div><span class="p2-label">更新时间</span><input type="text" :value="formData.updateTime" class="p2-input input-readonly" readonly></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
+                            <div><span class="p2-label">总柜量</span><input type="text" :value="totalContainersString" class="p2-input input-readonly" readonly></div>
+                        </div>
+                        
+                        <div class="mt-5 border-t border-slate-200 pt-5 grid grid-cols-2 gap-8">
+                            <div>
+                                <span class="p2-label required-star mb-2 block">箱型箱量录入</span>
+                                <div class="space-y-3">
+                                    <div v-for="(c, idx) in formData.containers" :key="idx" class="flex items-center gap-2">
+                                        <select v-model="c.type" @change="handleContainerTypeChange(idx, c.type)" class="p2-input w-32" :disabled="isReadOnly"><option>20GP</option><option>40GP</option><option>40HQ</option><option>40NOR</option><option>LCL</option></select>
+                                        <span class="text-gray-400">×</span>
+                                        <input type="number" v-model="c.qty" class="p2-input w-24 text-center" :disabled="isReadOnly || c.type === 'LCL'">
+                                        <button @click="removeContainer(idx)" class="text-gray-400 hover:text-red-500 ml-2 no-print" :disabled="isReadOnly"><i class="fa-solid fa-trash-can text-lg"></i></button>
+                                    </div>
+                                    <button @click="addContainer" class="text-blue-600 text-sm font-bold flex items-center hover:underline no-print" :disabled="isReadOnly || isNoneContainerSelected"><i class="fa-solid fa-plus mr-1"></i>添加箱型</button>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="p2-label required-star block mb-2">装柜方案</span>
+                                <textarea v-model="formData.loadingPlan" :disabled="isReadOnly" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-24 resize-none bg-white" placeholder="输入装柜方案..." :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.loadingPlan}"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div class="section-panel">
+                         <div class="section-header">
+                            <h3 class="section-title"><i class="fa-solid fa-layer-group"></i> 滚动计划明细</h3>
+                            <div class="flex gap-2">
+                                <button v-if="isVnFlow" @click="refreshAllItems" class="table-toolbar-btn no-print" :disabled="!canRefreshAll"><i class="fa-solid fa-rotate-right mr-1"></i>同步全部</button>
+                                <button @click="exportBatchDetails" class="table-toolbar-btn no-print" :disabled="isReadOnly"><i class="fa-solid fa-file-export mr-1"></i>导出明细</button>
+                                <button @click="openImportModal" class="table-toolbar-btn no-print" :disabled="!canImportItems"><i class="fa-solid fa-file-import mr-1"></i>导入滚动计划</button>
+                                <button v-if="isVnFlow" @click="openAddBatchModal" class="table-toolbar-btn primary no-print" :disabled="!canQueryAddItems">+ 查询新增</button>
+                                <button v-if="isTvsFlow" @click="addManualItem" class="table-toolbar-btn primary no-print" :disabled="!canManualAddItems">+ 新增</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full min-w-[1760px] text-left text-xs">
+                                <thead class="bg-[#F3F7FB] text-gray-600 font-semibold border-b border-gray-200 whitespace-nowrap">
+                                    <tr>
+                                        <th class="compact-cell detail-head-muted min-w-[148px]">滚动计划号</th>
+                                        <th class="compact-cell text-center w-24 bg-blue-50">本次委托数量</th><th class="compact-cell text-center">已做委托数量</th><th class="compact-cell text-center">滚动计划总量</th>
+                                        <th class="compact-cell text-center w-24">报关单价</th><th class="compact-cell detail-head-number">报关总价</th>
+                                        <th class="compact-cell text-center w-24 text-blue-600">销售单价</th><th class="compact-cell detail-head-number font-bold text-blue-600">销售总价</th>
+                                        <th class="compact-cell text-center min-w-[88px]">币种</th><th class="compact-cell min-w-[128px]">出口包装方式</th><th class="compact-cell min-w-[164px]">交货期</th><th class="compact-cell min-w-[164px]">到港时间</th>
+                                        <th class="compact-cell min-w-[84px]">生产基地</th><th class="compact-cell min-w-[104px]">产品类型</th><th class="compact-cell min-w-[110px]">有无直发料</th>
+                                        <th class="compact-cell min-w-[138px]">客户型号</th><th class="compact-cell min-w-[138px]">工厂型号</th><th class="compact-cell min-w-[112px]">面板直发</th><th class="compact-cell min-w-[112px]">品牌</th>
+                                        <th class="compact-cell text-center no-print sticky-head sticky-right-action min-w-[120px]">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100">
+                                    <tr v-for="(item, idx) in formData.items" :key="item.id" class="hover:bg-gray-50">
+                                        <td class="compact-cell detail-batch">{{ item.batchNo }}</td>
+                                        <td class="compact-cell text-center bg-blue-50/30">
+                                            <div class="flex items-center justify-center gap-1">
+                                                <input type="number" v-model.number="item.tempQty" v-if="item.isEditing" class="detail-input w-[74px] border-blue-500 text-center font-bold text-blue-700 outline-none">
+                                                <span v-else class="font-bold text-blue-700 cursor-pointer border-b border-dashed border-blue-500" @click="startEditQty(item)">{{ item.qty }}</span>
+                                                <button v-if="item.isEditing" @click="confirmQty(item)" class="text-green-600 hover:text-green-800 no-print"><i class="fa-solid fa-check"></i></button>
+                                                <button v-if="item.isEditing" @click="cancelQty(item)" class="text-gray-400 hover:text-gray-600 no-print"><i class="fa-solid fa-xmark"></i></button>
+                                            </div>
+                                        </td>
+                                        <td class="compact-cell detail-cell-center text-gray-500">{{ item.used }}</td>
+                                        <td class="compact-cell text-center"><input type="number" :value="item.versionDemandQty" disabled class="detail-input w-[88px] input-readonly text-center"></td>
+                                        
+                                        <td class="compact-cell text-center"><input type="number" v-model.number="item.customsPrice" :disabled="isReadOnly" class="detail-input w-[88px] text-center font-mono focus:ring-1 focus:ring-blue-500"></td>
+                                        <td class="compact-cell detail-cell-number text-gray-600 detail-total">{{ (item.customsPrice * item.qty).toFixed(2) }}</td>
+                                        
+                                        <td class="compact-cell text-center"><div class="detail-pill">{{ ((item.customsPrice * item.qty * (1 + item.markupRate/100)) / (item.qty || 1)).toFixed(2) }}</div></td>
+                                        <td class="compact-cell detail-cell-number text-blue-600 detail-total">{{ (item.customsPrice * item.qty * (1 + item.markupRate/100)).toFixed(2) }}</td>
+                                        <td class="compact-cell text-center">
+                                            <select v-model="item.currency" :disabled="isReadOnly" class="detail-select w-[78px] outline-none focus:border-blue-500">
+                                                <option value="CNY">CNY</option>
+                                                <option value="USD">USD</option>
+                                                <option value="EUR">EUR</option>
+                                            </select>
+                                        </td>
+                                        <td class="compact-cell">
+                                            <select v-model="item.packaging" :disabled="isReadOnly" class="detail-select w-[124px] outline-none">
+                                                <option value="">--</option>
+                                                <option v-for="opt in config.packagingOptions" :value="opt">{{ opt }}</option>
+                                            </select>
+                                        </td>
+                                        <td class="compact-cell"><input type="date" v-model="item.deliveryDate" :disabled="isReadOnly" class="detail-date w-[150px]"></td>
+                                        <td class="compact-cell"><input type="date" v-model="item.arrivalDate" :disabled="isReadOnly" class="detail-date w-[150px]"></td>
+                                        <td class="compact-cell">{{ item.baseName }}</td>
+                                        <td class="compact-cell">
+                                            <select v-model="item.productType" :disabled="isReadOnly" class="detail-select w-[98px] outline-none">
+                                                <option v-for="opt in config.productTypes" :value="opt">{{ opt }}</option>
+                                            </select>
+                                        </td>
+                                        <td class="compact-cell">
+                                            <select v-model="item.directMaterial" :disabled="isReadOnly" class="detail-select w-[102px] outline-none">
+                                                <option v-for="opt in config.directMaterialOptions" :value="opt">{{ opt }}</option>
+                                            </select>
+                                        </td>
+                                        <td class="compact-cell"><input type="text" v-model="item.customerModel" :disabled="isReadOnly" class="detail-input w-[128px]"></td>
+                                        <td class="compact-cell"><input type="text" v-model="item.factoryModel" :disabled="isReadOnly" class="detail-input w-[128px]"></td>
+                                        <td class="compact-cell">
+                                            <select v-model="item.panelDirect" :disabled="isReadOnly" class="detail-select w-[100px] outline-none">
+                                                <option v-for="opt in config.panelDirectOptions" :value="opt">{{ opt === '' ? '' : opt }}</option>
+                                            </select>
+                                        </td>
+                                        <td class="compact-cell">
+                                            <select v-model="item.brand" :disabled="isReadOnly" class="detail-select w-[112px] outline-none">
+                                                <option value="">--</option>
+                                                <option v-for="opt in config.brandOptions" :value="opt">{{ opt }}</option>
+                                            </select>
+                                        </td>
+                                        
+                                        <td class="compact-cell text-center no-print sticky-body sticky-right-action min-w-[120px] bg-white">
+                                            <div class="flex gap-2 justify-center">
+                                                <template v-if="isVnFlow">
+                                                    <button @click="executeSync(item)" class="text-blue-600 hover:text-blue-800 text-xs font-medium" :disabled="!canSyncItem">同步</button>
+                                                    <span class="text-gray-300">|</span>
+                                                </template>
+                                                <button @click="removeItem(idx)" title="删除此批次" class="text-red-600 hover:text-red-800 text-xs font-medium" :disabled="!canRemoveItem">删除</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-6 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-6">
+                            <div class="bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm cursor-pointer hover:shadow-md transition" @click="copyToClipboard(customsTotalString)">
+                                <div class="text-xs text-gray-400 uppercase font-bold tracking-wider">报关总额 (Customs)</div>
+                                <div class="text-xl font-mono font-bold text-gray-700">{{ customsTotalString }}</div>
+                            </div>
+                             <div class="bg-blue-600 border border-blue-700 rounded-lg px-4 py-2 shadow-sm cursor-pointer hover:bg-blue-700 transition" @click="copyToClipboard(hshaTotalString)">
+                                <div class="text-xs text-blue-200 uppercase font-bold tracking-wider">销售总额</div>
+                                <div class="text-xl font-mono font-bold text-white">{{ hshaTotalString }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-box info-box-blue mt-6">
+                        <div class="bg-section-header flex justify-between items-center mb-4">
+                            <h3 class="text-blue-600 font-bold flex items-center gap-2"><i class="fa-solid fa-circle-info"></i> 备注事项</h3>
+                            <div class="flex items-center gap-2">
+                                <select v-model="selectedNoteTemplate" @change="applyNotesTemplate" class="template-select"><option value="">-- 选择模板 --</option><option v-for="(tpl, key) in notesTemplates" :key="key" :value="key">{{ key }}</option></select>
+                                <span class="save-tpl-btn" @click="updateTemplate('note')">保存修改</span>
+                                <span class="save-tpl-btn" @click="openSaveTemplateModal('note')">+ 存为新模板</span>
+                                <span class="reset-btn text-red-500 hover:text-red-700" @click="deleteTemplate('note')">删除模板</span>
+                                <span class="reset-btn" @click="resetNotes()"><i class="fa-solid fa-eraser mr-1"></i>重置</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-6">
+                            <div><span class="p2-label">船务注意事项</span><textarea v-model="formData.notes.shipping" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.notes.shipping}"></textarea></div>
+                            <div><span class="p2-label">发货注意事项</span><textarea v-model="formData.notes.delivery" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.notes.delivery}"></textarea></div>
+                            <div><span class="p2-label">单证注意事项</span><textarea v-model="formData.notes.docs" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.notes.docs}"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div class="info-box mt-6">
+                        <div class="bg-section-header flex justify-between items-center mb-4">
+                            <h3 class="text-blue-600 font-bold flex items-center gap-2"><i class="fa-solid fa-address-card"></i> 收发通信息</h3>
+                            <div class="flex items-center gap-2">
+                                <select v-model="selectedPartyTemplate" @change="applyPartyTemplate" class="template-select"><option value="">-- 选择模板 --</option><option v-for="(tpl, key) in partyTemplates" :key="key" :value="key">{{ key }}</option></select>
+                                <span class="save-tpl-btn" @click="updateTemplate('party')">保存修改</span>
+                                <span class="save-tpl-btn" @click="openSaveTemplateModal('party')">+ 存为新模板</span>
+                                <span class="reset-btn text-red-500 hover:text-red-700" @click="deleteTemplate('party')">删除模板</span>
+                                <span class="reset-btn" @click="resetParties"><i class="fa-solid fa-eraser mr-1"></i>重置</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-6">
+                             <div><span class="p2-label required-star">发货人</span><textarea v-model="formData.shipper" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.shipper}"></textarea></div>
+                             <div><span class="p2-label required-star">收货人</span><textarea v-model="formData.consignee" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.consignee}"></textarea></div>
+                             <div><span class="p2-label required-star">通知人</span><textarea v-model="formData.notifyParty" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.notifyParty}"></textarea></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="currentView === 'list'" class="max-w-full mx-auto space-y-2.5">
+                    <div class="query-shell">
+                        <div class="query-header">
+                            <div class="flex items-center border-l-4 border-blue-600 pl-3 py-1">
+                                <h2 class="text-base font-bold tracking-tight text-slate-900">物流委托管理</h2>
+                            </div>
+                        </div>
+                        <div class="query-body space-y-3">
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                <div class="filter-item"><span class="filter-label">委托单号</span><input v-model="listFilters.commissionNo" type="text" class="filter-control w-[150px]" placeholder="请输入..."></div>
+                                <div class="filter-item multi-select-wrap">
+                                    <span class="filter-label">委托单状态</span>
+                                    <button type="button" @click="toggleFilterDropdown('status')" :class="['multi-select-trigger', !listFilters.status.length ? 'placeholder' : '']">
+                                        <span>{{ getMultiSelectLabel('status', '请选择') }}</span>
+                                        <span class="text-[10px]">▼</span>
+                                    </button>
+                                    <div v-if="openFilterDropdown === 'status'" class="multi-select-panel">
+                                        <label v-for="option in filterOptions.statuses" :key="option.value" class="multi-select-option">
+                                            <input type="checkbox" :checked="listFilters.status.includes(option.value)" @change="toggleMultiFilter('status', option.value)">
+                                            <span>{{ option.label }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="filter-item"><span class="filter-label">批次号</span><input v-model="listFilters.planNo" type="text" class="filter-control w-[150px]" placeholder="请输入..."></div>
+                                <div class="filter-item multi-select-wrap">
+                                    <span class="filter-label">起运港</span>
+                                    <button type="button" @click="toggleFilterDropdown('pol')" :class="['multi-select-trigger', !listFilters.pol.length ? 'placeholder' : '']">
+                                        <span>{{ getMultiSelectLabel('pol', '请选择') }}</span>
+                                        <span class="text-[10px]">▼</span>
+                                    </button>
+                                    <div v-if="openFilterDropdown === 'pol'" class="multi-select-panel">
+                                        <label v-for="option in filterOptions.ports" :key="option" class="multi-select-option">
+                                            <input type="checkbox" :checked="listFilters.pol.includes(option)" @change="toggleMultiFilter('pol', option)">
+                                            <span>{{ option }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="filter-item"><span class="filter-label">船期</span><input v-model="listFilters.etdFrom" type="date" class="filter-control w-[170px]"></div>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                                <div class="filter-item"><span class="filter-label">创建时间</span><input v-model="listFilters.createdFrom" type="date" class="filter-control w-[170px]"></div>
+                                <div class="filter-item"><span class="filter-label">订单人</span><input v-model="listFilters.orderer" type="text" class="filter-control w-[150px]" placeholder="请输入..."></div>
+                                <div class="filter-item"><span class="filter-label">销售区域</span><select v-model="listFilters.salesArea" class="filter-control w-[170px]"><option value="">请选择</option><option value="越南工厂">越南工厂</option><option value="TVS">TVS</option></select></div>
+                                <div class="filter-item multi-select-wrap">
+                                    <span class="filter-label">目的港</span>
+                                    <button type="button" @click="toggleFilterDropdown('pod')" :class="['multi-select-trigger', !listFilters.pod.length ? 'placeholder' : '']">
+                                        <span>{{ getMultiSelectLabel('pod', '请选择') }}</span>
+                                        <span class="text-[10px]">▼</span>
+                                    </button>
+                                    <div v-if="openFilterDropdown === 'pod'" class="multi-select-panel">
+                                        <label v-for="option in filterOptions.destinations" :key="option" class="multi-select-option">
+                                            <input type="checkbox" :checked="listFilters.pod.includes(option)" @change="toggleMultiFilter('pod', option)">
+                                            <span>{{ option }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 ml-auto">
+                                    <button @click="runListSearch" class="list-btn primary">查询</button>
+                                    <button @click="resetListFilters" class="list-btn">重置</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-shell">
+                        <div class="list-topbar">
+                            <div class="section-title"><i class="fa-solid fa-table-list"></i> 委托列表</div>
+                            <div class="flex flex-col items-end gap-1.5">
+                                <div class="list-actions">
+                                        <button class="list-btn">按物流委托导出</button>
+                                        <button class="list-btn">按批次导出</button>
+                                        <button @click="navigate('edit', 'tvs-direct')" class="list-btn primary">新建</button>
+                                        <button @click="navigate('create')" class="list-btn secondary">查询新建</button>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500">新建用于 TVS 手工录入；查询新建用于越南工厂查询滚动计划后创建。</p>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                        <table class="w-full min-w-[1520px] text-left text-[12px]">
+                            <thead class="text-gray-600 border-b bg-[#F3F7FB]">
+                                <tr>
+                                    <th class="px-3 py-2.5 w-10 whitespace-nowrap"><input type="checkbox" v-model="selectAllPage3" class="w-4 h-4 text-blue-600 border-gray-300 rounded"></th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">委托单号</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">包含批次</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">产品线</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">价格条款</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">运输方式</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">起运港</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">目的港</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">箱型箱量</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">客户</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">订单人</th>
+                                    <th class="px-3 py-2.5 sticky-head sticky-right-status min-w-[72px] whitespace-nowrap text-center">状态</th>
+                                    <th class="px-3 py-2.5 sticky-head sticky-right-action min-w-[104px] text-center whitespace-nowrap">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="doc in pagedList" :key="doc.id" class="hover:bg-blue-50/30">
+                                    <td class="px-3 py-2.5"><input type="checkbox" v-model="doc.checked" class="w-4 h-4 text-blue-600 border-gray-300 rounded"></td>
+                                    <td class="px-3 py-2.5 font-medium text-blue-600 whitespace-nowrap">{{ doc.id }}</td>
+                                    <td class="px-3 py-2.5"><div class="flex gap-1 flex-wrap"><span v-for="b in doc.batches" class="bg-gray-100 px-1 rounded text-[11px] border">{{ b }}</span></div></td>
+                                    <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.productLine }}</td>
+                                    <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.priceTerms }}</td>
+                                    <td class="px-3 py-2.5 text-gray-500 whitespace-nowrap">{{ doc.transport }}</td>
+                                    <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.pol }}</td>
+                                    <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.pod }}</td>
+                                    <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.containerSummary }}</td>
+                                    <td class="px-3 py-2.5">{{ doc.customer }}</td>
+                                    <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.orderer }}</td>
+                                    <td class="px-3 py-2.5 sticky-body sticky-right-status min-w-[72px] whitespace-nowrap text-center text-gray-900">{{ statusMap[doc.status] }}</td>
+                                    <td class="px-3 py-2.5 sticky-body sticky-right-action min-w-[104px] text-center">
+                                        <div class="flex justify-center gap-2 whitespace-nowrap">
+                                            <button class="text-teal-600 hover:text-teal-800 text-xs font-medium" @click.stop="openDoc(doc, 'view')">查看</button>
+                                            <button v-if="doc.status !== 'EXECUTED'" class="text-teal-600 hover:text-teal-800 text-xs font-medium" @click.stop="openDoc(doc, 'edit')">编辑</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        </div>
+                        <div class="px-6 py-4 border-t flex justify-between items-center">
+                            <span class="text-xs text-gray-500">显示 {{ pageStart }}-{{ pageEnd }} 条，共 {{ filteredList.length }} 条</span>
+                            <div class="flex gap-2 items-center">
+                                <select v-model="pagination.pageSize" class="border rounded px-2 py-1 text-xs bg-white text-gray-600 outline-none"><option value="10">10 条/页</option><option value="20">20 条/页</option><option value="50">50 条/页</option><option value="100">100 条/页</option></select>
+                                <div class="flex gap-1">
+                                    <button @click="goPrevPage" :disabled="pagination.currentPage === 1" :class="pagination.currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''" class="px-3 py-1 border rounded text-xs">上一页</button>
+                                    <button @click="goNextPage" :disabled="pagination.currentPage === totalPages" :class="pagination.currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''" class="px-3 py-1 border rounded text-xs">下一页</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+        
+        <div v-if="showAddBatchModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+             <div class="bg-white rounded-lg shadow-xl w-[900px] max-h-[80vh] flex flex-col">
+                <div class="p-4 border-b flex justify-between items-center"><h3 class="font-bold">查询新增滚动计划（{{ formData.productLine }}）</h3><button @click="showAddBatchModal=false"><i class="fa-solid fa-xmark"></i></button></div>
+                <div class="p-4 bg-gray-50 border-b flex gap-2">
+                    <input v-model="modalSearchQuery" type="text" placeholder="输入滚动计划号（支持逗号分隔）..." class="border rounded px-3 py-2 flex-1"><button @click="modalSearchBatch" class="bg-blue-600 text-white px-4 rounded">查询</button>
+                </div>
+                <div class="overflow-y-auto flex-1 p-0">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-100 text-gray-600 sticky top-0">
+                            <tr>
+                                <th class="px-4 py-2 w-10"><input type="checkbox" v-model="selectAllModal" @change="toggleSelectAllModal"></th>
+                                <th class="px-4 py-2">滚动计划号</th>
+                                <th class="px-4 py-2">产品类型</th>
+                                <th class="px-4 py-2 text-right">排产</th>
+                                <th class="px-4 py-2 text-right">已做</th>
+                                <th class="px-4 py-2 text-right">剩余</th>
+                                <th class="px-4 py-2 w-32">此次数量</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="mItem in modalBatchData" :key="mItem.id" class="border-b">
+                                <td class="px-4 py-2"><input type="checkbox" v-model="mItem.checked" @change="toggleModalRowCheck(mItem)"></td>
+                                <td class="px-4 py-2 font-mono">{{ mItem.batchNo }}</td><td class="px-4 py-2">{{ mItem.productType }}</td>
+                                <td class="px-4 py-2 text-right text-gray-500">{{ mItem.total }}</td><td class="px-4 py-2 text-right text-gray-500">{{ mItem.used }}</td>
+                                <td class="px-4 py-2 text-right font-bold text-green-600">{{ mItem.remaining }}</td>
+                                <td class="px-4 py-2"><input type="number" v-model.number="mItem.inputQty" @input="monitorModalQty(mItem)" class="border rounded w-full px-2 py-1 text-right"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 border-t flex justify-end gap-3">
+                    <button @click="showAddBatchModal=false" class="px-4 py-2 border rounded">取消</button>
+                    <button @click="confirmAddBatchItems" class="px-4 py-2 bg-blue-600 text-white rounded">确认带入</button>
+                </div>
+             </div>
+        </div>
+
+        <div v-if="showImportModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-xl w-[600px] flex flex-col">
+                <div class="p-4 border-b flex justify-between items-center"><h3 class="font-bold">批量导入滚动计划</h3><button @click="showImportModal=false"><i class="fa-solid fa-xmark"></i></button></div>
+                <div class="p-6 space-y-4">
+                    <div class="bg-blue-50 border border-blue-200 p-3 rounded text-sm text-blue-700">
+                        <i class="fa-solid fa-circle-info mr-2"></i>说明：单次最多上传 99 行数据。校验失败将无法导入。
+                    </div>
+                    <div class="flex gap-4 items-center">
+                        <button @click="downloadTemplate" class="text-blue-600 underline text-sm">下载 Excel 模板</button>
+                    </div>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition" @click="$refs.fileInput.click()">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 mb-2"></i>
+                        <div class="text-sm text-gray-600">点击上传文件 (.xlsx, .csv)</div>
+                        <input type="file" ref="fileInput" class="hidden" @change="handleFileUpload">
+                    </div>
+                    <div v-if="importPreview.length > 0" class="border rounded max-h-40 overflow-y-auto">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-gray-50"><tr><th class="p-2">滚动计划号</th><th class="p-2">产品类型</th><th class="p-2 text-right">本次委托数量</th></tr></thead>
+                            <tbody><tr v-for="(row, i) in importPreview" :key="i" class="border-t"><td class="p-2">{{row.batchNo}}</td><td class="p-2">{{row.productType}}</td><td class="p-2 text-right">{{row.qty}}</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="p-4 border-t flex justify-end gap-3">
+                    <button @click="showImportModal=false" class="px-4 py-2 border rounded">取消</button>
+                    <button @click="confirmImport" class="px-4 py-2 bg-green-600 text-white rounded">开始导入</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showCommissionSearchModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg shadow-xl w-[500px] p-6">
+                <h3 class="font-bold text-lg mb-4">查询物流委托</h3>
+                <div class="mb-4">
+                    <input v-model="commissionSearchQuery" type="text" class="w-full border p-2 rounded" placeholder="输入委托单号 (如 HA202512001)...">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button @click="showCommissionSearchModal=false" class="border px-4 py-2 rounded text-gray-600">取消</button>
+                    <button @click="searchAndLoadCommission" class="bg-blue-600 text-white px-4 py-2 rounded">查询并加载</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showReferenceCreateModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+            <div class="bg-white rounded-xl shadow-xl w-[460px] p-6">
+                <h3 class="font-bold text-lg mb-3">确认参考创建</h3>
+                <p class="text-sm text-gray-600 leading-6 mb-6">系统将带入一套示例参考数据，并自动填充大部分必填项；`船期`、`落货日期`、`箱型箱量` 仍需用户补充确认。</p>
+                <div class="flex justify-end gap-3">
+                    <button @click="showReferenceCreateModal=false" class="px-4 py-2 border rounded text-gray-600">取消</button>
+                    <button @click="applyReferenceCreate" class="px-4 py-2 bg-blue-600 text-white rounded">确认带入</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showSaveTemplateModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"><div class="bg-white p-6 rounded w-[400px]"><h3 class="font-bold mb-4">存为新模板</h3><input v-model="newTemplateName" class="border w-full p-2 mb-4" placeholder="名称..."><div class="flex justify-end gap-2"><button @click="showSaveTemplateModal=false" class="border px-4 py-2 rounded">取消</button><button @click="confirmSaveTemplate" class="bg-blue-600 text-white px-4 py-2 rounded">保存</button></div></div></div>
+
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    currentView: 'list', selectAllPage1: false, selectAllPage3: false, isOrderMenuOpen: true, openFilterDropdown: '',
+                    // [Hotfix] Added productLine to createFilters
+                    createFilters: { batchNo: '', showCompleted: false, productLine: '电视' },
+                    appliedCreateFilters: { batchNo: '', productLine: '' },
+                    createHasSearched: false,
+                    searchedGssData: [],
+                    isSubmitting: false,
+                    showCommissionSearchModal: false,
+                    showReferenceCreateModal: false,
+                    commissionSearchQuery: '',
+                    showValidationErrors: false, 
+                    selectAllModal: false,
+                    showAddBatchModal: false,
+                    modalSearchQuery: '',
+                    modalBatchData: [],
+                    
+                    // Import Feature Data
+                    showImportModal: false,
+                    importPreview: [],
+                    forcedReadOnly: false,
+                    listFilters: {
+                        commissionNo: '',
+                        status: [],
+                        planNo: '',
+                        salesArea: '',
+                        etdFrom: '',
+                        etdTo: '',
+                        createdFrom: '',
+                        createdTo: '',
+                        orderer: '',
+                        pol: [],
+                        pod: []
+                    },
+                    appliedListFilters: {
+                        commissionNo: '',
+                        status: [],
+                        planNo: '',
+                        salesArea: '',
+                        etdFrom: '',
+                        etdTo: '',
+                        createdFrom: '',
+                        createdTo: '',
+                        orderer: '',
+                        pol: [],
+                        pod: []
+                    },
+                    filterOptions: {
+                        statuses: [
+                            { label: '草稿', value: 'DRAFT' },
+                            { label: '执行', value: 'EXECUTED' },
+                            { label: '撤回', value: 'RECALLED' }
+                        ],
+                        ports: ['青岛', '江门', '上海'],
+                        destinations: ['东京', '大阪', '横滨', '名古屋', '神户', '海防', '胡志明', '岘港']
+                    },
+                    
+                    // Template Editing State
+                    selectedPartyTemplate: '',
+                    selectedNoteTemplate: '',
+
+                    // Configs (Hotfix Added)
+                    config: {
+                        productLines: [
+                            { label: '电视', value: '电视' }
+                        ],
+                        productTypes: ['整机', '备件'],
+                        directMaterialOptions: ['有', '无'],
+                        panelDirectOptions: ['', '面板直发'],
+                        packagingOptions: ['CBU', 'ZSKD-1', 'SKD-1', 'CKD', 'SKD-P'],
+                        brandOptions: ['REGZA', 'Hisense', 'Toshiba'],
+                        tradeModes: [
+                            { label: '一般贸易', value: 'General' },
+                            { label: 'ATA', value: 'ATA' },
+                            { label: '货样广告', value: 'Sample' }
+                        ],
+                        orderers: ['薛馨', '田晓丽'],
+                        bookers: ['郭美芹', '马筱然', '张暖']
+                    },
+
+                    gssData: [
+                        { id: 1, batchNo: 'REGZA-RP-001', productType: '备件', total: 3000, usedTotal: 5, remaining: 2995, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 2, batchNo: 'REGZA-RP-002', productType: '备件', total: 1200, usedTotal: 200, remaining: 1000, inputQty: 0, checked: false, hasError: false, base: '2000', baseName: '黄岛', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 3, batchNo: 'REGZA-RP-003', productType: '备件', total: 850, usedTotal: 120, remaining: 730, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 4, batchNo: 'REGZA-RP-004', productType: '备件', total: 500, usedTotal: 0, remaining: 500, inputQty: 0, checked: false, hasError: false, base: '2000', baseName: '黄岛', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 5, batchNo: 'REGZA-RP-005', productType: '备件', total: 960, usedTotal: 430, remaining: 530, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 6, batchNo: 'REGZA-RP-006', productType: '备件', total: 1500, usedTotal: 700, remaining: 800, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 7, batchNo: 'REGZA-RP-007', productType: '备件', total: 420, usedTotal: 20, remaining: 400, inputQty: 0, checked: false, hasError: false, base: '2000', baseName: '黄岛', entity: 'REGZA_ENT', salesOrg: 'HSVC' }
+                    ],
+                    formData: { 
+                        commissionNo: '', status: 'NONE', 
+                        productLine: '电视', country: 'VN', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'DAP', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
+                        orderer: '薛馨',
+                        booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
+                        items: [], 
+                        notes: { shipping: '', delivery: '', docs: '' }, 
+                        etd: '', cutoff: '', pol: '', pod: '', shipper: '', consignee: '', notifyParty: '' 
+                    },
+                    partyTemplates: { 
+                        "泰国海信标准": { shipper: "HISENSE (THAILAND) CO., LTD.\nNO. 123 BANGNA-TRAD ROAD...", consignee: "THAI DISTRIBUTOR CO., LTD.", notify: "SAME AS CONSIGNEE" }, 
+                        "日本海信": { shipper: "HISENSE JAPAN CORPORATION\nTOKYO, JAPAN", consignee: "JAPAN RETAIL GROUP", notify: "LOGISTICS PARTNER JP" },
+                        "英国海信": { shipper: "HISENSE UK LTD\nLEEDS, UK", consignee: "BRITISH APPLIANCES LTD", notify: "UK FORWARDER INC" }
+                    },
+                    notesTemplates: { 
+                        "标准模板": { shipping: "Original BL required.", delivery: "Handle with care.", docs: "Invoice, Packing List" },
+                        "紧急空运": { shipping: "Urgent Air Freight. Do not stack.", delivery: "Immediate delivery upon arrival.", docs: "Express release" },
+                        "危险品": { shipping: "DG Class 9. Label required.", delivery: "DG Warehouse only.", docs: "MSDS attached" }
+                    },
+                    listData: [ 
+                        { id: 'VN202605130001', status: 'DRAFT', salesArea: 'TVS', batches: ['TVS-RP-001', 'TVS-RP-002'], productLine: '电视', priceTerms: 'DAP', transport: 'BY SEA', pol: '江门', pod: '东京', containerSummary: '40HQ * 8', customer: 'REGZA越南电子有限公司', etd: '2026-05-28', orderer: '田晓丽', booker: '郭美芹', checked: false },
+                        { id: 'VN202605140002', status: 'EXECUTED', salesArea: '越南工厂', batches: ['REGZA-RP-003'], productLine: '电视', priceTerms: 'CIP', transport: 'BY SEA', pol: '青岛', pod: '胡志明', containerSummary: '20GP * 4', customer: 'REGZA越南电子有限公司', etd: '2026-05-30', orderer: '薛馨', booker: '马筱然', checked: false },
+                        { id: 'VN202605150003', status: 'EXECUTED', salesArea: 'TVS', batches: ['TVS-RP-005'], productLine: '电视', priceTerms: 'CIF', transport: 'BY AIR', pol: '上海', pod: '大阪', containerSummary: 'LCL', customer: 'TVS REGZA CORPORATION', etd: '2026-06-02', orderer: '田晓丽', booker: '张暖', checked: false },
+                        { id: 'VN202605160004', status: 'DRAFT', salesArea: '越南工厂', batches: ['REGZA-RP-006', 'REGZA-RP-007'], productLine: '电视', priceTerms: 'DAP', transport: 'BY TRUCK', pol: '江门', pod: '海防', containerSummary: '20GP * 6', customer: 'REGZA越南电子有限公司', etd: '2026-06-04', orderer: '薛馨', booker: '郭美芹', checked: false },
+                        { id: 'VN202605170005', status: 'DRAFT', salesArea: 'TVS', batches: ['TVS-RP-008'], productLine: '电视', priceTerms: 'FOB', transport: 'BY SEA', pol: '江门', pod: '横滨', containerSummary: '40HQ * 5', customer: 'TVS REGZA CORPORATION', etd: '2026-06-05', orderer: '田晓丽', booker: '郭美芹', checked: false },
+                        { id: 'VN202605180006', status: 'EXECUTED', salesArea: '越南工厂', batches: ['REGZA-RP-009', 'REGZA-RP-010'], productLine: '电视', priceTerms: 'DAP', transport: 'BY SEA', pol: '青岛', pod: '胡志明', containerSummary: '40HQ * 3', customer: 'REGZA越南电子有限公司', etd: '2026-06-06', orderer: '薛馨', booker: '马筱然', checked: false },
+                        { id: 'VN202605190007', status: 'EXECUTED', salesArea: 'TVS', batches: ['TVS-RP-011'], productLine: '电视', priceTerms: 'CIF', transport: 'BY AIR', pol: '上海', pod: '名古屋', containerSummary: 'LCL', customer: '海信视像科技股份有限公司', etd: '2026-06-07', orderer: '田晓丽', booker: '张暖', checked: false },
+                        { id: 'VN202605200008', status: 'RECALLED', salesArea: '越南工厂', batches: ['REGZA-RP-012'], productLine: '电视', priceTerms: 'CIP', transport: 'BY TRUCK', pol: '江门', pod: '海防', containerSummary: '20GP * 2', customer: 'REGZA越南电子有限公司', etd: '2026-06-08', orderer: '薛馨', booker: '郭美芹', checked: false },
+                        { id: 'VN202605210009', status: 'DRAFT', salesArea: 'TVS', batches: ['TVS-RP-013', 'TVS-RP-014'], productLine: '电视', priceTerms: 'DAP', transport: 'BY SEA', pol: '江门', pod: '神户', containerSummary: '40HQ * 4', customer: '广东海信电子有限公司', etd: '2026-06-09', orderer: '田晓丽', booker: '张暖', checked: false },
+                        { id: 'VN202605220010', status: 'EXECUTED', salesArea: '越南工厂', batches: ['REGZA-RP-015'], productLine: '电视', priceTerms: 'FOB', transport: 'BY SEA', pol: '青岛', pod: '胡志明', containerSummary: '20GP * 7', customer: 'REGZA越南电子有限公司', etd: '2026-06-10', orderer: '薛馨', booker: '马筱然', checked: false },
+                        { id: 'VN202605230011', status: 'DRAFT', salesArea: 'TVS', batches: ['TVS-RP-016'], productLine: '电视', priceTerms: 'CIP', transport: 'BY TRAIN', pol: '上海', pod: '东京', containerSummary: '40HQ * 2', customer: 'TVS REGZA CORPORATION', etd: '2026-06-11', orderer: '田晓丽', booker: '郭美芹', checked: false },
+                        { id: 'VN202605240012', status: 'RECALLED', salesArea: '越南工厂', batches: ['REGZA-RP-017', 'REGZA-RP-018'], productLine: '电视', priceTerms: 'DAP', transport: 'BY SEA', pol: '江门', pod: '海防', containerSummary: '40HQ * 6', customer: 'REGZA越南电子有限公司', etd: '2026-06-12', orderer: '薛馨', booker: '郭美芹', checked: false },
+                        { id: 'VN202605250013', status: 'DRAFT', salesArea: 'TVS', batches: ['TVS-RP-019'], productLine: '电视', priceTerms: 'CIF', transport: 'BY AIR', pol: '上海', pod: '大阪', containerSummary: 'LCL', customer: '海信视像科技股份有限公司', etd: '2026-06-13', orderer: '田晓丽', booker: '张暖', checked: false },
+                        { id: 'VN202605260014', status: 'EXECUTED', salesArea: '越南工厂', batches: ['REGZA-RP-020'], productLine: '电视', priceTerms: 'DAP', transport: 'BY SEA', pol: '青岛', pod: '岘港', containerSummary: '20GP * 5', customer: 'REGZA越南电子有限公司', etd: '2026-06-14', orderer: '薛馨', booker: '马筱然', checked: false },
+                        { id: 'VN202605270015', status: 'EXECUTED', salesArea: 'TVS', batches: ['TVS-RP-021', 'TVS-RP-022'], productLine: '电视', priceTerms: 'FOB', transport: 'BY TRUCK', pol: '江门', pod: '横滨', containerSummary: '20GP * 3', customer: '广东海信电子有限公司', etd: '2026-06-15', orderer: '田晓丽', booker: '郭美芹', checked: false },
+                        { id: 'VN202605280016', status: 'RECALLED', salesArea: '越南工厂', batches: ['REGZA-RP-023'], productLine: '电视', priceTerms: 'CIP', transport: 'BY SEA', pol: '青岛', pod: '胡志明', containerSummary: '40HQ * 7', customer: 'REGZA越南电子有限公司', etd: '2026-06-16', orderer: '薛馨', booker: '马筱然', checked: false },
+                        { id: 'VN202605290017', status: 'DRAFT', salesArea: 'TVS', batches: ['TVS-RP-024'], productLine: '电视', priceTerms: 'DAP', transport: 'BY SEA', pol: '江门', pod: '名古屋', containerSummary: '40HQ * 1', customer: 'TVS REGZA CORPORATION', etd: '2026-06-17', orderer: '田晓丽', booker: '张暖', checked: false },
+                        { id: 'VN202605300018', status: 'EXECUTED', salesArea: '越南工厂', batches: ['REGZA-RP-025', 'REGZA-RP-026'], productLine: '电视', priceTerms: 'DAP', transport: 'BY TRAIN', pol: '上海', pod: '岘港', containerSummary: '20GP * 4', customer: 'REGZA越南电子有限公司', etd: '2026-06-18', orderer: '薛馨', booker: '郭美芹', checked: false },
+                        { id: 'VN202606010019', status: 'EXECUTED', salesArea: 'TVS', batches: ['TVS-RP-027'], productLine: '电视', priceTerms: 'FOB', transport: 'BY SEA', pol: '江门', pod: '神户', containerSummary: '40HQ * 9', customer: '海信视像科技股份有限公司', etd: '2026-06-19', orderer: '田晓丽', booker: '张暖', checked: false },
+                        { id: 'VN202606020020', status: 'RECALLED', salesArea: '越南工厂', batches: ['REGZA-RP-028'], productLine: '电视', priceTerms: 'CIF', transport: 'BY AIR', pol: '上海', pod: '胡志明', containerSummary: 'LCL', customer: 'REGZA越南电子有限公司', etd: '2026-06-20', orderer: '薛馨', booker: '马筱然', checked: false },
+                        { id: 'VN202606030021', status: 'DRAFT', salesArea: 'TVS', batches: ['TVS-RP-029', 'TVS-RP-030'], productLine: '电视', priceTerms: 'DAP', transport: 'BY TRUCK', pol: '江门', pod: '东京', containerSummary: '20GP * 8', customer: '广东海信电子有限公司', etd: '2026-06-21', orderer: '田晓丽', booker: '郭美芹', checked: false },
+                        { id: 'VN202606040022', status: 'EXECUTED', salesArea: '越南工厂', batches: ['REGZA-RP-031'], productLine: '电视', priceTerms: 'CIP', transport: 'BY SEA', pol: '青岛', pod: '海防', containerSummary: '40HQ * 2', customer: 'REGZA越南电子有限公司', etd: '2026-06-22', orderer: '薛馨', booker: '马筱然', checked: false },
+                        { id: 'VN202606050023', status: 'DRAFT', salesArea: 'TVS', batches: ['TVS-RP-032'], productLine: '电视', priceTerms: 'FOB', transport: 'BY SEA', pol: '江门', pod: '大阪', containerSummary: 'LCL', customer: 'TVS REGZA CORPORATION', etd: '2026-06-23', orderer: '田晓丽', booker: '张暖', checked: false }
+                    ],
+                    pagination: { pageSize: 10, currentPage: 1 },
+                    showSaveTemplateModal: false, newTemplateName: '', saveTemplateType: '', saveTemplateCategory: '', showDraftWatermark: false, 
+                    statusMap: { 'NONE': '新单据', 'DRAFT': '草稿', 'EXECUTED': '执行', 'RECALLED': '撤回', 'DELETED': '已删除' }
+                }
+            },
+            computed: {
+                pageTitle() { if (this.currentView === 'create') return '新建物流委托'; if (this.currentView === 'edit') return '编辑物流委托'; return '物流委托管理'; },
+                hasValidSelection() { return this.searchedGssData.some(i => i.checked && i.inputQty > 0 && !i.hasError); },
+                isReadOnly() { return this.forcedReadOnly || this.formData.status === 'EXECUTED' || this.formData.status === 'DELETED'; },
+                canSave() { return ['NONE', 'DRAFT', 'RECALLED'].includes(this.formData.status); },
+                canSubmit() { return ['NONE', 'DRAFT', 'RECALLED'].includes(this.formData.status); },
+                canDelete() { return ['DRAFT', 'RECALLED'].includes(this.formData.status); },
+                canReferenceCreate() { return this.canSave && !this.forcedReadOnly; },
+                canDraftAction() { return this.canSave && !this.forcedReadOnly; },
+                canSubmitAction() { return this.canSubmit && !this.forcedReadOnly; },
+                canDeleteAction() { return this.canDelete && !this.forcedReadOnly; },
+                canRecallAction() { return this.formData.status === 'EXECUTED' && !this.forcedReadOnly; },
+                showReferenceCreate() { return this.canReferenceCreate; },
+                showSaveDraft() { return this.canDraftAction; },
+                showSubmit() { return this.canSubmitAction; },
+                showDelete() { return this.canDeleteAction; },
+                showRecall() { return this.canRecallAction; },
+                canImportItems() { return this.canDraftAction; },
+                canQueryAddItems() { return this.isVnFlow && this.canDraftAction; },
+                canManualAddItems() { return this.isTvsFlow && this.canDraftAction; },
+                canRefreshAll() { return this.isVnFlow && this.canDraftAction && this.formData.items.length > 0; },
+                canSyncItem() { return this.isVnFlow && this.canDraftAction; },
+                canRemoveItem() { return this.canDraftAction; },
+                editFlow() {
+                    if (this.formData.salesOrg === '越南工厂') return 'vnFactory';
+                    if (this.formData.salesOrg === 'TVS') return 'tvsDirect';
+                    return 'default';
+                },
+                isVnFlow() { return this.editFlow === 'vnFactory'; },
+                isTvsFlow() { return this.editFlow === 'tvsDirect'; },
+                statusBadgeClass() { 
+                    const s = this.formData.status;
+                    if (s === 'DRAFT') return 'status-draft';
+                    if (s === 'EXECUTED') return 'status-executed';
+                    if (s === 'RECALLED') return 'status-recalled';
+                    if (s === 'DELETED') return 'status-deleted';
+                    return 'status-none';
+                },
+                
+                isNoneContainerSelected() { return this.formData.containers.some(c => c.type === 'LCL'); },
+                totalContainersString() {
+                    if (this.formData.containers.some(c => c.type === 'LCL')) return 'LCL';
+                    const counts = {};
+                    this.formData.containers.forEach(c => { if (!counts[c.type]) counts[c.type] = 0; counts[c.type] += (c.qty || 0); });
+                    return Object.entries(counts).map(([type, qty]) => `${type}*${qty}`).join(', ');
+                },
+                customsTotalString() { const totals = {}; this.formData.items.forEach(item => { const amt = item.customsPrice * (item.qty || 0); if (!totals[item.currency]) totals[item.currency] = 0; totals[item.currency] += amt; }); const parts = Object.keys(totals).map(curr => `${this.formatMoney(totals[curr])} ${curr}`); return parts.length > 0 ? parts.join(' + ') : '0.00'; },
+                
+                // [Hotfix] Updated HSHA Total Calculation Logic: CustomsTotal * (1 + Markup)
+                hshaTotalString() { 
+                    const totals = {}; 
+                    this.formData.items.forEach(item => { 
+                        const customsTotal = item.customsPrice * (item.qty || 0);
+                        const hshaTotal = customsTotal * (1 + (item.markupRate || 0) / 100); 
+                        if (!totals[item.currency]) totals[item.currency] = 0; 
+                        totals[item.currency] += hshaTotal; 
+                    }); 
+                    const parts = Object.keys(totals).map(curr => `${this.formatMoney(totals[curr])} ${curr}`); 
+                    return parts.length > 0 ? parts.join(' + ') : '0.00'; 
+                },
+                
+                sortedGssData() { 
+                    if (!this.createHasSearched) return [];
+                    let data = [...this.searchedGssData];
+                    return data.sort((a, b) => a.batchNo.localeCompare(b.batchNo));
+                },
+                filteredList() {
+                    const f = this.appliedListFilters;
+                    return this.listData.filter(doc => {
+                        const createDate = doc.createDate || doc.etd;
+                        const matchesCommission = !f.commissionNo || doc.id.toLowerCase().includes(f.commissionNo.toLowerCase());
+                        const matchesStatus = !f.status.length || f.status.includes(doc.status);
+                        const matchesPlan = !f.planNo || doc.batches.some(batch => batch.toLowerCase().includes(f.planNo.toLowerCase()));
+                        const matchesArea = !f.salesArea || doc.salesArea === f.salesArea;
+                        const matchesOrderer = !f.orderer || doc.orderer.toLowerCase().includes(f.orderer.toLowerCase());
+                        const matchesPol = !f.pol.length || f.pol.includes(doc.pol);
+                        const matchesPod = !f.pod.length || f.pod.includes(doc.pod);
+                        const matchesEtd = !f.etdFrom || doc.etd === f.etdFrom;
+                        const matchesCreated = !f.createdFrom || createDate === f.createdFrom;
+                        return matchesCommission && matchesStatus && matchesPlan && matchesArea && matchesOrderer && matchesPol && matchesPod && matchesEtd && matchesCreated;
+                    });
+                },
+                totalPages() {
+                    const size = Number(this.pagination.pageSize) || 10;
+                    return Math.max(1, Math.ceil(this.filteredList.length / size));
+                },
+                pagedList() {
+                    const size = Number(this.pagination.pageSize) || 10;
+                    const start = (this.pagination.currentPage - 1) * size;
+                    return this.filteredList.slice(start, start + size);
+                },
+                pageStart() {
+                    if (this.filteredList.length === 0) return 0;
+                    return (this.pagination.currentPage - 1) * (Number(this.pagination.pageSize) || 10) + 1;
+                },
+                pageEnd() {
+                    if (this.filteredList.length === 0) return 0;
+                    return Math.min(this.pagination.currentPage * (Number(this.pagination.pageSize) || 10), this.filteredList.length);
+                }
+            },
+            watch: {
+                selectAllPage3(val) { this.pagedList.forEach(d => d.checked = val); },
+                'pagination.pageSize'() {
+                    this.pagination.currentPage = 1;
+                    this.selectAllPage3 = false;
+                },
+                pagedList() {
+                    this.selectAllPage3 = false;
+                }
+            },
+            methods: {
+                topActionBtnClass(enabled, tone = 'default') {
+                    if (!enabled) return 'opacity-50 cursor-not-allowed bg-gray-100 border border-gray-200 text-gray-400';
+                    if (tone === 'purple') return 'bg-purple-50 border border-purple-200 text-purple-600 hover:bg-purple-100';
+                    if (tone === 'yellow') return 'bg-yellow-50 border border-yellow-200 text-yellow-700 hover:bg-yellow-100';
+                    if (tone === 'red') return 'bg-red-50 border border-red-200 text-red-600 hover:bg-red-100';
+                    if (tone === 'blue') return 'bg-blue-600 border border-blue-700 text-white hover:bg-blue-700';
+                    return 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50';
+                },
+                navigate(view, mode) { 
+                    this.currentView = view; 
+                    if (view === 'create') { 
+                        this.forcedReadOnly = false;
+                        this.gssData.forEach(i => { i.checked = false; i.inputQty = 0; i.hasError = false; }); 
+                        this.searchedGssData = [];
+                        this.selectAllPage1 = false;
+                        this.createHasSearched = false;
+                        this.appliedCreateFilters = { batchNo: '', productLine: '' };
+                        this.createFilters.batchNo = '';
+                    }
+                    if (view === 'edit' && (mode === 'direct' || mode === 'tvs-direct')) {
+                        this.resetFormData();
+                        this.applyFlowDefaults('tvsDirect');
+                        this.formData.status = 'NONE';
+                    }
+                    if (view === 'list') this.forcedReadOnly = false;
+                },
+                isFieldLocked(field) {
+                    if (this.isReadOnly) return true;
+                    if (field === 'salesOrg') return true;
+                    if (field === 'productLine') return this.editFlow === 'vnFactory';
+                    return false;
+                },
+                applyFlowDefaults(flow) {
+                    if (flow === 'vnFactory') {
+                        this.formData.salesOrg = '越南工厂';
+                        this.formData.country = 'VN';
+                        this.formData.transportMode = 'BY SEA';
+                        this.formData.tradeMode = 'General';
+                        this.formData.priceTerms = 'DAP';
+                        this.formData.orderer = '薛馨';
+                        return;
+                    }
+                    if (flow === 'tvsDirect') {
+                        this.formData.salesOrg = 'TVS';
+                        this.formData.productLine = '电视';
+                        this.formData.country = 'VN';
+                        this.formData.transportMode = 'BY SEA';
+                        this.formData.tradeMode = 'General';
+                        this.formData.priceTerms = 'FOB';
+                        this.formData.orderer = '田晓丽';
+                    }
+                },
+                resetListFilters() {
+                    this.listFilters = {
+                        commissionNo: '',
+                        status: [],
+                        planNo: '',
+                        salesArea: '',
+                        etdFrom: '',
+                        etdTo: '',
+                        createdFrom: '',
+                        createdTo: '',
+                        orderer: '',
+                        pol: [],
+                        pod: []
+                    };
+                    this.appliedListFilters = { ...this.listFilters };
+                    this.pagination.currentPage = 1;
+                    this.selectAllPage3 = false;
+                    this.openFilterDropdown = '';
+                },
+                runListSearch() {
+                    this.appliedListFilters = { ...this.listFilters };
+                    this.pagination.currentPage = 1;
+                    this.selectAllPage3 = false;
+                    this.openFilterDropdown = '';
+                },
+                toggleFilterDropdown(field) {
+                    this.openFilterDropdown = this.openFilterDropdown === field ? '' : field;
+                },
+                toggleMultiFilter(field, value) {
+                    const current = [...this.listFilters[field]];
+                    const idx = current.indexOf(value);
+                    if (idx >= 0) current.splice(idx, 1);
+                    else current.push(value);
+                    this.listFilters[field] = current;
+                },
+                getMultiSelectLabel(field, placeholder) {
+                    const values = this.listFilters[field];
+                    if (!values || values.length === 0) return placeholder;
+                    if (field === 'status') {
+                        const labels = this.filterOptions.statuses
+                            .filter(option => values.includes(option.value))
+                            .map(option => option.label);
+                        return labels.length <= 2 ? labels.join('、') : `已选 ${labels.length} 项`;
+                    }
+                    return values.length <= 2 ? values.join('、') : `已选 ${values.length} 项`;
+                },
+                goPrevPage() {
+                    if (this.pagination.currentPage > 1) this.pagination.currentPage -= 1;
+                },
+                goNextPage() {
+                    if (this.pagination.currentPage < this.totalPages) this.pagination.currentPage += 1;
+                },
+                openDoc(doc, mode) {
+                    this.editDoc(doc);
+                    this.forcedReadOnly = mode === 'view';
+                },
+                
+                // Helper to simulate fetching current GSS totals for validation
+                async fetchGSS_Total(items) {
+                    console.log("Fetching fresh GSS totals for validation...");
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            // Mock logic: return current known totals
+                            // In real app, this would hit API.
+                            const results = items.map(i => ({ batchNo: i.batchNo, versionDemandQty: i.versionDemandQty, used: i.used }));
+                            resolve(results);
+                        }, 200);
+                    });
+                },
+
+                // Helper to simulate SAP Price fetch
+                async fetchSAP_Price(items) {
+                    console.log("Fetching SAP prices...");
+                    return new Promise(resolve => {
+                        setTimeout(() => {
+                            // Mock return default price
+                            resolve(150.00); 
+                        }, 300);
+                    });
+                },
+                validateItemQuantities() {
+                    if (this.formData.items.length === 0) return { ok: false, message: '明细行不能为空' };
+                    for (const item of this.formData.items) {
+                        const qty = Number(item.qty);
+                        if (!Number.isInteger(qty) || qty <= 0) {
+                            return { ok: false, message: `滚动计划【${item.batchNo}】数量需为大于 0 的整数` };
+                        }
+                        if (this.isVnFlow) {
+                            const maxAllowed = Math.max(0, Number(item.versionDemandQty || 0) - Number(item.used || 0));
+                            if (qty > maxAllowed) {
+                                return { ok: false, message: `滚动计划【${item.batchNo}】数量超出可委托上限，当前最大允许 ${maxAllowed}` };
+                            }
+                        }
+                    }
+                    return { ok: true };
+                },
+                buildDetailItem(overrides = {}) {
+                    const defaults = {
+                        id: Date.now() + Math.random(),
+                        batchNo: '',
+                        base: this.formData.base || '2900',
+                        baseName: (this.formData.base || '2900') === '2000' ? '黄岛' : '江门',
+                        productType: this.isTvsFlow ? '整机' : '备件',
+                        directMaterial: this.isTvsFlow ? '无' : '有',
+                        customerModel: '',
+                        factoryModel: '',
+                        panelDirect: '',
+                        brand: '',
+                        qty: 0,
+                        tempQty: 0,
+                        totalPlan: this.isTvsFlow ? 0 : 1000,
+                        used: this.isTvsFlow ? 0 : 0,
+                        remaining: this.isTvsFlow ? 0 : 1000,
+                        customsPrice: 0,
+                        markupRate: 10,
+                        currency: this.isTvsFlow ? 'USD' : 'CNY',
+                        packaging: '',
+                        versionDemandQty: this.isTvsFlow ? 1 : 1000,
+                        deliveryDate: '',
+                        arrivalDate: '',
+                        entity: this.formData.entity,
+                        salesOrg: this.formData.salesOrg,
+                        isEditing: false
+                    };
+                    return { ...defaults, ...overrides };
+                },
+                refreshAllItems() {
+                    if (this.isReadOnly || !this.formData.items.length) return;
+                    if (!this.isVnFlow) return;
+                    this.formData.items = this.formData.items.map(item => ({
+                        ...item,
+                        customsPrice: Number((item.customsPrice + 5).toFixed(2)),
+                        versionDemandQty: Number(item.versionDemandQty || 0) + 20,
+                        used: Math.max(item.used, item.qty),
+                        customerModel: `${item.customerModel || 'MODEL'}-R`,
+                        factoryModel: `${item.factoryModel || 'FACT'}-R`,
+                        updateFlag: Date.now()
+                    }));
+                    this.formData.updateTime = new Date().toLocaleString();
+                },
+
+                goToEditFromCreate() {
+                    const selected = this.searchedGssData.filter(i => i.checked && i.inputQty > 0);
+
+                    const hasOverQtyError = this.searchedGssData.some(i => i.hasError);
+                    if (hasOverQtyError) {
+                        alert("创建委托单失败：请修正所有超量输入的批次数量。");
+                        return;
+                    }
+                    if (selected.length === 0) {
+                        alert("请至少选择一个批次并输入数量。");
+                        return;
+                    }
+
+                    this.resetFormData();
+                    this.applyFlowDefaults('vnFactory');
+                    this.formData.productLine = this.createFilters.productLine;
+
+                    const uniqueBases = [...new Set(selected.map(i => i.base))];
+                    const uniqueEntities = [...new Set(selected.map(i => i.entity))];
+                    this.formData.base = uniqueBases.length === 1 ? uniqueBases[0] : '';
+                    this.formData.entity = uniqueEntities.length === 1 ? uniqueEntities[0] : '';
+
+                    selected.forEach(i => {
+                        this.formData.items.push(this.buildDetailItem({
+                            batchNo: i.batchNo,
+                            base: i.base,
+                            baseName: i.baseName,
+                            productType: '备件',
+                            directMaterial: '有',
+                            customerModel: `REGZA-${i.id}`,
+                            factoryModel: `FACT-${i.id}`,
+                            panelDirect: '',
+                            brand: 'REGZA',
+                            qty: i.inputQty,
+                            tempQty: i.inputQty,
+                            totalPlan: i.total,
+                            used: i.usedTotal,
+                            remaining: i.remaining,
+                            customsPrice: 150,
+                            currency: 'CNY',
+                            packaging: 'SKD-1',
+                            versionDemandQty: i.total,
+                            deliveryDate: '2026-06-30',
+                            arrivalDate: '2026-07-05',
+                            entity: i.entity,
+                            salesOrg: '越南工厂'
+                        }));
+                        i.usedTotal += i.inputQty;
+                        i.remaining -= i.inputQty;
+                        i.inputQty = 0;
+                        i.checked = false;
+                        i.hasError = false;
+                    });
+                    this.formData.status = 'DRAFT';
+                    this.currentView = 'edit';
+                },
+                
+                resetFormData() {
+                    this.formData = { 
+                        commissionNo: '', status: 'NONE', 
+                        productLine: '电视', country: 'VN', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'DAP', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
+                        orderer: '薛馨',
+                        booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
+                        items: [], 
+                        notes: { shipping: '', delivery: '', docs: '' }, 
+                        etd: '', cutoff: '', pol: '', pod: '', shipper: '', consignee: '', notifyParty: '' 
+                    };
+                    this.forcedReadOnly = false;
+                    this.showValidationErrors = false; 
+                    this.selectedPartyTemplate = '';
+                    this.selectedNoteTemplate = '';
+                },
+                resetParties() { this.formData.shipper = ''; this.formData.consignee = ''; this.formData.notifyParty = ''; this.selectedPartyTemplate = ''; },
+                resetNotes() { this.formData.notes = { shipping: '', delivery: '', docs: '' }; this.selectedNoteTemplate = ''; },
+
+                formatMoney(num) { return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
+                searchGSS() { 
+                    if (!this.createFilters.productLine) {
+                        alert("请先选择产品线");
+                        return;
+                    }
+                    this.appliedCreateFilters = {
+                        batchNo: this.createFilters.batchNo,
+                        productLine: this.createFilters.productLine
+                    };
+                    const shuffled = [...this.gssData].sort(() => Math.random() - 0.5);
+                    const count = Math.min(shuffled.length, 3 + Math.floor(Math.random() * 3));
+                    this.searchedGssData = shuffled.slice(0, count).map(item => ({
+                        ...item,
+                        checked: item.remaining > 0,
+                        inputQty: item.remaining > 0 ? item.remaining : 0,
+                        hasError: false
+                    }));
+                    this.createHasSearched = true;
+                    this.selectAllPage1 = this.searchedGssData.length > 0 && this.searchedGssData.every(item => item.checked);
+                },
+                
+                toggleSelectAll(view) { 
+                    if (view === 'create') {
+                        this.sortedGssData.forEach(item => { 
+                            if (item.remaining > 0) {
+                                item.checked = this.selectAllPage1; 
+                                if (item.checked) {
+                                    item.inputQty = item.remaining;
+                                    item.hasError = false;
+                                } else {
+                                    item.inputQty = 0;
+                                    item.hasError = false;
+                                }
+                            }
+                        }); 
+                    }
+                    if (view === 'list') this.listData.forEach(doc => doc.checked = this.selectAllPage3); 
+                },
+                
+                toggleCheck(item) { if (item.checked) { item.inputQty = item.remaining; item.hasError = false; } else { item.inputQty = 0; item.hasError = false; } },
+                validateQty(item) { 
+                    const qty = Number(item.inputQty);
+                    if (qty < 0 || isNaN(qty)) {
+                        item.inputQty = 0;
+                    }
+                    
+                    if (!Number.isInteger(Number(item.inputQty)) || item.inputQty > item.remaining) {
+                        item.hasError = true; 
+                    } else {
+                        item.hasError = false; 
+                    }
+
+                    if (item.inputQty > 0 && !item.hasError) {
+                        item.checked = true; 
+                    } else if (item.inputQty === 0) {
+                        item.checked = false; 
+                    }
+                },
+                
+                searchAndLoadCommission() {
+                    if (!this.commissionSearchQuery) { alert("请输入单号"); return; }
+                    this.resetFormData();
+                    this.formData.commissionNo = this.commissionSearchQuery;
+                    this.formData.status = 'DRAFT'; 
+                    this.applyFlowDefaults('vnFactory');
+                    this.formData.productLine = '电视';
+                    this.formData.items = [
+                         this.buildDetailItem({ batchNo: 'REGZA-RP-LOADED-01', base: '2900', baseName: '江门', productType: '备件', directMaterial: '有', customerModel: 'TV-75A', factoryModel: '75A6N', panelDirect: '', brand: 'REGZA', currency: 'USD', customsPrice: 120, markupRate: 10, remaining: 500, entity: 'REGZA_ENT', salesOrg: '越南工厂', totalPlan: 1000, used: 500, qty: 100, tempQty: 100, packaging: 'SKD-1', versionDemandQty: 1000, deliveryDate: '2026-06-28', arrivalDate: '2026-07-03' }),
+                         this.buildDetailItem({ batchNo: 'REGZA-RP-LOADED-02', base: '2000', baseName: '黄岛', productType: '备件', directMaterial: '有', customerModel: 'TV-65B', factoryModel: '65E5N', panelDirect: '面板直发', brand: 'REGZA', currency: 'CNY', customsPrice: 800, markupRate: 0, remaining: 800, entity: 'REGZA_ENT', salesOrg: '越南工厂', totalPlan: 1000, used: 200, qty: 200, tempQty: 200, packaging: 'CKD', versionDemandQty: 1000, deliveryDate: '2026-06-29', arrivalDate: '2026-07-04' })
+                    ];
+                    this.formData.base = '2900';
+                    this.formData.entity = 'REGZA_ENT';
+                    this.formData.pol = '江门';
+                    this.formData.pod = '海防';
+                    this.formData.createTime = '2025-12-16 10:00';
+                    this.formData.updateTime = '2025-12-16 10:05';
+                    this.showCommissionSearchModal = false;
+                    alert(`查询成功！\n单号：${this.commissionSearchQuery}\n状态：${this.statusMap[this.formData.status]}`);
+                },
+
+                openAddBatchModal() { 
+                    if (!this.canQueryAddItems) {
+                        alert('当前状态不允许查询新增滚动计划。');
+                        return;
+                    }
+                    this.showAddBatchModal = true; 
+                    this.modalSearchQuery = ''; 
+                    this.modalBatchData = [];
+                    this.selectAllModal = false; 
+                },
+                addManualItem() {
+                    if (!this.canManualAddItems) {
+                        alert('当前状态不允许新增批次。');
+                        return;
+                    }
+                    const serial = String(this.formData.items.length + 1).padStart(3, '0');
+                    this.formData.items.push(this.buildDetailItem({
+                        batchNo: `TVS-NEW-${serial}`,
+                        productType: '整机',
+                        directMaterial: '无',
+                        customerModel: '',
+                        factoryModel: '',
+                        panelDirect: '',
+                        brand: 'Hisense',
+                        currency: 'USD',
+                        customsPrice: 0,
+                        markupRate: 12,
+                        qty: 1,
+                        tempQty: 1,
+                        totalPlan: 1,
+                        used: 0,
+                        remaining: 0,
+                        packaging: '',
+                        versionDemandQty: 1,
+                        deliveryDate: '',
+                        arrivalDate: '',
+                        base: this.formData.base || '2900',
+                        baseName: (this.formData.base || '2900') === '2000' ? '黄岛' : '江门',
+                        entity: this.formData.entity || 'TVS_ENT',
+                        salesOrg: 'TVS',
+                        isEditing: true
+                    }));
+                    this.formData.updateTime = new Date().toLocaleString();
+                },
+                modalSearchBatch() { 
+                    const currentLine = this.formData.productLine;
+                    const mockDB = [ 
+                        { id: 901, batchNo: 'TVS-RP-ADD-01', productType: '整机', productLine: '电视', total: 1000, used: 200, remaining: 800, inputQty: 0, checked: false }, 
+                        { id: 902, batchNo: 'REGZA-RP-ADD-02', productType: '备件', productLine: '电视', total: 680, used: 80, remaining: 600, inputQty: 0, checked: false },
+                        { id: 903, batchNo: 'OTHER-RP-ERR', productType: '配件', productLine: '冰冷', total: 100, used: 10, remaining: 90, inputQty: 0, checked: false } 
+                    ]; 
+                    
+                    this.modalBatchData = mockDB.filter(i => i.productLine === currentLine || !currentLine);
+                    this.selectAllModal = false;
+                },
+                monitorModalQty(item) { 
+                    if (item.inputQty < 0 || isNaN(item.inputQty)) item.inputQty = 0;
+                    if (item.inputQty > 0) item.checked = true; 
+                    else item.checked = false; 
+                },
+                
+                toggleSelectAllModal() {
+                    this.modalBatchData.forEach(item => {
+                        item.checked = this.selectAllModal;
+                        if(item.checked) item.inputQty = item.remaining;
+                        else item.inputQty = 0;
+                    });
+                },
+                toggleModalRowCheck(item) {
+                    if(item.checked) item.inputQty = item.remaining;
+                    else item.inputQty = 0;
+                },
+
+                openImportModal() {
+                    if (!this.canImportItems) {
+                        alert('当前状态不允许导入滚动计划。');
+                        return;
+                    }
+                    this.showImportModal = true;
+                    this.importPreview = [];
+                },
+                downloadTemplate() { alert("模拟下载：视像出口物流委托导入模板.xlsx"); },
+                handleFileUpload(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    this.importPreview = [
+                        { batchNo: 'TVS-RP-IMP-001', productType: '整机', qty: 50 },
+                        { batchNo: 'REGZA-RP-IMP-002', productType: '备件', qty: 100 }
+                    ];
+                    if (this.importPreview.length > 99) {
+                        alert("导入失败：单次最多上传 99 行");
+                        this.importPreview = [];
+                        return;
+                    }
+                },
+                confirmImport() {
+                    if (this.importPreview.length === 0) return;
+                    this.fetchSAP_Price().then(price => {
+                        this.importPreview.forEach(row => {
+                            this.formData.items.push(this.buildDetailItem({
+                                batchNo: row.batchNo,
+                                productType: row.productType,
+                                directMaterial: this.isTvsFlow ? '无' : '有',
+                                customerModel: 'IMP-CUST',
+                                factoryModel: 'IMP-FACT',
+                                panelDirect: '',
+                                brand: this.isTvsFlow ? 'Hisense' : 'REGZA',
+                                totalPlan: this.editFlow === 'tvsDirect' ? 0 : 1000,
+                                used: this.editFlow === 'tvsDirect' ? 20 : 200,
+                                currency: this.editFlow === 'tvsDirect' ? 'USD' : 'CNY',
+                                customsPrice: price,
+                                markupRate: this.editFlow === 'tvsDirect' ? 5 : 10,
+                                qty: row.qty,
+                                tempQty: row.qty,
+                                remaining: this.editFlow === 'tvsDirect' ? 0 : 800,
+                                packaging: this.isTvsFlow ? 'CBU' : 'SKD-1',
+                                versionDemandQty: this.editFlow === 'tvsDirect' ? row.qty : 1000,
+                                deliveryDate: '2026-07-01',
+                                arrivalDate: '2026-07-06',
+                                base: this.formData.base || '2900',
+                                baseName: (this.formData.base || '2900') === '2000' ? '黄岛' : '江门',
+                                entity: this.formData.entity || (this.editFlow === 'tvsDirect' ? 'TVS_ENT' : 'REGZA_ENT'),
+                                salesOrg: this.formData.salesOrg
+                            }));
+                        });
+                        this.showImportModal = false;
+                        this.saveDraft(true);
+                    });
+                },
+
+                confirmAddBatchItems() { 
+                    const added = this.modalBatchData.filter(i => i.checked && i.inputQty > 0);
+                    if (added.length === 0) return;
+                    
+                    const invalid = added.filter(i => i.inputQty > i.remaining);
+                    if (invalid.length > 0) { alert(`数量超限: ${invalid[0].batchNo}`); return; }
+
+                    const duplicates = added.filter(i => this.formData.items.some(existing => existing.batchNo === i.batchNo && existing.productType === i.productType));
+                    if (duplicates.length > 0) {
+                        alert(`添加失败：以下批次+产品类型已存在，不能重复添加：\n${duplicates.map(d => d.batchNo + '-' + d.productType).join(', ')}`);
+                        return;
+                    }
+
+                    this.fetchSAP_Price(added).then(price => {
+                        added.forEach(i => { 
+                            this.formData.items.push(this.buildDetailItem({ 
+                                batchNo: i.batchNo,
+                                productType: i.productType,
+                                directMaterial: this.isTvsFlow ? '无' : '有',
+                                customerModel: 'ADD-CUST',
+                                factoryModel: 'ADD-FACT',
+                                panelDirect: '',
+                                brand: this.isTvsFlow ? 'Hisense' : 'REGZA',
+                                totalPlan: i.total,
+                                used: i.used,
+                                currency: this.editFlow === 'tvsDirect' ? 'USD' : 'CNY',
+                                customsPrice: price,
+                                markupRate: this.editFlow === 'tvsDirect' ? 5 : 10,
+                                qty: i.inputQty,
+                                tempQty: i.inputQty,
+                                remaining: i.remaining - i.inputQty,
+                                packaging: this.isTvsFlow ? 'CBU' : 'SKD-1',
+                                versionDemandQty: this.editFlow === 'tvsDirect' ? i.inputQty : i.total,
+                                deliveryDate: '2026-07-02',
+                                arrivalDate: '2026-07-07',
+                                base: this.formData.base || '2900',
+                                baseName: (this.formData.base || '2900') === '2000' ? '黄岛' : '江门',
+                                entity: this.formData.entity || (this.editFlow === 'tvsDirect' ? 'TVS_ENT' : 'REGZA_ENT'),
+                                salesOrg: this.formData.salesOrg
+                            })); 
+                        }); 
+                        this.showAddBatchModal = false; 
+                        this.saveDraft(true);
+                    });
+                },
+
+                validateHeaders() {
+                     const f = this.formData;
+                     return f.productLine && f.country && f.base && f.entity && f.transportMode && f.tradeMode && f.priceTerms && f.orderer && f.booker && f.pol && f.pod && f.shipper && f.consignee && f.notifyParty && f.loadingPlan;
+                },
+
+                async saveDraft(isSilent = false) {
+                    this.showValidationErrors = true; 
+
+                    if (!this.validateHeaders()) { 
+                        if(!isSilent) alert("保存失败：请填写所有红色必填项"); 
+                        return; 
+                    }
+                    if (this.formData.items.length === 0) {
+                        if(!isSilent) alert("保存失败：至少需要包含一个批次"); 
+                        return;
+                    }
+                    const qtyValidation = this.validateItemQuantities();
+                    if (!qtyValidation.ok) {
+                        if (!isSilent) alert(`保存失败：${qtyValidation.message}`);
+                        return;
+                    }
+                    
+                    // GSS Sync Validation (Only Total Qty)
+                    await this.fetchGSS_Total(this.formData.items);
+                    // Assume validation passes for this mock
+                    
+                    if (!this.formData.commissionNo) this.formData.commissionNo = 'HA' + Date.now().toString().slice(-8);
+                    
+                    this.formData.status = 'DRAFT';
+                    this.formData.updateTime = new Date().toLocaleString();
+                    if (!this.formData.createTime) this.formData.createTime = new Date().toLocaleString();
+                    
+                    if(!isSilent) alert("已暂存草稿 (GSS总量校验通过)");
+                },
+
+                async submitCommission() {
+                    if (this.isSubmitting || !this.canSubmitAction) return;
+                    this.showValidationErrors = true;
+                    this.isSubmitting = true;
+                    try {
+                        if (!this.validateHeaders()) {
+                            alert('提交失败：请填写所有红色必填项');
+                            return;
+                        }
+                        if (this.formData.items.length === 0) {
+                            alert('提交失败：至少需要包含一个批次');
+                            return;
+                        }
+                        const qtyValidation = this.validateItemQuantities();
+                        if (!qtyValidation.ok) {
+                            alert(`提交失败：${qtyValidation.message}`);
+                            return;
+                        }
+                        await this.fetchGSS_Total(this.formData.items);
+                        if (!this.formData.commissionNo) this.formData.commissionNo = 'HA' + Date.now().toString().slice(-8);
+                        if (!this.formData.createTime) this.formData.createTime = new Date().toLocaleString();
+                        this.formData.status = 'EXECUTED';
+                        this.formData.updateTime = new Date().toLocaleString();
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                },
+
+                recallCommission() {
+                    if (!this.canRecallAction) return;
+                    if (!confirm("确定要撤回此单据吗？撤回后可重新编辑，但库存不会释放。")) return;
+                    this.formData.status = 'RECALLED';
+                    this.formData.updateTime = new Date().toLocaleString();
+                },
+
+                deleteCommission() {
+                    if (!this.canDeleteAction) return;
+                    if (!confirm("确定要删除此单据吗？此操作不可恢复，并将释放库存。")) return;
+                    this.formData.status = 'DELETED';
+                    this.formData.items = []; 
+                    alert("单据已删除，库存已释放");
+                },
+
+                executeSync(item) { 
+                    if (!this.canSyncItem || !item) return;
+                    const newPrice = this.isVnFlow ? 160.00 : Number((item.customsPrice || 0) + 8).toFixed(2); 
+                    Object.assign(item, {
+                        customsPrice: Number(newPrice),
+                        versionDemandQty: this.isVnFlow ? Number(item.versionDemandQty || 0) + 10 : item.versionDemandQty,
+                        used: this.isVnFlow ? Math.max(item.used, item.qty) : item.used,
+                        customerModel: this.isVnFlow ? 'SYNCED-CM' : `${item.customerModel || 'TVS-CM'}-TVS`,
+                        factoryModel: this.isVnFlow ? 'SYNCED-FM' : `${item.factoryModel || 'TVS-FM'}-TVS`
+                    });
+                    this.formData.updateTime = new Date().toLocaleString();
+                    alert(`同步成功：${newPrice}`);
+                },
+                
+                jumpToEdit(docId) { this.formData.commissionNo = docId; this.formData.status = 'DRAFT'; this.currentView = 'edit'; },
+                editDoc(doc) {
+                    this.resetFormData();
+                    this.currentView = 'edit';
+                    const flow = doc.salesArea === 'TVS' ? 'tvsDirect' : 'vnFactory';
+                    this.applyFlowDefaults(flow);
+                    this.formData.status = doc.status;
+                    this.formData.commissionNo = doc.id;
+                    this.formData.productLine = doc.productLine || '电视';
+                    this.formData.priceTerms = doc.priceTerms || this.formData.priceTerms;
+                    this.formData.transportMode = doc.transport || this.formData.transportMode;
+                    this.formData.pol = doc.pol || '';
+                    this.formData.pod = doc.pod || '';
+                    this.formData.etd = doc.etd || '';
+                    this.formData.cutoff = doc.cutoff || doc.etd || '';
+                    this.formData.orderer = doc.orderer || this.formData.orderer;
+                    this.formData.booker = doc.booker || '';
+                    this.formData.base = doc.base || (doc.salesArea === 'TVS' ? '2900' : '2000');
+                    this.formData.entity = doc.salesArea === 'TVS' ? 'TVS_ENT' : 'REGZA_ENT';
+                    this.formData.country = doc.country || this.formData.country;
+                    this.formData.tradeMode = doc.tradeMode || this.formData.tradeMode;
+                    this.formData.loadingPlan = doc.loadingPlan || (doc.salesArea === 'TVS' ? '按客户装柜方案手工维护。' : '按 SCP 查询结果执行装柜。');
+                    this.formData.containers = this.parseContainerSummary(doc.containerSummary);
+                    this.formData.shipper = doc.shipper || (doc.salesArea === 'TVS' ? 'TVS REGZA CORPORATION\nTOKYO, JAPAN' : 'REGZA越南电子有限公司\nHAI PHONG, VIETNAM');
+                    this.formData.consignee = doc.consignee || (doc.salesArea === 'TVS' ? 'JAPAN RETAIL GROUP\nTOKYO, JAPAN' : '越南工厂收货仓\nHAI PHONG, VIETNAM');
+                    this.formData.notifyParty = doc.notifyParty || (doc.salesArea === 'TVS' ? 'TVS LOGISTICS TEAM' : 'REGZA VN LOGISTICS');
+                    this.formData.notes = this.buildFlowNotes(doc.salesArea);
+                    this.formData.items = doc.batches.map((batch, idx) => ({
+                        ...this.buildDetailItem({
+                            id: Date.now() + idx,
+                            batchNo: batch,
+                            base: this.formData.base,
+                            baseName: this.formData.base === '2000' ? '黄岛' : '江门',
+                            productType: doc.salesArea === 'TVS' ? '整机' : '备件',
+                            directMaterial: doc.salesArea === 'TVS' ? '无' : '有',
+                            customerModel: doc.salesArea === 'TVS' ? `TVS-CM-${idx + 1}` : `REGZA-CM-${idx + 1}`,
+                            factoryModel: `FM-${idx + 1}`,
+                            panelDirect: idx % 2 === 0 ? '' : '面板直发',
+                            brand: doc.salesArea === 'TVS' ? 'Hisense' : 'REGZA',
+                            currency: doc.salesArea === 'TVS' ? 'USD' : 'CNY',
+                            customsPrice: doc.salesArea === 'TVS' ? 180 : 150,
+                            markupRate: doc.salesArea === 'TVS' ? 5 : 10,
+                            qty: doc.salesArea === 'TVS' ? 120 : 200,
+                            tempQty: doc.salesArea === 'TVS' ? 120 : 200,
+                            remaining: doc.salesArea === 'TVS' ? 0 : 800,
+                            entity: this.formData.entity,
+                            salesOrg: doc.salesArea,
+                            totalPlan: doc.salesArea === 'TVS' ? 0 : 1000,
+                            used: doc.salesArea === 'TVS' ? 30 : 200,
+                            packaging: doc.salesArea === 'TVS' ? 'CBU' : 'SKD-1',
+                            versionDemandQty: doc.salesArea === 'TVS' ? 120 : 1000,
+                            deliveryDate: doc.etd || '2026-07-03',
+                            arrivalDate: doc.etd || '2026-07-08'
+                        })
+                    }));
+                    this.forcedReadOnly = doc.status === 'EXECUTED';
+                },
+                parseContainerSummary(summary) {
+                    if (!summary || summary === 'LCL' || summary.startsWith('AIR')) return [{ type: 'LCL', qty: 0 }];
+                    const parts = String(summary).split(',').map(s => s.trim()).filter(Boolean);
+                    const parsed = parts.map(part => {
+                        const match = part.match(/(20GP|40GP|40HQ|40NOR|LCL)\s*\*\s*(\d+)/i);
+                        if (!match) return null;
+                        return { type: match[1].toUpperCase(), qty: Number(match[2]) || 0 };
+                    }).filter(Boolean);
+                    return parsed.length ? parsed : [{ type: '20GP', qty: 1 }];
+                },
+                buildFlowNotes(salesArea) {
+                    return salesArea === 'TVS'
+                        ? { shipping: '按 TVS 客户订舱口径执行。', delivery: '以客户提货安排为准。', docs: '单证按 TVS 客户要求手工确认。' }
+                        : { shipping: '按 SCP 最新滚动计划执行订舱。', delivery: '发货前需复核剩余可用量。', docs: '单证以越南工厂出口资料为准。' };
+                },
+                addContainer() {
+                    if (!this.canDraftAction) return;
+                    this.formData.containers.push({ type: '40HQ', qty: 1 });
+                },
+                removeContainer(idx) {
+                    if (!this.canDraftAction) return;
+                    this.formData.containers.splice(idx, 1);
+                },
+                handleContainerTypeChange(idx, type) { 
+                    if (!this.canDraftAction) return;
+                    if (type === 'LCL') { this.formData.containers = [{ type: 'LCL', qty: 0 }]; } 
+                    else {
+                        this.formData.containers = this.formData.containers.filter(c => c.type !== 'LCL');
+                        if (this.formData.containers[idx].qty === 0) this.formData.containers[idx].qty = 1;
+                    }
+                },
+                removeItem(idx) { 
+                    if (!this.canRemoveItem) return;
+                    if(!confirm('确定要删除该批次吗？')) return; 
+                    const removedItem = this.formData.items[idx];
+                    const originalGssItem = this.gssData.find(i => i.batchNo === removedItem.batchNo);
+                    if (originalGssItem) {
+                        originalGssItem.usedTotal -= removedItem.qty;
+                        originalGssItem.remaining += removedItem.qty;
+                    }
+                    this.formData.items.splice(idx, 1); 
+                },
+                openSaveTemplateModal(type, cat) { this.newTemplateName = ''; this.saveTemplateType = type; this.saveTemplateCategory = cat; this.showSaveTemplateModal = true; },
+                confirmSaveTemplate() { 
+                    if (!this.newTemplateName) return;
+                    if (this.saveTemplateType === 'party') {
+                         this.partyTemplates[this.newTemplateName] = { shipper: this.formData.shipper, consignee: this.formData.consignee, notify: this.formData.notifyParty };
+                         this.selectedPartyTemplate = this.newTemplateName;
+                    } else if (this.saveTemplateType === 'note') {
+                         this.notesTemplates[this.newTemplateName] = { ...this.formData.notes };
+                         this.selectedNoteTemplate = this.newTemplateName;
+                    }
+                    this.showSaveTemplateModal = false; 
+                },
+                
+                // Update Existing Template Logic
+                updateTemplate(type, cat) {
+                    if (type === 'party') {
+                        if (!this.selectedPartyTemplate) { alert("请先选择一个模板"); return; }
+                        if (!confirm(`确认更新模板【${this.selectedPartyTemplate}】吗？`)) return;
+                        this.partyTemplates[this.selectedPartyTemplate] = {
+                            shipper: this.formData.shipper,
+                            consignee: this.formData.consignee,
+                            notify: this.formData.notifyParty
+                        };
+                        alert("模板更新成功");
+                    } else if (type === 'note') {
+                        const tplName = this.selectedNoteTemplate;
+                        if (!tplName) { alert("请先选择一个模板"); return; }
+                        if (!confirm(`确认更新模板【${tplName}】吗？`)) return;
+                        this.notesTemplates[tplName] = { ...this.formData.notes };
+                        alert("模板更新成功");
+                    }
+                },
+
+                deleteTemplate(type, cat) {
+                    if (type === 'party') {
+                        if (!this.selectedPartyTemplate) { alert("请先选择一个模板"); return; }
+                        if (!confirm(`确认删除模板【${this.selectedPartyTemplate}】吗？`)) return;
+                        delete this.partyTemplates[this.selectedPartyTemplate];
+                        this.selectedPartyTemplate = '';
+                        alert("模板已删除");
+                    } else if (type === 'note') {
+                        const tplName = this.selectedNoteTemplate;
+                        if (!tplName) { alert("请先选择一个模板"); return; }
+                        if (!confirm(`确认删除模板【${tplName}】吗？`)) return;
+                        delete this.notesTemplates[tplName];
+                        this.selectedNoteTemplate = '';
+                        alert("模板已删除");
+                    }
+                },
+
+                applyPartyTemplate() { const key = this.selectedPartyTemplate; if (!key) return; const tpl = this.partyTemplates[key]; if (tpl) { this.formData.shipper = tpl.shipper; this.formData.consignee = tpl.consignee; this.formData.notifyParty = tpl.notify; } },
+                applyNotesTemplate() { const key = this.selectedNoteTemplate; if (!key) return; const tpl = this.notesTemplates[key]; if (tpl) { this.formData.notes = { ...tpl }; } },
+                
+                copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => { alert("已复制"); }); },
+                exportPDF() {
+                    if (this.currentView !== 'edit') {
+                         alert("请进入编辑页面进行导出");
+                         return;
+                    }
+                    const isDraft = ['NONE', 'DRAFT', 'RECALLED'].includes(this.formData.status);
+                    this.showDraftWatermark = isDraft;
+                    setTimeout(() => {
+                        window.print();
+                    }, 100);
+                },
+                
+                // Export Batch Details Logic
+                exportBatchDetails() {
+                    if (this.formData.items.length === 0) { alert("无数据可导出"); return; }
+                    console.table(this.formData.items);
+                    alert("已导出批次明细 (模拟下载 .xlsx 文件)");
+                },
+
+                startEditQty(item) { 
+                    if(!this.canDraftAction) return; 
+                    item.tempQty = item.qty; 
+                    item.isEditing = true; 
+                },
+                cancelQty(item) { item.isEditing = false; },
+                confirmQty(item) { 
+                    const originalQty = item.qty;
+                    const newQty = item.tempQty;
+                    if (!Number.isInteger(Number(newQty)) || newQty <= 0) {
+                        alert("数量必须为大于 0 的整数");
+                        item.tempQty = originalQty; 
+                        return;
+                    }
+                    if (!this.isVnFlow) {
+                        item.qty = newQty;
+                        item.isEditing = false;
+                        this.formData.updateTime = new Date().toLocaleString();
+                        return;
+                    }
+                    const maxAllowed = Math.max(0, Number(item.versionDemandQty || 0) - Number(item.used || 0));
+                    if (newQty > maxAllowed) {
+                        alert(`数量超限! 当前项最大允许: ${maxAllowed}`);
+                        item.tempQty = originalQty;
+                        return;
+                    }
+                    item.qty = newQty; 
+                    item.isEditing = false; 
+                    this.formData.updateTime = new Date().toLocaleString();
+                },
+                referenceCreate() {
+                    if (!this.canReferenceCreate) return;
+                    this.showReferenceCreateModal = true;
+                },
+                applyReferenceCreate() {
+                    this.showReferenceCreateModal = false;
+                    const isTvs = this.editFlow === 'tvsDirect';
+                    this.formData.productLine = '电视';
+                    this.formData.country = isTvs ? 'JP' : 'VN';
+                    this.formData.base = isTvs ? '2900' : '2000';
+                    this.formData.entity = isTvs ? 'TVS_ENT' : 'REGZA_ENT';
+                    this.formData.transportMode = isTvs ? 'BY SEA' : 'BY TRUCK';
+                    this.formData.tradeMode = 'General';
+                    this.formData.priceTerms = isTvs ? 'FOB' : 'DAP';
+                    this.formData.booker = '郭美芹';
+                    this.formData.pol = isTvs ? '江门' : '青岛';
+                    this.formData.pod = isTvs ? '东京' : '海防';
+                    this.formData.shipper = isTvs
+                        ? 'TVS REGZA CORPORATION\nTOKYO, JAPAN'
+                        : 'REGZA越南电子有限公司\nHAI PHONG, VIETNAM';
+                    this.formData.consignee = isTvs
+                        ? 'JAPAN RETAIL GROUP\nTOKYO, JAPAN'
+                        : '越南工厂收货仓\nHAI PHONG, VIETNAM';
+                    this.formData.notifyParty = isTvs
+                        ? 'TVS LOGISTICS TEAM'
+                        : 'REGZA VN LOGISTICS';
+                    this.formData.loadingPlan = isTvs
+                        ? '按客户出货节奏安排装柜，整票按同船期处理。'
+                        : '按滚动计划顺序执行发运，优先满足已锁定需求。';
+                    this.formData.notes = isTvs
+                        ? {
+                            shipping: '按 TVS 客户口径安排订舱。',
+                            delivery: '发货前确认客户收货窗口。',
+                            docs: '单证资料按客户模板整理。'
+                        }
+                        : {
+                            shipping: '按越南出口口径安排船务。',
+                            delivery: '出货前复核滚动计划总量与已做数量。',
+                            docs: '单证以越南工厂出口资料为准。'
+                        };
+                    this.formData.etd = '';
+                    this.formData.cutoff = '';
+                    this.formData.containers = [{ type: '40HQ', qty: '' }];
+                    this.formData.items = [
+                        this.buildDetailItem({
+                            id: Date.now(),
+                            batchNo: isTvs ? 'TVS-REF-001' : 'REGZA-REF-001',
+                            base: this.formData.base,
+                            baseName: this.formData.base === '2000' ? '黄岛' : '江门',
+                            productType: isTvs ? '整机' : '备件',
+                            directMaterial: isTvs ? '无' : '有',
+                            customerModel: isTvs ? 'TVS-CM-900A' : 'REGZA-CM-75A',
+                            factoryModel: isTvs ? 'TVS-FM-900A' : 'REGZA-FM-75A',
+                            panelDirect: '',
+                            brand: isTvs ? 'Hisense' : 'REGZA',
+                            currency: isTvs ? 'USD' : 'CNY',
+                            customsPrice: isTvs ? 220 : 160,
+                            markupRate: isTvs ? 12 : 10,
+                            qty: isTvs ? 80 : 120,
+                            tempQty: isTvs ? 80 : 120,
+                            remaining: isTvs ? 0 : 880,
+                            entity: this.formData.entity,
+                            salesOrg: this.formData.salesOrg,
+                            totalPlan: isTvs ? 0 : 1000,
+                            used: isTvs ? 20 : 120,
+                            packaging: isTvs ? 'CBU' : 'SKD-1',
+                            versionDemandQty: isTvs ? 100 : 1000,
+                            deliveryDate: '2026-07-08',
+                            arrivalDate: '2026-07-14'
+                        }),
+                        this.buildDetailItem({
+                            id: Date.now() + 1,
+                            batchNo: isTvs ? 'TVS-REF-002' : 'REGZA-REF-002',
+                            base: this.formData.base,
+                            baseName: this.formData.base === '2000' ? '黄岛' : '江门',
+                            productType: isTvs ? '整机' : '备件',
+                            directMaterial: isTvs ? '无' : '有',
+                            customerModel: isTvs ? 'TVS-CM-901B' : 'REGZA-CM-65B',
+                            factoryModel: isTvs ? 'TVS-FM-901B' : 'REGZA-FM-65B',
+                            panelDirect: '面板直发',
+                            brand: isTvs ? 'Hisense' : 'REGZA',
+                            currency: isTvs ? 'USD' : 'CNY',
+                            customsPrice: isTvs ? 210 : 150,
+                            markupRate: isTvs ? 12 : 10,
+                            qty: isTvs ? 60 : 90,
+                            tempQty: isTvs ? 60 : 90,
+                            remaining: isTvs ? 0 : 910,
+                            entity: this.formData.entity,
+                            salesOrg: this.formData.salesOrg,
+                            totalPlan: isTvs ? 0 : 1000,
+                            used: isTvs ? 30 : 90,
+                            packaging: isTvs ? 'CBU' : 'CKD',
+                            versionDemandQty: isTvs ? 90 : 1000,
+                            deliveryDate: '2026-07-09',
+                            arrivalDate: '2026-07-15'
+                        })
+                    ];
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
