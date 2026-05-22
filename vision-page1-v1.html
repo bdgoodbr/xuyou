@@ -381,6 +381,40 @@
                     </div>
 
                     <div class="section-panel">
+                        <div class="section-header">
+                            <h3 class="section-title"><i class="fa-solid fa-money-check-dollar"></i> 运保费信息</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="mb-4 text-xs text-slate-500">默认可留空；如填写任一费用金额大于 0，则费用币种必填。</div>
+                            <div class="grid grid-cols-4 gap-x-6 gap-y-5">
+                                <div>
+                                    <span class="p2-label" :class="{ 'required-star': isFeeCurrencyRequired }">费用币种</span>
+                                    <select v-model="formData.fees.currency" :disabled="isReadOnly" :class="['p2-input', isReadOnly ? 'input-readonly' : '', { 'border-red-500 ring-1 ring-red-500': showValidationErrors && isFeeCurrencyRequired && !formData.fees.currency }]">
+                                        <option value="">请选择</option>
+                                        <option value="CNY">CNY</option>
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                        <option value="JPY">JPY</option>
+                                        <option value="GBP">GBP</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <span class="p2-label">运费 (Freight)</span>
+                                    <input type="number" v-model.number="formData.fees.freight" :disabled="isReadOnly" class="p2-input" placeholder="0.00" min="0" step="0.01">
+                                </div>
+                                <div>
+                                    <span class="p2-label">保费 (Insurance)</span>
+                                    <input type="number" v-model.number="formData.fees.insurance" :disabled="isReadOnly" class="p2-input" placeholder="0.00" min="0" step="0.01">
+                                </div>
+                                <div>
+                                    <span class="p2-label">其他费用 (Other)</span>
+                                    <input type="number" v-model.number="formData.fees.other" :disabled="isReadOnly" class="p2-input" placeholder="0.00" min="0" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-panel">
                          <div class="section-header">
                             <h3 class="section-title"><i class="fa-solid fa-layer-group"></i> 滚动计划明细</h3>
                             <div class="flex gap-2">
@@ -852,6 +886,7 @@
                     formData: { 
                         commissionNo: '', status: 'NONE', 
                         productLine: '电视', country: 'VN', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'DAP', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
+                        fees: { currency: '', freight: null, insurance: null, other: null },
                         orderer: '薛馨',
                         booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
                         items: [], 
@@ -921,6 +956,10 @@
                 canRefreshAll() { return this.isVnFlow && this.canDraftAction && this.formData.items.length > 0; },
                 canSyncItem() { return this.isVnFlow && this.canDraftAction; },
                 canRemoveItem() { return this.canDraftAction; },
+                isFeeCurrencyRequired() {
+                    const fees = this.formData.fees || {};
+                    return ['freight', 'insurance', 'other'].some(key => Number(fees[key] || 0) > 0);
+                },
                 editFlow() {
                     if (this.formData.salesOrg === '越南工厂') return 'vnFactory';
                     if (this.formData.salesOrg === 'TVS') return 'tvsDirect';
@@ -1263,6 +1302,7 @@
                     this.formData = { 
                         commissionNo: '', status: 'NONE', 
                         productLine: '电视', country: 'VN', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'DAP', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
+                        fees: { currency: '', freight: null, insurance: null, other: null },
                         orderer: '薛馨',
                         booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
                         items: [], 
@@ -1538,6 +1578,13 @@
                      const f = this.formData;
                      return f.productLine && f.country && f.base && f.entity && f.transportMode && f.tradeMode && f.priceTerms && f.orderer && f.booker && f.pol && f.pod && f.shipper && f.consignee && f.notifyParty && f.loadingPlan;
                 },
+                validateFees() {
+                    if (!this.isFeeCurrencyRequired) return { ok: true };
+                    if (!this.formData.fees.currency) {
+                        return { ok: false, message: '填写运费、保费或其他费用后，费用币种不能为空' };
+                    }
+                    return { ok: true };
+                },
 
                 async saveDraft(isSilent = false) {
                     this.showValidationErrors = true; 
@@ -1553,6 +1600,11 @@
                     const qtyValidation = this.validateItemQuantities();
                     if (!qtyValidation.ok) {
                         if (!isSilent) alert(`保存失败：${qtyValidation.message}`);
+                        return;
+                    }
+                    const feeValidation = this.validateFees();
+                    if (!feeValidation.ok) {
+                        if (!isSilent) alert(`保存失败：${feeValidation.message}`);
                         return;
                     }
                     
@@ -1585,6 +1637,11 @@
                         const qtyValidation = this.validateItemQuantities();
                         if (!qtyValidation.ok) {
                             alert(`提交失败：${qtyValidation.message}`);
+                            return;
+                        }
+                        const feeValidation = this.validateFees();
+                        if (!feeValidation.ok) {
+                            alert(`提交失败：${feeValidation.message}`);
                             return;
                         }
                         await this.fetchGSS_Total(this.formData.items);
@@ -1648,6 +1705,12 @@
                     this.formData.country = doc.country || this.formData.country;
                     this.formData.tradeMode = doc.tradeMode || this.formData.tradeMode;
                     this.formData.loadingPlan = doc.loadingPlan || (doc.salesArea === 'TVS' ? '按客户装柜方案手工维护。' : '按 SCP 查询结果执行装柜。');
+                    this.formData.fees = {
+                        currency: doc.fees?.currency || '',
+                        freight: doc.fees?.freight ?? null,
+                        insurance: doc.fees?.insurance ?? null,
+                        other: doc.fees?.other ?? null
+                    };
                     this.formData.containers = this.parseContainerSummary(doc.containerSummary);
                     this.formData.shipper = doc.shipper || (doc.salesArea === 'TVS' ? 'TVS REGZA CORPORATION\nTOKYO, JAPAN' : 'REGZA越南电子有限公司\nHAI PHONG, VIETNAM');
                     this.formData.consignee = doc.consignee || (doc.salesArea === 'TVS' ? 'JAPAN RETAIL GROUP\nTOKYO, JAPAN' : '越南工厂收货仓\nHAI PHONG, VIETNAM');
@@ -1868,6 +1931,7 @@
                             delivery: '出货前复核滚动计划总量与已做数量。',
                             docs: '单证以越南工厂出口资料为准。'
                         };
+                    this.formData.fees = { currency: '', freight: null, insurance: null, other: null };
                     this.formData.etd = '';
                     this.formData.cutoff = '';
                     this.formData.containers = [{ type: '40HQ', qty: '' }];
