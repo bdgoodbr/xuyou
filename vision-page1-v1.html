@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTM</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <script>
+        if (!window.Vue) {
+            document.write('<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"><\\/script>');
+        }
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body { font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif; }
@@ -231,7 +236,7 @@
             <div class="flex-1 overflow-auto px-6 py-5 relative">
                 <div :class="{'show-watermark': showDraftWatermark}" class="watermark">DRAFT</div>
                 
-                <div class="pdf-header">订舱委托书 (Booking Confirmation)</div>
+                <div class="pdf-header">订舱委托书</div>
 
                 <div v-if="currentView === 'create'" class="max-w-[1460px] mx-auto space-y-4">
                     <div class="flex items-center justify-between">
@@ -333,29 +338,30 @@
                         <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
                             <div><span class="p2-label required-star">产品线</span><select v-model="formData.productLine" :disabled="isFieldLocked('productLine')" :class="[['p2-input', isFieldLocked('productLine') ? 'input-readonly' : ''], {'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.productLine}]"><option v-for="opt in config.productLines" :value="opt.value">{{opt.label}}</option></select></div>
                             <div><span class="p2-label required-star">出口国家</span><select v-model="formData.country" :disabled="isReadOnly" :class="['p2-input', {'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.country}]"><option value="VN">越南</option><option value="JP">日本</option><option value="UK">英国</option><option value="TH">泰国</option></select></div>
+                            <div><span class="p2-label required-star">贸易国</span><select v-model="formData.tradeCountry" :disabled="isReadOnly" :class="['p2-input', {'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.tradeCountry}]"><option value="VN">越南</option><option value="JP">日本</option><option value="UK">英国</option><option value="TH">泰国</option></select></div>
                             <div><span class="p2-label required-star">生产基地</span><select v-model="formData.base" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.base}"><option value="2000">黄岛</option><option value="2900">江门</option></select></div>
-                            <div><span class="p2-label required-star">报关主体</span><select v-model="formData.entity" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.entity}"><option value="REGZA_ENT">REGZA越南电子有限公司</option><option value="TVS_ENT">TVS REGZA CORPORATION</option></select></div>
                         </div>
                         <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
-                            <div><span class="p2-label required-star">销售组织</span><select v-model="formData.salesOrg" disabled class="p2-input input-readonly" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.salesOrg}"><option value="越南工厂">越南工厂</option><option value="TVS">TVS</option></select></div>
-
+                            <div><span class="p2-label required-star">报关主体</span><select v-model="formData.entity" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.entity}"><option value="REGZA_ENT">REGZA越南电子有限公司</option><option value="TVS_ENT">TVS REGZA CORPORATION</option></select></div>
+                            <div><span class="p2-label required-star">销售区域</span><select v-model="formData.salesOrg" disabled class="p2-input input-readonly" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.salesOrg}"><option value="越南工厂">越南工厂</option><option value="TVS">TVS</option></select></div>
                             <div><span class="p2-label required-star">运输方式</span><select v-model="formData.transportMode" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.transportMode}"><option value="BY SEA">BY SEA</option><option value="BY TRAIN">BY TRAIN</option><option value="BY TRUCK">BY TRUCK</option><option value="BY AIR">BY AIR</option></select></div>
                             <div><span class="p2-label">贸易方式</span><select v-model="formData.tradeMode" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.tradeMode}"><option v-for="opt in config.tradeModes" :value="opt.value">{{opt.label}}</option></select></div>
-                            <div><span class="p2-label required-star">价格条款</span><select v-model="formData.priceTerms" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.priceTerms}"><option value="DAP">DAP</option><option value="FOB">FOB</option><option value="CIF">CIF</option><option value="CIP">CIP</option></select></div>
                         </div>
                         <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
+                            <div><span class="p2-label required-star">价格条款</span><select v-model="formData.priceTerms" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.priceTerms}"><option value="DAP">DAP</option><option value="FOB">FOB</option><option value="CIF">CIF</option><option value="CIP">CIP</option></select></div>
                             <div><span class="p2-label required-star">订单人</span><input type="text" v-model="formData.orderer" disabled class="p2-input input-readonly"></div>
                             <div><span class="p2-label required-star">订舱人</span><select v-model="formData.booker" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.booker}"><option value="">-- 请选择 --</option><option v-for="name in config.bookers" :value="name">{{name}}</option></select></div>
                             <div><span class="p2-label required-star">船期</span><input type="date" v-model="formData.etd" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.etd}"></div>
-                            <div><span class="p2-label required-star">落货日期</span><input type="date" v-model="formData.cutoff" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.cutoff}"></div>
                         </div>
                         <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
+                            <div><span class="p2-label required-star">落货日期</span><input type="date" v-model="formData.cutoff" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.cutoff}"></div>
                             <div><span class="p2-label required-star">起运港</span><select v-model="formData.pol" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.pol}"><option value="江门">江门</option><option value="青岛">青岛</option><option value="上海">上海</option></select></div>
                             <div><span class="p2-label required-star">目的港</span><select v-model="formData.pod" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.pod}"><option value="海防">海防</option><option value="胡志明">胡志明</option><option value="岘港">岘港</option><option value="东京">东京</option><option value="大阪">大阪</option></select></div>
-                            <div><span class="p2-label">创建时间</span><input type="text" :value="formData.createTime" class="p2-input input-readonly" readonly></div>
-                            <div><span class="p2-label">更新时间</span><input type="text" :value="formData.updateTime" class="p2-input input-readonly" readonly></div>
+                            <div><span class="p2-label required-star">客户</span><select v-model="formData.customer" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.customer}"><option value="REGZA">REGZA</option></select></div>
                         </div>
                         <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
+                            <div><span class="p2-label">创建时间</span><input type="text" :value="formData.createTime" class="p2-input input-readonly" readonly></div>
+                            <div><span class="p2-label">更新时间</span><input type="text" :value="formData.updateTime" class="p2-input input-readonly" readonly></div>
                             <div><span class="p2-label">总柜量</span><input type="text" :value="totalContainersString" class="p2-input input-readonly" readonly></div>
                         </div>
                         
@@ -399,15 +405,15 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <span class="p2-label">运费 (Freight)</span>
+                                    <span class="p2-label">运费</span>
                                     <input type="number" v-model.number="formData.fees.freight" :disabled="isReadOnly" class="p2-input" placeholder="0.00" min="0" step="0.01">
                                 </div>
                                 <div>
-                                    <span class="p2-label">保费 (Insurance)</span>
+                                    <span class="p2-label">保费</span>
                                     <input type="number" v-model.number="formData.fees.insurance" :disabled="isReadOnly" class="p2-input" placeholder="0.00" min="0" step="0.01">
                                 </div>
                                 <div>
-                                    <span class="p2-label">其他费用 (Other)</span>
+                                    <span class="p2-label">其他费用</span>
                                     <input type="number" v-model.number="formData.fees.other" :disabled="isReadOnly" class="p2-input" placeholder="0.00" min="0" step="0.01">
                                 </div>
                             </div>
@@ -513,7 +519,7 @@
                         </div>
                         <div class="p-6 bg-gray-50 border-t border-gray-200 flex justify-end items-center gap-6">
                             <div class="bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm cursor-pointer hover:shadow-md transition" @click="copyToClipboard(customsTotalString)">
-                                <div class="text-xs text-gray-400 uppercase font-bold tracking-wider">报关总额 (Customs)</div>
+                                <div class="text-xs text-gray-400 uppercase font-bold tracking-wider">报关总额</div>
                                 <div class="text-xl font-mono font-bold text-gray-700">{{ customsTotalString }}</div>
                             </div>
                              <div class="bg-blue-600 border border-blue-700 rounded-lg px-4 py-2 shadow-sm cursor-pointer hover:bg-blue-700 transition" @click="copyToClipboard(hshaTotalString)">
@@ -525,7 +531,7 @@
 
                     <div class="info-box info-box-blue mt-6">
                         <div class="bg-section-header flex justify-between items-center mb-4">
-                            <h3 class="text-blue-600 font-bold flex items-center gap-2"><i class="fa-solid fa-circle-info"></i> 备注事项</h3>
+                            <h3 class="text-blue-600 font-bold flex items-center gap-2"><i class="fa-solid fa-circle-info"></i> 注意事项</h3>
                             <div class="flex items-center gap-2">
                                 <select v-model="selectedNoteTemplate" @change="applyNotesTemplate" class="template-select"><option value="">-- 选择模板 --</option><option v-for="(tpl, key) in notesTemplates" :key="key" :value="key">{{ key }}</option></select>
                                 <span class="save-tpl-btn" @click="updateTemplate('note')">保存修改</span>
@@ -885,7 +891,7 @@
                     ],
                     formData: { 
                         commissionNo: '', status: 'NONE', 
-                        productLine: '电视', country: 'VN', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'DAP', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
+                        productLine: '电视', country: 'VN', tradeCountry: 'VN', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', customer: 'REGZA', priceTerms: 'DAP', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
                         fees: { currency: '', freight: null, insurance: null, other: null },
                         orderer: '薛馨',
                         booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
@@ -899,9 +905,9 @@
                         "英国海信": { shipper: "HISENSE UK LTD\nLEEDS, UK", consignee: "BRITISH APPLIANCES LTD", notify: "UK FORWARDER INC" }
                     },
                     notesTemplates: { 
-                        "标准模板": { shipping: "Original BL required.", delivery: "Handle with care.", docs: "Invoice, Packing List" },
-                        "紧急空运": { shipping: "Urgent Air Freight. Do not stack.", delivery: "Immediate delivery upon arrival.", docs: "Express release" },
-                        "危险品": { shipping: "DG Class 9. Label required.", delivery: "DG Warehouse only.", docs: "MSDS attached" }
+                        "标准模板": { shipping: "需提供正本提单。", delivery: "装卸过程注意轻拿轻放。", docs: "单证准备发票、装箱单。" },
+                        "紧急空运": { shipping: "紧急空运货物，禁止堆压。", delivery: "货物到达后立即安排提货。", docs: "单证按加急放单要求处理。" },
+                        "危险品": { shipping: "按危险品 9 类要求安排运输并张贴标签。", delivery: "仅允许进入危险品仓库。", docs: "随附材料安全说明书。" }
                     },
                     listData: [ 
                         { id: 'VN202605130001', status: 'DRAFT', salesArea: 'TVS', batches: ['TVS-RP-001', 'TVS-RP-002'], productLine: '电视', priceTerms: 'DAP', transport: 'BY SEA', pol: '江门', pod: '东京', containerSummary: '40HQ * 8', customer: 'REGZA越南电子有限公司', etd: '2026-05-28', orderer: '田晓丽', booker: '郭美芹', checked: false },
@@ -1083,7 +1089,9 @@
                 applyFlowDefaults(flow) {
                     if (flow === 'vnFactory') {
                         this.formData.salesOrg = '越南工厂';
+                        this.formData.customer = 'REGZA';
                         this.formData.country = 'VN';
+                        this.formData.tradeCountry = 'VN';
                         this.formData.transportMode = 'BY SEA';
                         this.formData.tradeMode = 'General';
                         this.formData.priceTerms = 'DAP';
@@ -1092,8 +1100,10 @@
                     }
                     if (flow === 'tvsDirect') {
                         this.formData.salesOrg = 'TVS';
+                        this.formData.customer = 'REGZA';
                         this.formData.productLine = '电视';
                         this.formData.country = 'VN';
+                        this.formData.tradeCountry = 'VN';
                         this.formData.transportMode = 'BY SEA';
                         this.formData.tradeMode = 'General';
                         this.formData.priceTerms = 'FOB';
@@ -1301,7 +1311,7 @@
                 resetFormData() {
                     this.formData = { 
                         commissionNo: '', status: 'NONE', 
-                        productLine: '电视', country: 'VN', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', priceTerms: 'DAP', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
+                        productLine: '电视', country: 'VN', tradeCountry: 'VN', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', customer: 'REGZA', priceTerms: 'DAP', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
                         fees: { currency: '', freight: null, insurance: null, other: null },
                         orderer: '薛馨',
                         booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
@@ -1576,7 +1586,7 @@
 
                 validateHeaders() {
                      const f = this.formData;
-                     return f.productLine && f.country && f.base && f.entity && f.transportMode && f.tradeMode && f.priceTerms && f.orderer && f.booker && f.pol && f.pod && f.shipper && f.consignee && f.notifyParty && f.loadingPlan;
+                     return f.productLine && f.country && f.tradeCountry && f.base && f.entity && f.salesOrg && f.customer && f.transportMode && f.tradeMode && f.priceTerms && f.orderer && f.booker && f.etd && f.cutoff && f.pol && f.pod && f.shipper && f.consignee && f.notifyParty && f.loadingPlan;
                 },
                 validateFees() {
                     if (!this.isFeeCurrencyRequired) return { ok: true };
@@ -1702,7 +1712,9 @@
                     this.formData.booker = doc.booker || '';
                     this.formData.base = doc.base || (doc.salesArea === 'TVS' ? '2900' : '2000');
                     this.formData.entity = doc.salesArea === 'TVS' ? 'TVS_ENT' : 'REGZA_ENT';
+                    this.formData.customer = 'REGZA';
                     this.formData.country = doc.country || this.formData.country;
+                    this.formData.tradeCountry = doc.tradeCountry || doc.country || this.formData.tradeCountry;
                     this.formData.tradeMode = doc.tradeMode || this.formData.tradeMode;
                     this.formData.loadingPlan = doc.loadingPlan || (doc.salesArea === 'TVS' ? '按客户装柜方案手工维护。' : '按 SCP 查询结果执行装柜。');
                     this.formData.fees = {
@@ -1900,8 +1912,10 @@
                     const isTvs = this.editFlow === 'tvsDirect';
                     this.formData.productLine = '电视';
                     this.formData.country = isTvs ? 'JP' : 'VN';
+                    this.formData.tradeCountry = isTvs ? 'JP' : 'VN';
                     this.formData.base = isTvs ? '2900' : '2000';
                     this.formData.entity = isTvs ? 'TVS_ENT' : 'REGZA_ENT';
+                    this.formData.customer = 'REGZA';
                     this.formData.transportMode = isTvs ? 'BY SEA' : 'BY TRUCK';
                     this.formData.tradeMode = 'General';
                     this.formData.priceTerms = isTvs ? 'FOB' : 'DAP';
