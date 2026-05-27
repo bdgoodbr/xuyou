@@ -265,12 +265,19 @@
                                     <option v-for="opt in config.productLines" :value="opt.value">{{opt.label}}</option>
                                 </select>
                             </div>
+                            <div class="flex items-center gap-2 pt-0.5">
+                                <label class="text-[12px] text-gray-700 font-medium whitespace-nowrap required-star">部件类型</label>
+                                <select v-model="createFilters.partType" class="filter-control w-[108px]">
+                                    <option value="">请选择</option>
+                                    <option v-for="opt in config.partTypes" :value="opt">{{ opt }}</option>
+                                </select>
+                            </div>
                             <div class="flex items-start gap-2 flex-1 min-w-0">
                                 <label class="text-[12px] text-gray-700 font-medium whitespace-nowrap leading-[34px] required-star">滚动计划号</label>
                                 <textarea v-model="createFilters.batchNo" placeholder="可输入滚动计划号，支持批量输入；原型阶段随机返回 3-5 条" class="flex-1 h-[76px] border border-gray-300 rounded-lg px-3 py-2 outline-none text-xs resize-none bg-white"></textarea>
                             </div>
                             <div class="pt-0.5">
-                                <button @click="searchGSS" class="list-btn primary flex items-center justify-center"><i class="fa-solid fa-magnifying-glass mr-2"></i> 查询</button>
+                                <button @click="searchSCP" class="list-btn primary flex items-center justify-center"><i class="fa-solid fa-magnifying-glass mr-2"></i> 查询</button>
                             </div>
                         </div>
                         </div>
@@ -281,6 +288,7 @@
                                 <tr>
                                     <th class="px-4 py-3 w-10"><input type="checkbox" v-model="selectAllPage1" @change="toggleSelectAll('create')" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"></th>
                                     <th class="px-4 py-3 whitespace-nowrap">滚动计划号</th>
+                                    <th class="px-4 py-3 whitespace-nowrap">部件类型</th>
                                     <th class="px-4 py-3 whitespace-nowrap">生产基地</th>
                                     <th class="px-4 py-3 text-right whitespace-nowrap">排产总量</th>
                                     <th class="px-4 py-3 text-right whitespace-nowrap">已做委托数量</th>
@@ -289,9 +297,10 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
-                                <tr v-for="item in sortedGssData" :key="item.id" class="hover:bg-blue-50/30 transition">
+                                <tr v-for="item in sortedScpData" :key="item.id" class="hover:bg-blue-50/30 transition">
                                     <td class="px-4 py-3 align-middle"><input type="checkbox" v-model="item.checked" @change="toggleCheck(item)" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"></td>
                                     <td class="px-4 py-3 font-mono font-medium text-slate-700 align-middle whitespace-nowrap">{{ item.batchNo }}</td>
+                                    <td class="px-4 py-3 align-middle whitespace-nowrap">{{ item.partType }}</td>
                                     <td class="px-4 py-3 align-middle whitespace-nowrap">{{ item.baseName }}</td>
                                     <td class="px-4 py-3 text-right font-mono text-gray-500 align-middle">{{ item.total }}</td>
                                     <td class="px-4 py-3 text-right font-mono text-gray-500 align-middle">{{ item.usedTotal }}</td>
@@ -299,10 +308,10 @@
                                     <td class="px-4 py-3 border-l bg-slate-50/30 align-middle"><div class="relative qty-input-wrapper"><input type="number" v-model.number="item.inputQty" @input="validateQty(item)" class="w-full border rounded px-2 py-1 text-right font-mono focus:ring-2 outline-none transition-colors text-sm" :class="{'border-red-500 bg-red-50': item.hasError, 'border-blue-500 ring-1 ring-blue-500 bg-white': item.checked && !item.hasError && item.inputQty > 0, 'border-gray-300 bg-white': !item.checked && !item.hasError}"><div v-if="item.hasError" class="absolute right-0 -bottom-4 text-[10px] text-red-500 whitespace-nowrap">需为整数且不超量</div></div></td>
                                 </tr>
                                 <tr v-if="!createHasSearched">
-                                    <td colspan="7" class="px-4 py-10 text-center text-sm text-gray-400">请选择产品线后点击查询；原型会随机返回 3-5 条滚动计划</td>
+                                    <td colspan="8" class="px-4 py-10 text-center text-sm text-gray-400">请选择产品线和部件类型后点击查询；原型会按数据源返回滚动计划</td>
                                 </tr>
-                                <tr v-else-if="sortedGssData.length === 0">
-                                    <td colspan="7" class="px-4 py-10 text-center text-sm text-gray-400">未查询到对应滚动计划</td>
+                                <tr v-else-if="sortedScpData.length === 0">
+                                    <td colspan="8" class="px-4 py-10 text-center text-sm text-gray-400">{{ createFilters.partType === '整机' ? '当前部件类型为整机，越南工厂查询创建暂无可用数据' : '未查询到对应滚动计划' }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -440,11 +449,12 @@
                                 <thead class="bg-[#F3F7FB] text-gray-600 font-semibold border-b border-gray-200 whitespace-nowrap">
                                     <tr>
                                         <th class="compact-cell detail-head-muted min-w-[148px]">滚动计划号</th>
+                                        <th class="compact-cell min-w-[94px]">部件类型</th>
                                         <th class="compact-cell text-center w-24 bg-blue-50">本次委托数量</th><th class="compact-cell text-center">已做委托数量</th><th class="compact-cell text-center">滚动计划总量</th>
                                         <th class="compact-cell text-center w-24">报关单价</th><th class="compact-cell detail-head-number">报关总价</th>
                                         <th class="compact-cell text-center w-24 text-blue-600">销售单价</th><th class="compact-cell detail-head-number font-bold text-blue-600">销售总价</th>
                                         <th class="compact-cell text-center min-w-[88px]">币种</th><th class="compact-cell min-w-[128px]">出口包装方式</th><th class="compact-cell min-w-[164px]">交货期</th><th class="compact-cell min-w-[164px]">到港时间</th>
-                                        <th class="compact-cell min-w-[84px]">生产基地</th><th class="compact-cell min-w-[104px]">产品类型</th><th class="compact-cell min-w-[110px]">有无直发料</th>
+                                        <th class="compact-cell min-w-[84px]">生产基地</th><th class="compact-cell min-w-[110px]">有无直发料</th>
                                         <th class="compact-cell min-w-[138px]">客户型号</th><th class="compact-cell min-w-[138px]">工厂型号</th><th class="compact-cell min-w-[112px]">面板直发</th><th class="compact-cell min-w-[112px]">品牌</th>
                                         <th class="compact-cell text-center no-print sticky-head sticky-right-action min-w-[120px]">操作</th>
                                     </tr>
@@ -452,6 +462,16 @@
                                 <tbody class="divide-y divide-gray-100">
                                     <tr v-for="(item, idx) in formData.items" :key="item.id" class="hover:bg-gray-50">
                                         <td class="compact-cell detail-batch">{{ item.batchNo }}</td>
+                                        <td class="compact-cell">
+                                            <template v-if="item.partTypeLocked || isReadOnly">
+                                                <div class="detail-pill min-w-[70px]">{{ item.partType }}</div>
+                                            </template>
+                                            <template v-else>
+                                                <select v-model="item.partType" class="detail-select w-[88px] outline-none">
+                                                    <option v-for="opt in config.partTypes" :value="opt">{{ opt }}</option>
+                                                </select>
+                                            </template>
+                                        </td>
                                         <td class="compact-cell text-center bg-blue-50/30">
                                             <div class="flex items-center justify-center gap-1">
                                                 <input type="number" v-model.number="item.tempQty" v-if="item.isEditing" class="detail-input w-[74px] border-blue-500 text-center font-bold text-blue-700 outline-none">
@@ -469,7 +489,8 @@
                                         <td class="compact-cell text-center"><div class="detail-pill">{{ ((item.customsPrice * item.qty * (1 + item.markupRate/100)) / (item.qty || 1)).toFixed(2) }}</div></td>
                                         <td class="compact-cell detail-cell-number text-blue-600 detail-total">{{ (item.customsPrice * item.qty * (1 + item.markupRate/100)).toFixed(2) }}</td>
                                         <td class="compact-cell text-center">
-                                            <select v-model="item.currency" :disabled="isReadOnly" class="detail-select w-[78px] outline-none focus:border-blue-500">
+                                            <select v-model="item.currency" :disabled="isReadOnly" :class="['detail-select w-[78px] outline-none focus:border-blue-500', { 'border-red-500 ring-1 ring-red-500': showValidationErrors && isItemCurrencyRequired(item) && !item.currency }]">
+                                                <option value="">--</option>
                                                 <option value="CNY">CNY</option>
                                                 <option value="USD">USD</option>
                                                 <option value="EUR">EUR</option>
@@ -484,11 +505,6 @@
                                         <td class="compact-cell"><input type="date" v-model="item.deliveryDate" :disabled="isReadOnly" class="detail-date w-[150px]"></td>
                                         <td class="compact-cell"><input type="date" v-model="item.arrivalDate" :disabled="isReadOnly" class="detail-date w-[150px]"></td>
                                         <td class="compact-cell">{{ item.baseName }}</td>
-                                        <td class="compact-cell">
-                                            <select v-model="item.productType" :disabled="isReadOnly" class="detail-select w-[98px] outline-none">
-                                                <option v-for="opt in config.productTypes" :value="opt">{{ opt }}</option>
-                                            </select>
-                                        </td>
                                         <td class="compact-cell">
                                             <select v-model="item.directMaterial" :disabled="isReadOnly" class="detail-select w-[102px] outline-none">
                                                 <option v-for="opt in config.directMaterialOptions" :value="opt">{{ opt }}</option>
@@ -717,7 +733,7 @@
                             <tr>
                                 <th class="px-4 py-2 w-10"><input type="checkbox" v-model="selectAllModal" @change="toggleSelectAllModal"></th>
                                 <th class="px-4 py-2">滚动计划号</th>
-                                <th class="px-4 py-2">产品类型</th>
+                                <th class="px-4 py-2">部件类型</th>
                                 <th class="px-4 py-2 text-right">排产</th>
                                 <th class="px-4 py-2 text-right">已做</th>
                                 <th class="px-4 py-2 text-right">剩余</th>
@@ -727,7 +743,7 @@
                         <tbody>
                             <tr v-for="mItem in modalBatchData" :key="mItem.id" class="border-b">
                                 <td class="px-4 py-2"><input type="checkbox" v-model="mItem.checked" @change="toggleModalRowCheck(mItem)"></td>
-                                <td class="px-4 py-2 font-mono">{{ mItem.batchNo }}</td><td class="px-4 py-2">{{ mItem.productType }}</td>
+                                <td class="px-4 py-2 font-mono">{{ mItem.batchNo }}</td><td class="px-4 py-2">{{ mItem.partType }}</td>
                                 <td class="px-4 py-2 text-right text-gray-500">{{ mItem.total }}</td><td class="px-4 py-2 text-right text-gray-500">{{ mItem.used }}</td>
                                 <td class="px-4 py-2 text-right font-bold text-green-600">{{ mItem.remaining }}</td>
                                 <td class="px-4 py-2"><input type="number" v-model.number="mItem.inputQty" @input="monitorModalQty(mItem)" class="border rounded w-full px-2 py-1 text-right"></td>
@@ -759,8 +775,8 @@
                     </div>
                     <div v-if="importPreview.length > 0" class="border rounded max-h-40 overflow-y-auto">
                         <table class="w-full text-xs text-left">
-                            <thead class="bg-gray-50"><tr><th class="p-2">滚动计划号</th><th class="p-2">产品类型</th><th class="p-2 text-right">本次委托数量</th></tr></thead>
-                            <tbody><tr v-for="(row, i) in importPreview" :key="i" class="border-t"><td class="p-2">{{row.batchNo}}</td><td class="p-2">{{row.productType}}</td><td class="p-2 text-right">{{row.qty}}</td></tr></tbody>
+                            <thead class="bg-gray-50"><tr><th class="p-2">滚动计划号</th><th class="p-2">部件类型</th><th class="p-2 text-right">本次委托数量</th></tr></thead>
+                            <tbody><tr v-for="(row, i) in importPreview" :key="i" class="border-t"><td class="p-2">{{row.batchNo}}</td><td class="p-2">{{row.partType}}</td><td class="p-2 text-right">{{row.qty}}</td></tr></tbody>
                         </table>
                     </div>
                 </div>
@@ -811,11 +827,10 @@
             data() {
                 return {
                     currentView: 'list', selectAllPage1: false, selectAllPage3: false, isOrderMenuOpen: true, openFilterDropdown: '',
-                    // [Hotfix] Added productLine to createFilters
-                    createFilters: { batchNo: '', showCompleted: false, productLine: '电视' },
-                    appliedCreateFilters: { batchNo: '', productLine: '' },
+                    createFilters: { batchNo: '', showCompleted: false, productLine: '电视', partType: '散件' },
+                    appliedCreateFilters: { batchNo: '', productLine: '', partType: '' },
                     createHasSearched: false,
-                    searchedGssData: [],
+                    searchedScpData: [],
                     isSubmitting: false,
                     showCommissionSearchModal: false,
                     showReferenceCreateModal: false,
@@ -877,7 +892,7 @@
                         productLines: [
                             { label: '电视', value: '电视' }
                         ],
-                        productTypes: ['整机', '备件'],
+                        partTypes: ['整机', '散件', '易损件'],
                         directMaterialOptions: ['有', '无'],
                         panelDirectOptions: ['', '面板直发'],
                         packagingOptions: ['CBU', 'ZSKD-1', 'SKD-1', 'CKD', 'SKD-P'],
@@ -891,14 +906,19 @@
                         bookers: ['郭美芹', '马筱然', '张暖']
                     },
 
-                    gssData: [
-                        { id: 1, batchNo: 'REGZA-RP-001', productType: '备件', total: 3000, usedTotal: 5, remaining: 2995, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
-                        { id: 2, batchNo: 'REGZA-RP-002', productType: '备件', total: 1200, usedTotal: 200, remaining: 1000, inputQty: 0, checked: false, hasError: false, base: '2000', baseName: '黄岛', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
-                        { id: 3, batchNo: 'REGZA-RP-003', productType: '备件', total: 850, usedTotal: 120, remaining: 730, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
-                        { id: 4, batchNo: 'REGZA-RP-004', productType: '备件', total: 500, usedTotal: 0, remaining: 500, inputQty: 0, checked: false, hasError: false, base: '2000', baseName: '黄岛', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
-                        { id: 5, batchNo: 'REGZA-RP-005', productType: '备件', total: 960, usedTotal: 430, remaining: 530, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
-                        { id: 6, batchNo: 'REGZA-RP-006', productType: '备件', total: 1500, usedTotal: 700, remaining: 800, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
-                        { id: 7, batchNo: 'REGZA-RP-007', productType: '备件', total: 420, usedTotal: 20, remaining: 400, inputQty: 0, checked: false, hasError: false, base: '2000', baseName: '黄岛', entity: 'REGZA_ENT', salesOrg: 'HSVC' }
+                    scpMasterPlanData: [
+                        { id: 1, batchNo: 'REGZA-RP-001', partType: '散件', sourceType: 'scpMasterPlan', total: 3000, usedTotal: 5, remaining: 2995, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 2, batchNo: 'REGZA-RP-002', partType: '散件', sourceType: 'scpMasterPlan', total: 1200, usedTotal: 200, remaining: 1000, inputQty: 0, checked: false, hasError: false, base: '2000', baseName: '黄岛', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 3, batchNo: 'REGZA-RP-003', partType: '散件', sourceType: 'scpMasterPlan', total: 850, usedTotal: 120, remaining: 730, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 4, batchNo: 'REGZA-RP-004', partType: '散件', sourceType: 'scpMasterPlan', total: 500, usedTotal: 0, remaining: 500, inputQty: 0, checked: false, hasError: false, base: '2000', baseName: '黄岛', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 5, batchNo: 'REGZA-RP-005', partType: '散件', sourceType: 'scpMasterPlan', total: 960, usedTotal: 430, remaining: 530, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 6, batchNo: 'REGZA-RP-006', partType: '散件', sourceType: 'scpMasterPlan', total: 1500, usedTotal: 700, remaining: 800, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 7, batchNo: 'REGZA-RP-007', partType: '散件', sourceType: 'scpMasterPlan', total: 420, usedTotal: 20, remaining: 400, inputQty: 0, checked: false, hasError: false, base: '2000', baseName: '黄岛', entity: 'REGZA_ENT', salesOrg: 'HSVC' }
+                    ],
+                    scpOrderData: [
+                        { id: 101, batchNo: 'YSD-RP-001', partType: '易损件', sourceType: 'scpOrder', total: 260, usedTotal: 20, remaining: 240, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 102, batchNo: 'YSD-RP-002', partType: '易损件', sourceType: 'scpOrder', total: 180, usedTotal: 15, remaining: 165, inputQty: 0, checked: false, hasError: false, base: '2000', baseName: '黄岛', entity: 'REGZA_ENT', salesOrg: 'HSVC' },
+                        { id: 103, batchNo: 'YSD-RP-003', partType: '易损件', sourceType: 'scpOrder', total: 90, usedTotal: 5, remaining: 85, inputQty: 0, checked: false, hasError: false, base: '2900', baseName: '江门', entity: 'REGZA_ENT', salesOrg: 'HSVC' }
                     ],
                     formData: { 
                         commissionNo: '', status: 'NONE', 
@@ -952,7 +972,7 @@
             },
             computed: {
                 pageTitle() { if (this.currentView === 'create') return '新建物流委托'; if (this.currentView === 'edit') return '编辑物流委托'; return '物流委托管理'; },
-                hasValidSelection() { return this.searchedGssData.some(i => i.checked && i.inputQty > 0 && !i.hasError); },
+                hasValidSelection() { return this.searchedScpData.some(i => i.checked && i.inputQty > 0 && !i.hasError); },
                 isReadOnly() { return this.forcedReadOnly || this.formData.status === 'EXECUTED' || this.formData.status === 'DELETED'; },
                 canSave() { return ['NONE', 'DRAFT', 'RECALLED'].includes(this.formData.status); },
                 canSubmit() { return ['NONE', 'DRAFT', 'RECALLED'].includes(this.formData.status); },
@@ -1015,9 +1035,9 @@
                     return parts.length > 0 ? parts.join(' + ') : '0.00'; 
                 },
                 
-                sortedGssData() { 
+                sortedScpData() { 
                     if (!this.createHasSearched) return [];
-                    let data = [...this.searchedGssData];
+                    let data = [...this.searchedScpData];
                     return data.sort((a, b) => a.batchNo.localeCompare(b.batchNo));
                 },
                 filteredList() {
@@ -1077,12 +1097,13 @@
                     this.currentView = view; 
                     if (view === 'create') { 
                         this.forcedReadOnly = false;
-                        this.gssData.forEach(i => { i.checked = false; i.inputQty = 0; i.hasError = false; }); 
-                        this.searchedGssData = [];
+                        [...this.scpMasterPlanData, ...this.scpOrderData].forEach(i => { i.checked = false; i.inputQty = 0; i.hasError = false; }); 
+                        this.searchedScpData = [];
                         this.selectAllPage1 = false;
                         this.createHasSearched = false;
-                        this.appliedCreateFilters = { batchNo: '', productLine: '' };
+                        this.appliedCreateFilters = { batchNo: '', productLine: '', partType: '' };
                         this.createFilters.batchNo = '';
+                        this.createFilters.partType = '散件';
                     }
                     if (view === 'edit' && (mode === 'direct' || mode === 'tvs-direct')) {
                         this.resetFormData();
@@ -1178,9 +1199,9 @@
                     this.forcedReadOnly = mode === 'view';
                 },
                 
-                // Helper to simulate fetching current GSS totals for validation
-                async fetchGSS_Total(items) {
-                    console.log("Fetching fresh GSS totals for validation...");
+                // Helper to simulate fetching current SCP totals for validation
+                async fetchSCP_Total(items) {
+                    console.log("Fetching fresh SCP totals for validation...");
                     return new Promise(resolve => {
                         setTimeout(() => {
                             // Mock logic: return current known totals
@@ -1217,13 +1238,28 @@
                     }
                     return { ok: true };
                 },
+                getScpSourceByPartType(partType) {
+                    if (partType === '散件') return 'scpMasterPlan';
+                    if (partType === '易损件') return 'scpOrder';
+                    return '';
+                },
+                getCurrentVnSourceType() {
+                    if (!this.isVnFlow || !this.formData.items.length) return '';
+                    return this.formData.items[0].sourceType || '';
+                },
+                getCurrentVnPartType() {
+                    if (!this.isVnFlow || !this.formData.items.length) return '散件';
+                    return this.formData.items[0].partType || '散件';
+                },
                 buildDetailItem(overrides = {}) {
                     const defaults = {
                         id: Date.now() + Math.random(),
                         batchNo: '',
                         base: this.formData.base || '2900',
                         baseName: (this.formData.base || '2900') === '2000' ? '黄岛' : '江门',
-                        productType: this.isTvsFlow ? '整机' : '备件',
+                        partType: this.isTvsFlow ? '整机' : '散件',
+                        partTypeLocked: false,
+                        sourceType: this.isTvsFlow ? 'manual' : '',
                         directMaterial: this.isTvsFlow ? '无' : '有',
                         customerModel: '',
                         factoryModel: '',
@@ -1263,9 +1299,9 @@
                 },
 
                 goToEditFromCreate() {
-                    const selected = this.searchedGssData.filter(i => i.checked && i.inputQty > 0);
+                    const selected = this.searchedScpData.filter(i => i.checked && i.inputQty > 0);
 
-                    const hasOverQtyError = this.searchedGssData.some(i => i.hasError);
+                    const hasOverQtyError = this.searchedScpData.some(i => i.hasError);
                     if (hasOverQtyError) {
                         alert("创建委托单失败：请修正所有超量输入的批次数量。");
                         return;
@@ -1278,6 +1314,7 @@
                     this.resetFormData();
                     this.applyFlowDefaults('vnFactory');
                     this.formData.productLine = this.createFilters.productLine;
+                    this.formData.querySource = this.getScpSourceByPartType(this.createFilters.partType);
 
                     const uniqueBases = [...new Set(selected.map(i => i.base))];
                     const uniqueEntities = [...new Set(selected.map(i => i.entity))];
@@ -1289,7 +1326,9 @@
                             batchNo: i.batchNo,
                             base: i.base,
                             baseName: i.baseName,
-                            productType: '备件',
+                            partType: i.partType,
+                            partTypeLocked: true,
+                            sourceType: i.sourceType,
                             directMaterial: '有',
                             customerModel: `REGZA-${i.id}`,
                             factoryModel: `FACT-${i.id}`,
@@ -1323,6 +1362,7 @@
                     this.formData = { 
                         commissionNo: '', status: 'NONE', 
                         productLine: '电视', country: 'VN', tradeCountry: 'VN', transportMode: 'BY SEA', tradeMode: 'General', base: '', entity: '', salesOrg: '', customer: 'REGZA', priceTerms: 'DAP', containers: [{ type: '40HQ', qty: 2 }], loadingPlan: '', 
+                        querySource: '',
                         fees: { currency: '', freight: null, insurance: null, other: null },
                         orderer: '薛馨',
                         booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
@@ -1339,30 +1379,42 @@
                 resetNotes() { this.formData.notes = { shipping: '', delivery: '', docs: '' }; this.selectedNoteTemplate = ''; },
 
                 formatMoney(num) { return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
-                searchGSS() { 
+                searchSCP() { 
                     if (!this.createFilters.productLine) {
                         alert("请先选择产品线");
                         return;
                     }
+                    if (!this.createFilters.partType) {
+                        alert("请先选择部件类型");
+                        return;
+                    }
                     this.appliedCreateFilters = {
                         batchNo: this.createFilters.batchNo,
-                        productLine: this.createFilters.productLine
+                        productLine: this.createFilters.productLine,
+                        partType: this.createFilters.partType
                     };
-                    const shuffled = [...this.gssData].sort(() => Math.random() - 0.5);
+                    if (this.createFilters.partType === '整机') {
+                        this.searchedScpData = [];
+                        this.createHasSearched = true;
+                        this.selectAllPage1 = false;
+                        return;
+                    }
+                    const pool = this.createFilters.partType === '易损件' ? this.scpOrderData : this.scpMasterPlanData;
+                    const shuffled = [...pool].sort(() => Math.random() - 0.5);
                     const count = Math.min(shuffled.length, 3 + Math.floor(Math.random() * 3));
-                    this.searchedGssData = shuffled.slice(0, count).map(item => ({
+                    this.searchedScpData = shuffled.slice(0, count).map(item => ({
                         ...item,
                         checked: item.remaining > 0,
                         inputQty: item.remaining > 0 ? item.remaining : 0,
                         hasError: false
                     }));
                     this.createHasSearched = true;
-                    this.selectAllPage1 = this.searchedGssData.length > 0 && this.searchedGssData.every(item => item.checked);
+                    this.selectAllPage1 = this.searchedScpData.length > 0 && this.searchedScpData.every(item => item.checked);
                 },
                 
                 toggleSelectAll(view) { 
                     if (view === 'create') {
-                        this.sortedGssData.forEach(item => { 
+                        this.sortedScpData.forEach(item => { 
                             if (item.remaining > 0) {
                                 item.checked = this.selectAllPage1; 
                                 if (item.checked) {
@@ -1406,9 +1458,10 @@
                     this.applyFlowDefaults('vnFactory');
                     this.formData.productLine = '电视';
                     this.formData.items = [
-                         this.buildDetailItem({ batchNo: 'REGZA-RP-LOADED-01', base: '2900', baseName: '江门', productType: '备件', directMaterial: '有', customerModel: 'TV-75A', factoryModel: '75A6N', panelDirect: '', brand: 'REGZA', currency: 'USD', customsPrice: 120, markupRate: 10, remaining: 500, entity: 'REGZA_ENT', salesOrg: '越南工厂', totalPlan: 1000, used: 500, qty: 100, tempQty: 100, packaging: 'SKD-1', versionDemandQty: 1000, deliveryDate: '2026-06-28', arrivalDate: '2026-07-03' }),
-                         this.buildDetailItem({ batchNo: 'REGZA-RP-LOADED-02', base: '2000', baseName: '黄岛', productType: '备件', directMaterial: '有', customerModel: 'TV-65B', factoryModel: '65E5N', panelDirect: '面板直发', brand: 'REGZA', currency: 'CNY', customsPrice: 800, markupRate: 0, remaining: 800, entity: 'REGZA_ENT', salesOrg: '越南工厂', totalPlan: 1000, used: 200, qty: 200, tempQty: 200, packaging: 'CKD', versionDemandQty: 1000, deliveryDate: '2026-06-29', arrivalDate: '2026-07-04' })
+                         this.buildDetailItem({ batchNo: 'REGZA-RP-LOADED-01', base: '2900', baseName: '江门', partType: '散件', partTypeLocked: true, sourceType: 'scpMasterPlan', directMaterial: '有', customerModel: 'TV-75A', factoryModel: '75A6N', panelDirect: '', brand: 'REGZA', currency: 'USD', customsPrice: 120, markupRate: 10, remaining: 500, entity: 'REGZA_ENT', salesOrg: '越南工厂', totalPlan: 1000, used: 500, qty: 100, tempQty: 100, packaging: 'SKD-1', versionDemandQty: 1000, deliveryDate: '2026-06-28', arrivalDate: '2026-07-03' }),
+                         this.buildDetailItem({ batchNo: 'REGZA-RP-LOADED-02', base: '2000', baseName: '黄岛', partType: '散件', partTypeLocked: true, sourceType: 'scpMasterPlan', directMaterial: '有', customerModel: 'TV-65B', factoryModel: '65E5N', panelDirect: '面板直发', brand: 'REGZA', currency: 'CNY', customsPrice: 800, markupRate: 0, remaining: 800, entity: 'REGZA_ENT', salesOrg: '越南工厂', totalPlan: 1000, used: 200, qty: 200, tempQty: 200, packaging: 'CKD', versionDemandQty: 1000, deliveryDate: '2026-06-29', arrivalDate: '2026-07-04' })
                     ];
+                    this.formData.querySource = 'scpMasterPlan';
                     this.formData.base = '2900';
                     this.formData.entity = 'REGZA_ENT';
                     this.formData.pol = '江门';
@@ -1437,7 +1490,7 @@
                     const serial = String(this.formData.items.length + 1).padStart(3, '0');
                     this.formData.items.push(this.buildDetailItem({
                         batchNo: `TVS-NEW-${serial}`,
-                        productType: '整机',
+                        partType: '整机',
                         directMaterial: '无',
                         customerModel: '',
                         factoryModel: '',
@@ -1466,12 +1519,17 @@
                 modalSearchBatch() { 
                     const currentLine = this.formData.productLine;
                     const mockDB = [ 
-                        { id: 901, batchNo: 'TVS-RP-ADD-01', productType: '整机', productLine: '电视', total: 1000, used: 200, remaining: 800, inputQty: 0, checked: false }, 
-                        { id: 902, batchNo: 'REGZA-RP-ADD-02', productType: '备件', productLine: '电视', total: 680, used: 80, remaining: 600, inputQty: 0, checked: false },
-                        { id: 903, batchNo: 'OTHER-RP-ERR', productType: '配件', productLine: '冰冷', total: 100, used: 10, remaining: 90, inputQty: 0, checked: false } 
+                        { id: 901, batchNo: 'TVS-RP-ADD-01', partType: '整机', productLine: '电视', total: 1000, used: 200, remaining: 800, inputQty: 0, checked: false, sourceType: 'manual' }, 
+                        { id: 902, batchNo: 'REGZA-RP-ADD-02', partType: '散件', productLine: '电视', total: 680, used: 80, remaining: 600, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
+                        { id: 903, batchNo: 'YSD-RP-ADD-03', partType: '易损件', productLine: '电视', total: 140, used: 10, remaining: 130, inputQty: 0, checked: false, sourceType: 'scpOrder' } 
                     ]; 
-                    
-                    this.modalBatchData = mockDB.filter(i => i.productLine === currentLine || !currentLine);
+                    if (this.isVnFlow) {
+                        const vnSource = this.getCurrentVnSourceType() || 'scpMasterPlan';
+                        const vnPartType = this.getCurrentVnPartType();
+                        this.modalBatchData = mockDB.filter(i => (i.productLine === currentLine || !currentLine) && i.sourceType === vnSource && i.partType === vnPartType);
+                    } else {
+                        this.modalBatchData = mockDB.filter(i => i.productLine === currentLine || !currentLine);
+                    }
                     this.selectAllModal = false;
                 },
                 monitorModalQty(item) { 
@@ -1505,8 +1563,8 @@
                     const file = event.target.files[0];
                     if (!file) return;
                     this.importPreview = [
-                        { batchNo: 'TVS-RP-IMP-001', productType: '整机', qty: 50 },
-                        { batchNo: 'REGZA-RP-IMP-002', productType: '备件', qty: 100 }
+                        { batchNo: 'TVS-RP-IMP-001', partType: '整机', qty: 50 },
+                        { batchNo: 'REGZA-RP-IMP-002', partType: this.isVnFlow ? this.getCurrentVnPartType() : '散件', qty: 100 }
                     ];
                     if (this.importPreview.length > 99) {
                         alert("导入失败：单次最多上传 99 行");
@@ -1520,7 +1578,9 @@
                         this.importPreview.forEach(row => {
                             this.formData.items.push(this.buildDetailItem({
                                 batchNo: row.batchNo,
-                                productType: row.productType,
+                                partType: row.partType,
+                                partTypeLocked: this.isVnFlow,
+                                sourceType: this.isVnFlow ? this.getCurrentVnSourceType() : 'manual',
                                 directMaterial: this.isTvsFlow ? '无' : '有',
                                 customerModel: 'IMP-CUST',
                                 factoryModel: 'IMP-FACT',
@@ -1556,9 +1616,9 @@
                     const invalid = added.filter(i => i.inputQty > i.remaining);
                     if (invalid.length > 0) { alert(`数量超限: ${invalid[0].batchNo}`); return; }
 
-                    const duplicates = added.filter(i => this.formData.items.some(existing => existing.batchNo === i.batchNo && existing.productType === i.productType));
+                    const duplicates = added.filter(i => this.formData.items.some(existing => existing.batchNo === i.batchNo && existing.partType === i.partType));
                     if (duplicates.length > 0) {
-                        alert(`添加失败：以下批次+产品类型已存在，不能重复添加：\n${duplicates.map(d => d.batchNo + '-' + d.productType).join(', ')}`);
+                        alert(`添加失败：以下批次+部件类型已存在，不能重复添加：\n${duplicates.map(d => d.batchNo + '-' + d.partType).join(', ')}`);
                         return;
                     }
 
@@ -1566,7 +1626,9 @@
                         added.forEach(i => { 
                             this.formData.items.push(this.buildDetailItem({ 
                                 batchNo: i.batchNo,
-                                productType: i.productType,
+                                partType: i.partType,
+                                partTypeLocked: this.isVnFlow,
+                                sourceType: this.isVnFlow ? this.getCurrentVnSourceType() : 'manual',
                                 directMaterial: this.isTvsFlow ? '无' : '有',
                                 customerModel: 'ADD-CUST',
                                 factoryModel: 'ADD-FACT',
@@ -1602,11 +1664,32 @@
                 hasEnteredFeeValue(value) {
                     return value !== '' && value !== null && value !== undefined && !Number.isNaN(Number(value));
                 },
+                getItemSalesUnitPrice(item) {
+                    return (Number(item.customsPrice || 0) * (1 + Number(item.markupRate || 0) / 100));
+                },
+                getItemSalesTotal(item) {
+                    return this.getItemSalesUnitPrice(item) * Number(item.qty || 0);
+                },
+                isItemCurrencyRequired(item) {
+                    const customsPrice = Number(item.customsPrice || 0);
+                    const customsTotal = customsPrice * Number(item.qty || 0);
+                    const salesUnitPrice = this.getItemSalesUnitPrice(item);
+                    const salesTotal = this.getItemSalesTotal(item);
+                    return [customsPrice, customsTotal, salesUnitPrice, salesTotal].some(value => value > 0);
+                },
                 validateFees() {
                     const fees = this.formData.fees || {};
                     const hasAnyFee = this.hasEnteredFeeValue(fees.freight) || this.hasEnteredFeeValue(fees.insurance) || this.hasEnteredFeeValue(fees.other);
                     if (hasAnyFee && !fees.currency) {
                         return { ok: false, message: '费用币种不能为空' };
+                    }
+                    return { ok: true };
+                },
+                validateItemCurrencies() {
+                    for (const item of this.formData.items) {
+                        if (this.isItemCurrencyRequired(item) && !item.currency) {
+                            return { ok: false, message: `滚动计划【${item.batchNo}】已填写价格金额，币种不能为空` };
+                        }
                     }
                     return { ok: true };
                 },
@@ -1640,9 +1723,14 @@
                         if (!isSilent) alert(`保存失败：${feeValidation.message}`);
                         return;
                     }
+                    const itemCurrencyValidation = this.validateItemCurrencies();
+                    if (!itemCurrencyValidation.ok) {
+                        if (!isSilent) alert(`保存失败：${itemCurrencyValidation.message}`);
+                        return;
+                    }
                     
-                    // GSS Sync Validation (Only Total Qty)
-                    await this.fetchGSS_Total(this.formData.items);
+                    // SCP Sync Validation (Only Total Qty)
+                    await this.fetchSCP_Total(this.formData.items);
                     // Assume validation passes for this mock
                     
                     if (!this.formData.commissionNo) this.formData.commissionNo = 'HA' + Date.now().toString().slice(-8);
@@ -1651,7 +1739,7 @@
                     this.formData.updateTime = new Date().toLocaleString();
                     if (!this.formData.createTime) this.formData.createTime = new Date().toLocaleString();
                     
-                    if(!isSilent) alert("已暂存草稿 (GSS总量校验通过)");
+                    if(!isSilent) alert("已暂存草稿 (SCP总量校验通过)");
                 },
 
                 async submitCommission() {
@@ -1677,7 +1765,12 @@
                             alert(`提交失败：${feeValidation.message}`);
                             return;
                         }
-                        await this.fetchGSS_Total(this.formData.items);
+                        const itemCurrencyValidation = this.validateItemCurrencies();
+                        if (!itemCurrencyValidation.ok) {
+                            alert(`提交失败：${itemCurrencyValidation.message}`);
+                            return;
+                        }
+                        await this.fetchSCP_Total(this.formData.items);
                         if (!this.formData.commissionNo) this.formData.commissionNo = 'HA' + Date.now().toString().slice(-8);
                         if (!this.formData.createTime) this.formData.createTime = new Date().toLocaleString();
                         this.formData.status = 'EXECUTED';
@@ -1739,6 +1832,7 @@
                     this.formData.country = doc.country || this.formData.country;
                     this.formData.tradeCountry = doc.tradeCountry || doc.country || this.formData.tradeCountry;
                     this.formData.tradeMode = doc.tradeMode || this.formData.tradeMode;
+                    this.formData.querySource = doc.querySource || (doc.salesArea === 'TVS' ? 'manual' : 'scpMasterPlan');
                     this.formData.loadingPlan = doc.loadingPlan || (doc.salesArea === 'TVS' ? '按客户装柜方案手工维护。' : '按 SCP 查询结果执行装柜。');
                     this.formData.fees = {
                         currency: doc.fees?.currency || '',
@@ -1757,7 +1851,9 @@
                             batchNo: batch,
                             base: this.formData.base,
                             baseName: this.formData.base === '2000' ? '黄岛' : '江门',
-                            productType: doc.salesArea === 'TVS' ? '整机' : '备件',
+                            partType: doc.salesArea === 'TVS' ? '整机' : '散件',
+                            partTypeLocked: doc.salesArea !== 'TVS',
+                            sourceType: doc.salesArea === 'TVS' ? 'manual' : this.formData.querySource,
                             directMaterial: doc.salesArea === 'TVS' ? '无' : '有',
                             customerModel: doc.salesArea === 'TVS' ? `TVS-CM-${idx + 1}` : `REGZA-CM-${idx + 1}`,
                             factoryModel: `FM-${idx + 1}`,
@@ -1816,10 +1912,10 @@
                     if (!this.canRemoveItem) return;
                     if(!confirm('确定要删除该批次吗？')) return; 
                     const removedItem = this.formData.items[idx];
-                    const originalGssItem = this.gssData.find(i => i.batchNo === removedItem.batchNo);
-                    if (originalGssItem) {
-                        originalGssItem.usedTotal -= removedItem.qty;
-                        originalGssItem.remaining += removedItem.qty;
+                    const originalScpItem = [...this.scpMasterPlanData, ...this.scpOrderData].find(i => i.batchNo === removedItem.batchNo && i.partType === removedItem.partType);
+                    if (originalScpItem) {
+                        originalScpItem.usedTotal -= removedItem.qty;
+                        originalScpItem.remaining += removedItem.qty;
                     }
                     this.formData.items.splice(idx, 1); 
                 },
