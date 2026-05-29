@@ -669,19 +669,25 @@
         </main>
         
         <div v-if="showAddBatchModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-             <div class="bg-white rounded-lg shadow-xl w-[900px] max-h-[80vh] flex flex-col">
+             <div class="bg-white rounded-lg shadow-xl w-[1080px] max-h-[84vh] flex flex-col">
                 <div class="p-4 border-b flex justify-between items-center"><h3 class="font-bold">查询新增滚动计划</h3><button @click="showAddBatchModal=false"><i class="fa-solid fa-xmark"></i></button></div>
-                <div class="p-4 bg-gray-50 border-b space-y-3">
-                    <div class="grid grid-cols-1 gap-3">
-                        <div>
+                <div class="p-4 bg-gray-50 border-b">
+                    <div class="grid grid-cols-[260px_minmax(0,1fr)] gap-4 items-stretch">
+                        <div class="bg-white border border-gray-200 rounded-lg px-4 py-4">
+                            <div class="text-xs font-semibold tracking-wide text-gray-500 mb-2">查询条件</div>
                             <div class="text-xs text-gray-600 mb-1 required-star">清关类型</div>
-                            <select v-model="modalPartType" class="border rounded px-3 py-2 w-full">
+                            <select v-model="modalPartType" class="border rounded px-3 py-2 w-full bg-white">
                                 <option v-for="opt in config.partTypes" :value="opt">{{ opt }}</option>
                             </select>
+                            <div class="mt-3 text-[11px] leading-5 text-gray-400">先确定清关类型，再录入滚动计划号进行查询。</div>
                         </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <textarea v-model="modalSearchQuery" placeholder="输入滚动计划号，支持单票或批量录入，可换行或逗号分隔" class="border rounded px-3 py-2 flex-1 h-[72px] resize-none"></textarea><button @click="modalSearchBatch" class="bg-blue-600 text-white px-4 rounded">查询</button>
+                        <div class="bg-white border border-gray-200 rounded-lg px-4 py-4">
+                            <div class="text-xs font-semibold tracking-wide text-gray-500 mb-2">滚动计划号</div>
+                            <div class="flex gap-3 items-stretch">
+                                <textarea v-model="modalSearchQuery" placeholder="输入滚动计划号，支持单票或批量录入，可换行或逗号分隔" class="border rounded px-3 py-3 flex-1 h-[92px] resize-none"></textarea>
+                                <button @click="modalSearchBatch" class="bg-blue-600 text-white px-6 rounded-lg min-w-[104px]">查询</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="overflow-y-auto flex-1 p-0">
@@ -1499,24 +1505,35 @@
                 },
                 modalSearchBatch() { 
                     const mockDB = [ 
-                        { id: 901, batchNo: 'TVS-RP-ADD-01', partType: '整机', productLine: '电视', total: 1000, used: 200, remaining: 800, inputQty: 0, checked: false, sourceType: 'manual' }, 
+                        { id: 901, batchNo: 'REGZA-RP-ADD-01', partType: '散件', productLine: '电视', total: 980, used: 180, remaining: 800, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
                         { id: 902, batchNo: 'REGZA-RP-ADD-02', partType: '散件', productLine: '电视', total: 680, used: 80, remaining: 600, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
-                        { id: 904, batchNo: 'REGZA-RP-ADD-04', partType: '整机', productLine: '电视', total: 520, used: 40, remaining: 480, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
-                        { id: 903, batchNo: 'YSD-RP-ADD-03', partType: '易损件', productLine: '电视', total: 140, used: 10, remaining: 130, inputQty: 0, checked: false, sourceType: 'scpOrder' } 
+                        { id: 903, batchNo: 'REGZA-RP-ADD-03', partType: '散件', productLine: '电视', total: 520, used: 40, remaining: 480, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
+                        { id: 904, batchNo: 'REGZA-RP-ADD-04', partType: '整机', productLine: '电视', total: 760, used: 160, remaining: 600, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
+                        { id: 905, batchNo: 'REGZA-RP-ADD-05', partType: '整机', productLine: '电视', total: 640, used: 120, remaining: 520, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
+                        { id: 906, batchNo: 'REGZA-RP-ADD-06', partType: '整机', productLine: '电视', total: 430, used: 50, remaining: 380, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
+                        { id: 907, batchNo: 'YSD-RP-ADD-07', partType: '易损件', productLine: '电视', total: 140, used: 10, remaining: 130, inputQty: 0, checked: false, sourceType: 'scpOrder' },
+                        { id: 908, batchNo: 'YSD-RP-ADD-08', partType: '易损件', productLine: '电视', total: 260, used: 20, remaining: 240, inputQty: 0, checked: false, sourceType: 'scpOrder' },
+                        { id: 909, batchNo: 'YSD-RP-ADD-09', partType: '易损件', productLine: '电视', total: 180, used: 15, remaining: 165, inputQty: 0, checked: false, sourceType: 'scpOrder' },
+                        { id: 910, batchNo: 'YSD-RP-ADD-10', partType: '易损件', productLine: '电视', total: 110, used: 12, remaining: 98, inputQty: 0, checked: false, sourceType: 'scpOrder' } 
                     ]; 
+                    const mapDefaultSelection = item => ({
+                        ...item,
+                        checked: item.remaining > 0,
+                        inputQty: item.remaining > 0 ? item.remaining : 0
+                    });
                     if (this.isVnFlow) {
                         const vnSource = this.getScpSourceByPartType(this.modalPartType) || 'scpMasterPlan';
                         this.modalBatchData = mockDB
                             .filter(i => i.sourceType === vnSource)
-                            .map(i => ({ ...i, partType: this.modalPartType }));
+                            .map(i => mapDefaultSelection({ ...i, partType: this.modalPartType }));
                     } else if (this.isTvsFlow) {
                         this.modalBatchData = mockDB
                             .filter(i => i.sourceType === 'scpOrder')
-                            .map(i => ({ ...i, sourceType: 'scpOrder', partType: '易损件' }));
+                            .map(i => mapDefaultSelection({ ...i, sourceType: 'scpOrder', partType: '易损件' }));
                     } else {
-                        this.modalBatchData = mockDB;
+                        this.modalBatchData = mockDB.map(mapDefaultSelection);
                     }
-                    this.selectAllModal = false;
+                    this.selectAllModal = this.modalBatchData.length > 0 && this.modalBatchData.every(item => item.checked);
                 },
                 monitorModalQty(item) { 
                     if (item.inputQty < 0 || isNaN(item.inputQty)) item.inputQty = 0;
