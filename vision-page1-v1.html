@@ -265,7 +265,6 @@
                                     <span class="status-badge" :class="statusBadgeClass">{{ statusMap[formData.status] }}</span>
                                 </div>
                             </div>
-                            <button @click="showCommissionSearchModal=true" class="edit-search-btn ml-1"><i class="fa-solid fa-search mr-1"></i>查询单据</button>
                         </div>
                         <div class="edit-topbar-actions">
                             <button v-if="showReferenceCreate" @click="referenceCreate" class="edit-header-btn reference">参考创建</button>
@@ -291,21 +290,24 @@
                         </div>
                         <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
                             <div><span class="p2-label required-star">报关主体</span><select v-model="formData.entity" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.entity}"><option value="">请选择</option><option value="REGZA_ENT">REGZA越南电子有限公司</option><option value="TVS_ENT">TVS REGZA CORPORATION</option></select></div>
+                            <div><span class="p2-label required-star">销售组织</span><select v-model="formData.salesOrganization" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.salesOrganization}"><option value="">请选择</option><option v-for="opt in config.salesOrganizations" :key="opt.value" :value="opt.value">{{ opt.label }}</option></select></div>
                             <div><span class="p2-label required-star">业务流</span><select v-model="formData.salesOrg" @change="handleBusinessFlowChange" :disabled="isBusinessFlowLocked" :class="['p2-input', isBusinessFlowLocked ? 'input-readonly' : '', {'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.salesOrg}]"><option value="">请选择</option><option value="越南工厂">越南工厂</option><option value="TVS">TVS</option></select></div>
                             <div><span class="p2-label required-star">运输方式</span><select v-model="formData.transportMode" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.transportMode}"><option value="">请选择</option><option value="BY SEA">BY SEA</option><option value="BY TRAIN">BY TRAIN</option><option value="BY TRUCK">BY TRUCK</option><option value="BY AIR">BY AIR</option></select></div>
-                            <div><span class="p2-label required-star">贸易方式</span><select v-model="formData.tradeMode" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.tradeMode}"><option value="">请选择</option><option v-for="opt in config.tradeModes" :value="opt.value">{{opt.label}}</option></select></div>
                         </div>
                         <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
+                            <div><span class="p2-label required-star">贸易方式</span><select v-model="formData.tradeMode" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.tradeMode}"><option value="">请选择</option><option v-for="opt in config.tradeModes" :value="opt.value">{{opt.label}}</option></select></div>
                             <div><span class="p2-label required-star">价格条款</span><select v-model="formData.priceTerms" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.priceTerms}"><option value="">请选择</option><option value="DAP">DAP</option><option value="FOB">FOB</option><option value="CIF">CIF</option><option value="CIP">CIP</option></select></div>
                             <div><span class="p2-label required-star">订单人</span><input type="text" v-model="formData.orderer" disabled class="p2-input input-readonly"></div>
                             <div><span class="p2-label required-star">订舱人</span><select v-model="formData.booker" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.booker}"><option value="">-- 请选择 --</option><option v-for="name in config.bookers" :value="name">{{name}}</option></select></div>
-                            <div><span class="p2-label required-star">船期</span><input type="date" v-model="formData.etd" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.etd}"></div>
                         </div>
                         <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
+                            <div><span class="p2-label required-star">船期</span><input type="date" v-model="formData.etd" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.etd}"></div>
                             <div><span class="p2-label required-star">落货日期</span><input type="date" v-model="formData.cutoff" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.cutoff}"></div>
                             <div><span class="p2-label required-star">起运港</span><select v-model="formData.pol" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.pol}"><option value="">请选择</option><option value="江门">江门</option><option value="青岛">青岛</option><option value="上海">上海</option></select></div>
                             <div><span class="p2-label required-star">目的港</span><select v-model="formData.pod" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.pod}"><option value="">请选择</option><option value="海防">海防</option><option value="胡志明">胡志明</option><option value="岘港">岘港</option><option value="东京">东京</option><option value="大阪">大阪</option></select></div>
-                            <div><span class="p2-label required-star">客户</span><select v-model="formData.customer" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.customer}"><option value="">请选择</option><option value="REGZA">REGZA</option></select></div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
+                            <div><span class="p2-label required-star">客户</span><select v-model="formData.customer" :disabled="isReadOnly" class="p2-input" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.customer}"><option value="">请选择</option><option v-for="name in config.customers" :key="name" :value="name">{{ name }}</option></select></div>
                         </div>
                         <div class="grid grid-cols-4 gap-x-6 gap-y-5 mb-5">
                             <div><span class="p2-label">创建时间</span><input type="text" :value="formData.createTime" class="p2-input input-readonly" readonly></div>
@@ -373,7 +375,7 @@
                             <h3 class="section-title"><i class="fa-solid fa-layer-group"></i> 滚动计划明细</h3>
                             <div class="flex gap-2">
                                 <button @click="refreshAllItems" class="table-toolbar-btn no-print" :disabled="!canRefreshAll"><i class="fa-solid fa-rotate-right mr-1"></i>同步全部</button>
-                                <button @click="exportBatchDetails" class="table-toolbar-btn no-print" :disabled="!hasBusinessFlow || isReadOnly"><i class="fa-solid fa-file-export mr-1"></i>导出明细</button>
+                                <button @click="exportBatchDetails" class="table-toolbar-btn no-print" :disabled="!canExportBatchDetails"><i class="fa-solid fa-file-export mr-1"></i>导出明细</button>
                                 <button @click="openImportModal" class="table-toolbar-btn no-print" :disabled="!canImportItems"><i class="fa-solid fa-file-import mr-1"></i>批量导入</button>
                                 <button @click="batchRemoveItems" class="table-toolbar-btn no-print" :disabled="!canBatchDeleteItems"><i class="fa-solid fa-trash-can mr-1"></i>批量删除批次</button>
                                 <button @click="openAddBatchModal" class="table-toolbar-btn primary no-print" :disabled="!canQueryAddItems">+ 查询新增</button>
@@ -389,7 +391,7 @@
                                         <th class="compact-cell detail-head-muted min-w-[148px]">滚动计划号</th>
                                         <th class="compact-cell min-w-[94px]">清关类型</th>
                                         <th class="compact-cell min-w-[120px]">数据来源</th>
-                                        <th class="compact-cell text-center w-24 bg-blue-50">本次委托数量</th><th class="compact-cell text-center">已做委托数量</th><th class="compact-cell text-center">滚动计划总量</th>
+                                        <th class="compact-cell text-center w-24 bg-blue-50">本次委托数量</th><th class="compact-cell text-center">滚动计划总量</th><th class="compact-cell text-center">已做委托数量</th>
                                         <th class="compact-cell text-center w-24">报关单价</th><th class="compact-cell detail-head-number">报关总价</th>
                                         <th class="compact-cell text-center w-24 text-blue-600">销售单价</th><th class="compact-cell detail-head-number font-bold text-blue-600">销售总价</th>
                                         <th class="compact-cell text-center min-w-[88px]">币种</th><th class="compact-cell min-w-[128px]">出口包装方式</th><th class="compact-cell min-w-[164px]">交货期</th><th class="compact-cell min-w-[164px]">到港时间</th>
@@ -430,14 +432,14 @@
                                                 <button v-if="item.isEditing" @click="cancelQty(item)" class="text-gray-400 hover:text-gray-600 no-print"><i class="fa-solid fa-xmark"></i></button>
                                             </div>
                                         </td>
+                                        <td class="compact-cell text-center"><input type="number" :value="getPlanTotalQty(item)" disabled class="detail-input w-[88px] input-readonly text-center"></td>
                                         <td class="compact-cell detail-cell-center text-gray-500">{{ item.used }}</td>
-                                        <td class="compact-cell text-center"><input type="number" :value="item.versionDemandQty" disabled class="detail-input w-[88px] input-readonly text-center"></td>
                                         
                                         <td class="compact-cell text-center"><input type="number" v-model.number="item.customsPrice" :disabled="isReadOnly" class="detail-input w-[88px] text-center font-mono focus:ring-1 focus:ring-blue-500"></td>
                                         <td class="compact-cell detail-cell-number text-gray-600 detail-total">{{ (item.customsPrice * item.qty).toFixed(2) }}</td>
                                         
-                                        <td class="compact-cell text-center"><div class="detail-pill">{{ ((item.customsPrice * item.qty * (1 + item.markupRate/100)) / (item.qty || 1)).toFixed(2) }}</div></td>
-                                        <td class="compact-cell detail-cell-number text-blue-600 detail-total">{{ (item.customsPrice * item.qty * (1 + item.markupRate/100)).toFixed(2) }}</td>
+                                        <td class="compact-cell text-center" title="加价率规则待定，演示计算非定稿"><div class="detail-pill">{{ ((item.customsPrice * item.qty * (1 + item.markupRate/100)) / (item.qty || 1)).toFixed(2) }}</div></td>
+                                        <td class="compact-cell detail-cell-number text-blue-600 detail-total" title="加价率规则待定，演示计算非定稿">{{ (item.customsPrice * item.qty * (1 + item.markupRate/100)).toFixed(2) }}</td>
                                         <td class="compact-cell text-center">
                                             <select v-model="item.currency" :disabled="isReadOnly" :class="['detail-select w-[78px] outline-none focus:border-blue-500', { 'border-red-500 ring-1 ring-red-500': showValidationErrors && isItemCurrencyRequired(item) && !item.currency }]">
                                                 <option value="">--</option>
@@ -517,10 +519,10 @@
                         </div>
                     </div>
 
-                    <div class="info-box mt-6">
-                        <div class="bg-section-header flex justify-between items-center mb-4">
-                            <h3 class="text-blue-600 font-bold flex items-center gap-2"><i class="fa-solid fa-address-card"></i> 收发通信息</h3>
-                            <div class="flex items-center gap-2">
+                    <div class="section-panel">
+                        <div class="section-header">
+                            <h3 class="section-title"><i class="fa-solid fa-address-card"></i> 收发通信息</h3>
+                            <div class="flex items-center gap-2 no-print">
                                 <select v-model="selectedPartyTemplate" @change="applyPartyTemplate" class="template-select"><option value="">-- 选择模板 --</option><option v-for="(tpl, key) in partyTemplates" :key="key" :value="key">{{ key }}</option></select>
                                 <span class="save-tpl-btn" @click="updateTemplate('party')">保存修改</span>
                                 <span class="save-tpl-btn" @click="openSaveTemplateModal('party')">+ 存为新模板</span>
@@ -528,12 +530,15 @@
                                 <span class="reset-btn" @click="resetParties"><i class="fa-solid fa-eraser mr-1"></i>重置</span>
                             </div>
                         </div>
-                        <div class="grid grid-cols-3 gap-6">
-                             <div><span class="p2-label required-star">发货人</span><textarea v-model="formData.shipper" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.shipper}"></textarea></div>
-                             <div><span class="p2-label required-star">收货人</span><textarea v-model="formData.consignee" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.consignee}"></textarea></div>
-                             <div><span class="p2-label required-star">通知人</span><textarea v-model="formData.notifyParty" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.notifyParty}"></textarea></div>
+                        <div class="section-body">
+                            <div class="grid grid-cols-3 gap-6">
+                                <div><span class="p2-label required-star">发货人</span><textarea v-model="formData.shipper" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.shipper}"></textarea></div>
+                                <div><span class="p2-label required-star">收货人</span><textarea v-model="formData.consignee" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.consignee}"></textarea></div>
+                                <div><span class="p2-label required-star">通知人</span><textarea v-model="formData.notifyParty" :disabled="isReadOnly" class="beautified-textarea" :class="{'border-red-500 ring-1 ring-red-500': showValidationErrors && !formData.notifyParty}"></textarea></div>
+                            </div>
                         </div>
                     </div>
+
                 </div>
 
                 <div v-if="currentView === 'list'" class="max-w-full mx-auto space-y-2.5">
@@ -610,12 +615,13 @@
                             </div>
                         </div>
                         <div class="overflow-x-auto">
-                        <table class="w-full min-w-[1520px] text-left text-[12px]">
+                        <table class="w-full min-w-[1680px] text-left text-[12px]">
                             <thead class="text-gray-600 border-b bg-[#F3F7FB]">
                                 <tr>
                                     <th class="px-3 py-2.5 w-10 whitespace-nowrap"><input type="checkbox" v-model="selectAllPage3" class="w-4 h-4 text-blue-600 border-gray-300 rounded"></th>
                                     <th class="px-3 py-2.5 whitespace-nowrap">委托单号</th>
-                                    <th class="px-3 py-2.5 whitespace-nowrap">包含批次</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">业务流</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">包含滚动计划</th>
                                     <th class="px-3 py-2.5 whitespace-nowrap">产品线</th>
                                     <th class="px-3 py-2.5 whitespace-nowrap">价格条款</th>
                                     <th class="px-3 py-2.5 whitespace-nowrap">运输方式</th>
@@ -624,6 +630,7 @@
                                     <th class="px-3 py-2.5 whitespace-nowrap">箱型箱量</th>
                                     <th class="px-3 py-2.5 whitespace-nowrap">客户</th>
                                     <th class="px-3 py-2.5 whitespace-nowrap">订单人</th>
+                                    <th class="px-3 py-2.5 whitespace-nowrap">订舱人</th>
                                     <th class="px-3 py-2.5 sticky-head sticky-right-status min-w-[72px] whitespace-nowrap text-center">状态</th>
                                     <th class="px-3 py-2.5 sticky-head sticky-right-action min-w-[104px] text-center whitespace-nowrap">操作</th>
                                 </tr>
@@ -632,6 +639,7 @@
                                 <tr v-for="doc in pagedList" :key="doc.id" class="hover:bg-blue-50/30">
                                     <td class="px-3 py-2.5"><input type="checkbox" v-model="doc.checked" class="w-4 h-4 text-blue-600 border-gray-300 rounded"></td>
                                     <td class="px-3 py-2.5 font-medium text-blue-600 whitespace-nowrap">{{ doc.id }}</td>
+                                    <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.salesArea }}</td>
                                     <td class="px-3 py-2.5"><div class="flex gap-1 flex-wrap"><span v-for="b in doc.batches" class="bg-gray-100 px-1 rounded text-[11px] border">{{ b }}</span></div></td>
                                     <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.productLine }}</td>
                                     <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.priceTerms }}</td>
@@ -641,6 +649,7 @@
                                     <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.containerSummary }}</td>
                                     <td class="px-3 py-2.5">{{ doc.customer }}</td>
                                     <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.orderer }}</td>
+                                    <td class="px-3 py-2.5 whitespace-nowrap">{{ doc.booker }}</td>
                                     <td class="px-3 py-2.5 sticky-body sticky-right-status min-w-[72px] whitespace-nowrap text-center text-gray-900">{{ statusMap[doc.status] }}</td>
                                     <td class="px-3 py-2.5 sticky-body sticky-right-action min-w-[104px] text-center">
                                         <div class="flex justify-center gap-2 whitespace-nowrap">
@@ -697,18 +706,16 @@
                                 <th class="px-4 py-2 w-10"><input type="checkbox" v-model="selectAllModal" @change="toggleSelectAllModal"></th>
                                 <th class="px-4 py-2">滚动计划号</th>
                                 <th class="px-4 py-2">清关类型</th>
-                                <th class="px-4 py-2 text-right">排产</th>
-                                <th class="px-4 py-2 text-right">已做</th>
-                                <th class="px-4 py-2 text-right">剩余</th>
-                                <th class="px-4 py-2 w-32">此次数量</th>
+                                <th class="px-4 py-2 text-right">滚动计划总量</th>
+                                <th class="px-4 py-2 text-right">已做委托数量</th>
+                                <th class="px-4 py-2 w-32">本次委托数量</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="mItem in modalBatchData" :key="mItem.id" class="border-b">
                                 <td class="px-4 py-2"><input type="checkbox" v-model="mItem.checked" @change="toggleModalRowCheck(mItem)"></td>
                                 <td class="px-4 py-2 font-mono">{{ mItem.batchNo }}</td><td class="px-4 py-2">{{ mItem.partType }}</td>
-                                <td class="px-4 py-2 text-right text-gray-500">{{ mItem.total }}</td><td class="px-4 py-2 text-right text-gray-500">{{ mItem.used }}</td>
-                                <td class="px-4 py-2 text-right font-bold text-green-600">{{ mItem.remaining }}</td>
+                                <td class="px-4 py-2 text-right text-gray-500">{{ mItem.total }}</td><td class="px-4 py-2 text-right text-gray-500">{{ mItem.usedTotal ?? mItem.used ?? Math.max(0, Number(mItem.total || 0) - Number(mItem.remaining || 0)) }}</td>
                                 <td class="px-4 py-2"><input type="number" v-model.number="mItem.inputQty" @input="monitorModalQty(mItem)" class="border rounded w-full px-2 py-1 text-right"></td>
                             </tr>
                         </tbody>
@@ -750,23 +757,10 @@
             </div>
         </div>
 
-        <div v-if="showCommissionSearchModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-            <div class="bg-white rounded-lg shadow-xl w-[500px] p-6">
-                <h3 class="font-bold text-lg mb-4">查询物流委托</h3>
-                <div class="mb-4">
-                    <input v-model="commissionSearchQuery" type="text" class="w-full border p-2 rounded" placeholder="输入委托单号 (如 HA202512001)...">
-                </div>
-                <div class="flex justify-end gap-2">
-                    <button @click="showCommissionSearchModal=false" class="border px-4 py-2 rounded text-gray-600">取消</button>
-                    <button @click="searchAndLoadCommission" class="bg-blue-600 text-white px-4 py-2 rounded">查询并加载</button>
-                </div>
-            </div>
-        </div>
-
         <div v-if="showReferenceCreateModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
             <div class="bg-white rounded-xl shadow-xl w-[520px] p-6">
                 <h3 class="font-bold text-lg mb-3">参考创建</h3>
-                <p class="text-sm text-gray-600 leading-6 mb-4">请输入历史物流委托单号。确认后，系统将带入可参考的头表字段信息；物流委托单号、状态、业务流、产品线、船期、落货日期、箱型箱量、运保费、滚动计划明细和系统时间不会被覆盖。</p>
+                <p class="text-sm text-gray-600 leading-6 mb-4">请输入历史物流委托单号。确认后，系统将按 PRD §2.3.10 参考创建字段一览表带入可参考头表信息；物流委托单号、状态、业务流、订单人、船期、落货日期、箱型箱量、运保费、滚动计划明细和系统时间不会被覆盖。当前单已选业务流时，参考单业务流须一致，否则不能参考创建。</p>
                 <div class="mb-3">
                     <label class="p2-label required-star">物流委托单号</label>
                     <input v-model.trim="referenceCommissionNo" type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none" placeholder="请输入物流委托单号，如 VN202605130001">
@@ -795,11 +789,9 @@
                     createHasSearched: false,
                     searchedScpData: [],
                     isSubmitting: false,
-                    showCommissionSearchModal: false,
                     showReferenceCreateModal: false,
                     referenceCommissionNo: '',
                     referenceCreateError: '',
-                    commissionSearchQuery: '',
                     showValidationErrors: false, 
                     selectAllDetailRows: false,
                     selectAllModal: false,
@@ -873,8 +865,22 @@
                             { label: 'ATA', value: 'ATA' },
                             { label: '货样广告', value: 'Sample' }
                         ],
+                        salesOrganizations: [
+                            { label: '海信视像', value: '海信视像' },
+                            { label: '广东海信', value: '广东海信' },
+                            { label: '广东海信电子有限公司', value: '广东海信电子有限公司' },
+                            { label: '海信视像科技股份有限公司', value: '海信视像科技股份有限公司' },
+                            { label: 'TVS REGZA CORPORATION', value: 'TVS REGZA CORPORATION' }
+                        ],
                         orderers: ['薛馨', '田晓丽'],
-                        bookers: ['郭美芹', '马筱然', '张暖']
+                        bookers: ['郭美芹', '马筱然', '张暖'],
+                        customers: [
+                            'REGZA越南电子有限公司',
+                            'TVS REGZA CORPORATION',
+                            '海信视像科技股份有限公司',
+                            '广东海信电子有限公司',
+                            'REGZA'
+                        ]
                     },
 
                     scpMasterPlanData: [
@@ -893,7 +899,7 @@
                     ],
                     formData: { 
                         commissionNo: '', status: 'NONE', 
-                        productLine: '电视', country: '', tradeCountry: '', transportMode: '', tradeMode: '', base: '', entity: '', salesOrg: '', customer: '', priceTerms: '', containers: [], loadingPlan: '', 
+                        productLine: '电视', country: '', tradeCountry: '', transportMode: '', tradeMode: '', base: '', entity: '', salesOrganization: '', salesOrg: '', customer: '', priceTerms: '', containers: [], loadingPlan: '', 
                         fees: { currency: '', freight: null, insurance: null, other: null },
                         orderer: '薛馨',
                         booker: '', createTime: new Date().toLocaleString(), updateTime: new Date().toLocaleString(), 
@@ -965,6 +971,11 @@
                 canRefreshAll() { return this.canDraftAction && this.formData.items.some(item => this.isSyncableSource(item)); },
                 canRemoveItem() { return this.canDraftAction; },
                 canBatchDeleteItems() { return this.canDraftAction && this.formData.items.some(item => item.checked); },
+                canExportBatchDetails() {
+                    if (!this.hasBusinessFlow || this.formData.items.length === 0) return false;
+                    if (this.formData.status === 'EXECUTED') return true;
+                    return this.canDraftAction;
+                },
                 isBusinessFlowLocked() { return this.isReadOnly || this.formData.items.length > 0; },
                 isFeeCurrencyRequired() {
                     const fees = this.formData.fees || {};
@@ -1066,6 +1077,16 @@
                     if (sourceType === 'scpOrder') return 'SCP订单';
                     if (sourceType === 'manual') return '手工新增';
                     return '未设置';
+                },
+                getPlanTotalQty(item) {
+                    if (!item) return '';
+                    const total = item.totalPlan ?? item.total;
+                    return total === '' || total === null || total === undefined ? '' : total;
+                },
+                getAvailableQty(item) {
+                    const total = Number(this.getPlanTotalQty(item) || 0);
+                    const used = Number(item?.used ?? item?.usedTotal ?? 0);
+                    return Math.max(0, total - used);
                 },
                 topActionBtnClass(enabled, tone = 'default') {
                     if (!enabled) return 'opacity-50 cursor-not-allowed bg-gray-100 border border-gray-200 text-gray-400';
@@ -1172,7 +1193,7 @@
                         setTimeout(() => {
                             // Mock logic: return current known totals
                             // In real app, this would hit API.
-                            const results = items.map(i => ({ batchNo: i.batchNo, versionDemandQty: i.versionDemandQty, used: i.used }));
+                            const results = items.map(i => ({ batchNo: i.batchNo, totalPlan: i.totalPlan, used: i.used }));
                             resolve(results);
                         }, 200);
                     });
@@ -1196,7 +1217,7 @@
                             return { ok: false, message: `滚动计划【${item.batchNo}】数量需为大于 0 的整数` };
                         }
                         if (this.isSyncableSource(item)) {
-                            const maxAllowed = Math.max(0, Number(item.versionDemandQty || 0) - Number(item.used || 0));
+                            const maxAllowed = this.getAvailableQty(item);
                             if (qty > maxAllowed) {
                                 return { ok: false, message: `滚动计划【${item.batchNo}】数量超出可委托上限，当前最大允许 ${maxAllowed}` };
                             }
@@ -1256,7 +1277,6 @@
                         markupRate: 10,
                         currency: this.isTvsFlow ? 'USD' : 'CNY',
                         packaging: '',
-                        versionDemandQty: this.isTvsFlow ? '' : 1000,
                         deliveryDate: '',
                         arrivalDate: '',
                         entity: this.formData.entity,
@@ -1323,7 +1343,6 @@
                             customsPrice: 150,
                             currency: 'CNY',
                             packaging: 'SKD-1',
-                            versionDemandQty: i.total,
                             deliveryDate: '2026-06-30',
                             arrivalDate: '2026-07-05',
                             entity: i.entity,
@@ -1342,7 +1361,7 @@
                 resetFormData() {
                     this.formData = { 
                         commissionNo: '', status: 'NONE', 
-                        productLine: '电视', country: '', tradeCountry: '', transportMode: '', tradeMode: '', base: '', entity: '', salesOrg: '', customer: '', priceTerms: '', containers: [], loadingPlan: '', 
+                        productLine: '电视', country: '', tradeCountry: '', transportMode: '', tradeMode: '', base: '', entity: '', salesOrganization: '', salesOrg: '', customer: '', priceTerms: '', containers: [], loadingPlan: '', 
                         querySource: '',
                         fees: { currency: '', freight: null, insurance: null, other: null },
                         orderer: '薛馨',
@@ -1369,7 +1388,7 @@
                     if (!this.isSyncableSource(item)) return;
                     Object.assign(item, {
                         customsPrice: Number((Number(item.customsPrice || 0) + 8).toFixed(2)),
-                        versionDemandQty: Number(item.versionDemandQty || 0) + 10,
+                        totalPlan: item.totalPlan === '' || item.totalPlan === null || item.totalPlan === undefined ? item.totalPlan : Number(item.totalPlan || 0) + 10,
                         used: Math.max(Number(item.used || 0), Number(item.qty || 0)),
                         customerModel: item.customerModel ? `${item.customerModel}-R` : 'SYNCED-CM',
                         factoryModel: item.factoryModel ? `${item.factoryModel}-R` : 'SYNCED-FM',
@@ -1436,28 +1455,6 @@
                     }
                 },
                 
-                searchAndLoadCommission() {
-                    if (!this.commissionSearchQuery) { alert("请输入单号"); return; }
-                    this.resetFormData();
-                    this.formData.commissionNo = this.commissionSearchQuery;
-                    this.formData.status = 'DRAFT'; 
-                    this.applyFlowDefaults('vnFactory');
-                    this.formData.productLine = '电视';
-                    this.formData.items = [
-                         this.buildDetailItem({ batchNo: 'REGZA-RP-LOADED-01', base: '2900', baseName: '江门', partType: '散件', partTypeLocked: true, sourceType: 'scpMasterPlan', directMaterial: '有', customerModel: 'TV-75A', factoryModel: '75A6N', panelDirect: '', brand: 'REGZA', currency: 'USD', customsPrice: 120, markupRate: 10, remaining: 500, entity: 'REGZA_ENT', salesOrg: '越南工厂', totalPlan: 1000, used: 500, qty: 100, tempQty: 100, packaging: 'SKD-1', versionDemandQty: 1000, deliveryDate: '2026-06-28', arrivalDate: '2026-07-03' }),
-                         this.buildDetailItem({ batchNo: 'REGZA-RP-LOADED-02', base: '2000', baseName: '黄岛', partType: '散件', partTypeLocked: true, sourceType: 'scpMasterPlan', directMaterial: '有', customerModel: 'TV-65B', factoryModel: '65E5N', panelDirect: '面板直发', brand: 'REGZA', currency: 'CNY', customsPrice: 800, markupRate: 0, remaining: 800, entity: 'REGZA_ENT', salesOrg: '越南工厂', totalPlan: 1000, used: 200, qty: 200, tempQty: 200, packaging: 'CKD', versionDemandQty: 1000, deliveryDate: '2026-06-29', arrivalDate: '2026-07-04' })
-                    ];
-                    this.formData.querySource = 'scpMasterPlan';
-                    this.formData.base = '2900';
-                    this.formData.entity = 'REGZA_ENT';
-                    this.formData.pol = '江门';
-                    this.formData.pod = '海防';
-                    this.formData.createTime = '2025-12-16 10:00';
-                    this.formData.updateTime = '2025-12-16 10:05';
-                    this.showCommissionSearchModal = false;
-                    alert(`查询成功！\n单号：${this.commissionSearchQuery}\n状态：${this.statusMap[this.formData.status]}`);
-                },
-
                 openAddBatchModal() { 
                     if (!this.canQueryAddItems) {
                         alert('当前状态不允许查询新增滚动计划。');
@@ -1468,6 +1465,7 @@
                     this.modalBatchData = [];
                     this.modalPartType = this.isTvsFlow ? '易损件' : this.getCurrentVnPartType();
                     this.selectAllModal = false; 
+                    this.$nextTick(() => this.modalSearchBatch());
                 },
                 addManualItem() {
                     if (!this.canManualAddItems) {
@@ -1491,7 +1489,6 @@
                         used: '',
                         remaining: '',
                         packaging: '',
-                        versionDemandQty: '',
                         deliveryDate: '',
                         arrivalDate: '',
                         sourceType: 'manual',
@@ -1612,7 +1609,6 @@
                                 tempQty: row.qty,
                                 remaining: this.editFlow === 'tvsDirect' ? 0 : 800,
                                 packaging: this.isTvsFlow ? 'CBU' : 'SKD-1',
-                                versionDemandQty: this.editFlow === 'tvsDirect' ? '' : 1000,
                                 deliveryDate: '2026-07-01',
                                 arrivalDate: '2026-07-06',
                                 sourceType: 'manual',
@@ -1656,7 +1652,7 @@
                                 panelDirect: '',
                                 brand: this.isTvsFlow ? 'Hisense' : 'REGZA',
                                 totalPlan: isScpSource ? i.total : '',
-                                used: i.used,
+                                used: i.usedTotal ?? i.used ?? Math.max(0, Number(i.total || 0) - Number(i.remaining || 0)),
                                 currency: this.editFlow === 'tvsDirect' ? 'USD' : 'CNY',
                                 customsPrice: price,
                                 markupRate: this.editFlow === 'tvsDirect' ? 5 : 10,
@@ -1664,7 +1660,6 @@
                                 tempQty: i.inputQty,
                                 remaining: isScpSource ? (i.remaining - i.inputQty) : '',
                                 packaging: this.isTvsFlow ? 'CBU' : 'SKD-1',
-                                versionDemandQty: isScpSource ? i.total : '',
                                 deliveryDate: '2026-07-02',
                                 arrivalDate: '2026-07-07',
                                 base: this.formData.base || '2900',
@@ -1680,7 +1675,7 @@
 
                 validateHeaders() {
                      const f = this.formData;
-                     return f.productLine && f.country && f.tradeCountry && f.base && f.entity && f.salesOrg && f.customer && f.transportMode && f.tradeMode && f.priceTerms && f.orderer && f.booker && f.etd && f.cutoff && f.pol && f.pod && f.shipper && f.consignee && f.notifyParty && f.loadingPlan && f.notes.shipping && f.notes.delivery && f.notes.docs;
+                     return f.productLine && f.country && f.tradeCountry && f.base && f.entity && f.salesOrganization && f.salesOrg && f.customer && f.transportMode && f.tradeMode && f.priceTerms && f.orderer && f.booker && f.etd && f.cutoff && f.pol && f.pod && f.shipper && f.consignee && f.notifyParty && f.loadingPlan && f.notes.shipping && f.notes.delivery && f.notes.docs;
                 },
                 hasEnteredFeeValue(value) {
                     return value !== '' && value !== null && value !== undefined && !Number.isNaN(Number(value));
@@ -1721,6 +1716,18 @@
                 },
                 findReferenceDocByNo(commissionNo) {
                     return this.listData.find(doc => doc.id.toLowerCase() === commissionNo.toLowerCase());
+                },
+                resolveReferenceSalesOrg(doc) {
+                    if (doc.salesOrganization) return doc.salesOrganization;
+                    const customer = doc.customer || '';
+                    if (customer.includes('广东海信')) return '广东海信电子有限公司';
+                    if (customer.includes('海信视像')) return '海信视像科技股份有限公司';
+                    if (doc.salesArea === 'TVS') return 'TVS REGZA CORPORATION';
+                    return '海信视像';
+                },
+                resolveReferenceEntity(doc) {
+                    if (doc.entity) return doc.entity;
+                    return doc.salesArea === 'TVS' ? 'TVS_ENT' : 'REGZA_ENT';
                 },
 
                 async saveDraft(isSilent = false) {
@@ -1851,8 +1858,9 @@
                     this.formData.orderer = doc.orderer || this.formData.orderer;
                     this.formData.booker = doc.booker || '';
                     this.formData.base = doc.base || (doc.salesArea === 'TVS' ? '2900' : '2000');
-                    this.formData.entity = doc.salesArea === 'TVS' ? 'TVS_ENT' : 'REGZA_ENT';
-                    this.formData.customer = 'REGZA';
+                    this.formData.entity = this.resolveReferenceEntity(doc) || this.formData.entity;
+                    this.formData.salesOrganization = doc.salesOrganization || this.resolveReferenceSalesOrg(doc) || this.formData.salesOrganization;
+                    this.formData.customer = doc.customer || this.formData.customer;
                     this.formData.country = doc.country || this.formData.country;
                     this.formData.tradeCountry = doc.tradeCountry || doc.country || this.formData.tradeCountry;
                     this.formData.tradeMode = doc.tradeMode || this.formData.tradeMode;
@@ -1894,7 +1902,6 @@
                             totalPlan: doc.salesArea === 'TVS' ? '' : 1000,
                             used: doc.salesArea === 'TVS' ? 30 : 200,
                             packaging: doc.salesArea === 'TVS' ? 'CBU' : 'SKD-1',
-                            versionDemandQty: doc.salesArea === 'TVS' ? '' : 1000,
                             deliveryDate: doc.etd || '2026-07-03',
                             arrivalDate: doc.etd || '2026-07-08'
                         })
@@ -1914,7 +1921,7 @@
                 buildFlowNotes(salesArea) {
                     return salesArea === 'TVS'
                         ? { shipping: '按 TVS 客户订舱口径执行。', delivery: '以客户提货安排为准。', docs: '单证按 TVS 客户要求手工确认。' }
-                        : { shipping: '按 SCP 最新滚动计划执行订舱。', delivery: '发货前需复核剩余可用量。', docs: '单证以越南工厂出口资料为准。' };
+                        : { shipping: '按 SCP 最新滚动计划执行订舱。', delivery: '发货前需复核滚动计划总量与已做委托数量。', docs: '单证以越南工厂出口资料为准。' };
                 },
                 addContainer() {
                     if (!this.canDraftAction) return;
@@ -2047,7 +2054,7 @@
                 
                 // Export Batch Details Logic
                 exportBatchDetails() {
-                    if (this.formData.items.length === 0) { alert("无数据可导出"); return; }
+                    if (!this.canExportBatchDetails) return;
                     console.table(this.formData.items);
                     alert("已导出批次明细 (模拟下载 .xlsx 文件)");
                 },
@@ -2066,13 +2073,13 @@
                         item.tempQty = originalQty; 
                         return;
                     }
-                    if (!this.isVnFlow) {
+                    if (!this.isSyncableSource(item)) {
                         item.qty = newQty;
                         item.isEditing = false;
                         this.formData.updateTime = new Date().toLocaleString();
                         return;
                     }
-                    const maxAllowed = Math.max(0, Number(item.versionDemandQty || 0) - Number(item.used || 0));
+                    const maxAllowed = this.getAvailableQty(item);
                     if (newQty > maxAllowed) {
                         alert(`数量超限! 当前项最大允许: ${maxAllowed}`);
                         item.tempQty = originalQty;
@@ -2099,16 +2106,20 @@
                         this.referenceCreateError = `未找到物流委托单【${commissionNo}】`;
                         return;
                     }
-                    if (doc.salesArea !== this.formData.salesOrg) {
-                        const shouldContinue = confirm(`当前单据业务流为【${this.formData.salesOrg || '未设置'}】，参考单据业务流为【${doc.salesArea}】。参考创建仅带出可参考头字段，不会修改当前单据业务流，是否继续？`);
-                        if (!shouldContinue) return;
+                    const currentFlow = (this.formData.salesOrg || '').trim();
+                    if (currentFlow && doc.salesArea !== currentFlow) {
+                        this.referenceCreateError = `参考单据业务流为【${doc.salesArea}】，与当前单据业务流【${currentFlow}】不一致，不能参考创建。`;
+                        return;
                     }
+                    const refProductLine = doc.productLine || '';
                     const isTvs = doc.salesArea === 'TVS';
+                    if (refProductLine) this.formData.productLine = refProductLine;
                     this.formData.country = doc.country || (isTvs ? 'JP' : 'VN');
                     this.formData.tradeCountry = doc.tradeCountry || doc.country || (isTvs ? 'JP' : 'VN');
                     this.formData.base = doc.base || (isTvs ? '2900' : '2000');
-                    this.formData.entity = doc.salesArea === 'TVS' ? 'TVS_ENT' : 'REGZA_ENT';
-                    this.formData.customer = 'REGZA';
+                    this.formData.entity = this.resolveReferenceEntity(doc) || this.formData.entity;
+                    this.formData.salesOrganization = doc.salesOrganization || this.resolveReferenceSalesOrg(doc) || this.formData.salesOrganization;
+                    this.formData.customer = doc.customer || this.formData.customer;
                     this.formData.transportMode = doc.transport || (isTvs ? 'BY SEA' : 'BY TRUCK');
                     this.formData.tradeMode = doc.tradeMode || 'General';
                     this.formData.priceTerms = doc.priceTerms || this.formData.priceTerms;
