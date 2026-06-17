@@ -760,7 +760,7 @@
         <div v-if="showReferenceCreateModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
             <div class="bg-white rounded-xl shadow-xl w-[520px] p-6">
                 <h3 class="font-bold text-lg mb-3">参考创建</h3>
-                <p class="text-sm text-gray-600 leading-6 mb-4">请输入历史物流委托单号。确认后，系统将按 PRD §2.3.10 参考创建字段一览表带入可参考头表信息；物流委托单号、状态、业务流、订单人、船期、落货日期、箱型箱量、运保费、滚动计划明细和系统时间不会被覆盖。当前单已选业务流时，参考单业务流须一致，否则不能参考创建。</p>
+                <p class="text-sm text-gray-600 leading-6 mb-4">请输入历史物流委托单号。确认后，系统将按 PRD §2.2.10 参考创建字段一览表带入可参考头表信息；物流委托单号、状态、订单人、船期、落货日期、箱型箱量、运保费、滚动计划明细和系统时间不会被覆盖。当前单未选业务流时可带出参考单业务流；当前单已选业务流时，参考单业务流须一致，否则不能参考创建。</p>
                 <div class="mb-3">
                     <label class="p2-label required-star">物流委托单号</label>
                     <input v-model.trim="referenceCommissionNo" type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none" placeholder="请输入物流委托单号，如 VN202605130001">
@@ -1544,7 +1544,6 @@
                             })); 
                         }); 
                         this.showAddBatchModal = false; 
-                        this.saveDraft(true);
                     });
                 },
 
@@ -1982,10 +1981,15 @@
                         return;
                     }
                     const currentFlow = (this.formData.salesOrg || '').trim();
+                    if (doc.status !== 'EXECUTED') {
+                        this.referenceCreateError = `被参考的物流委托单须为执行状态，当前单据状态为【${this.statusMap[doc.status] || doc.status}】，不能参考创建。`;
+                        return;
+                    }
                     if (currentFlow && doc.salesArea !== currentFlow) {
                         this.referenceCreateError = `参考单据业务流为【${doc.salesArea}】，与当前单据业务流【${currentFlow}】不一致，不能参考创建。`;
                         return;
                     }
+                    if (!currentFlow) this.formData.salesOrg = doc.salesArea;
                     const refProductLine = doc.productLine || '';
                     const isTvs = doc.salesArea === 'TVS';
                     if (refProductLine) this.formData.productLine = refProductLine;
