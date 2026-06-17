@@ -394,7 +394,7 @@
                                         <th class="compact-cell text-center w-24 bg-blue-50">本次委托数量</th><th class="compact-cell text-center">滚动计划总量</th><th class="compact-cell text-center">已做委托数量</th>
                                         <th class="compact-cell text-center w-24">报关单价</th><th class="compact-cell detail-head-number">报关总价</th>
                                         <th class="compact-cell text-center w-24 text-blue-600">销售单价</th><th class="compact-cell detail-head-number font-bold text-blue-600">销售总价</th>
-                                        <th class="compact-cell text-center min-w-[88px]">币种</th><th class="compact-cell min-w-[128px]">出口包装方式</th><th class="compact-cell min-w-[164px]">交货期</th><th class="compact-cell min-w-[164px]">到港时间</th>
+                                        <th class="compact-cell text-center min-w-[88px]">币种</th><th class="compact-cell min-w-[128px]">出口包装方式</th><th class="compact-cell min-w-[164px]">落货日期</th><th class="compact-cell min-w-[164px]">到港时间</th>
                                         <th class="compact-cell min-w-[84px]">生产基地</th><th class="compact-cell min-w-[110px]">有无直发料</th>
                                         <th class="compact-cell min-w-[138px]">客户型号</th><th class="compact-cell min-w-[138px]">工厂型号</th><th class="compact-cell min-w-[112px]">面板直发</th><th class="compact-cell min-w-[112px]">品牌</th>
                                         <th class="compact-cell text-center no-print sticky-head sticky-right-action min-w-[120px]">操作</th>
@@ -685,7 +685,7 @@
                         <div class="bg-white border border-gray-200 rounded-lg px-4 py-4">
                             <div class="text-xs font-semibold tracking-wide text-gray-500 mb-2">查询条件</div>
                             <div class="text-xs text-gray-600 mb-1 required-star">清关类型</div>
-                            <select v-model="modalPartType" class="border rounded px-3 py-2 w-full bg-white">
+                            <select v-model="modalPartType" :disabled="isTvsFlow" :class="['border rounded px-3 py-2 w-full', isTvsFlow ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : 'bg-white']">
                                 <option v-for="opt in config.partTypes" :value="opt">{{ opt }}</option>
                             </select>
                             <div class="mt-3 text-[11px] leading-5 text-gray-400">先确定清关类型，再录入滚动计划号进行查询。</div>
@@ -783,11 +783,7 @@
         createApp({
             data() {
                 return {
-                    currentView: 'list', selectAllPage1: false, selectAllPage3: false, isOrderMenuOpen: true, openFilterDropdown: '',
-                    createFilters: { batchNo: '', showCompleted: false, productLine: '电视', partType: '散件' },
-                    appliedCreateFilters: { batchNo: '', productLine: '', partType: '' },
-                    createHasSearched: false,
-                    searchedScpData: [],
+                    currentView: 'list', selectAllPage3: false, isOrderMenuOpen: true, openFilterDropdown: '',
                     isSubmitting: false,
                     showReferenceCreateModal: false,
                     referenceCommissionNo: '',
@@ -949,7 +945,6 @@
             },
             computed: {
                 pageTitle() { if (this.currentView === 'edit') return '编辑物流委托'; return '物流委托管理'; },
-                hasValidSelection() { return this.searchedScpData.some(i => i.checked && i.inputQty > 0 && !i.hasError); },
                 isReadOnly() { return this.forcedReadOnly || this.formData.status === 'EXECUTED' || this.formData.status === 'DELETED'; },
                 canSave() { return ['NONE', 'DRAFT', 'RECALLED'].includes(this.formData.status); },
                 canSubmit() { return ['NONE', 'DRAFT', 'RECALLED'].includes(this.formData.status); },
@@ -1019,11 +1014,6 @@
                     const parts = Object.keys(totals).map(curr => `${this.formatMoney(totals[curr])} ${curr}`); 
                     return parts.length > 0 ? parts.join(' + ') : '0.00'; 
                 },
-                sortedScpData() { 
-                    if (!this.createHasSearched) return [];
-                    let data = [...this.searchedScpData];
-                    return data.sort((a, b) => a.batchNo.localeCompare(b.batchNo));
-                },
                 filteredList() {
                     const f = this.appliedListFilters;
                     return this.listData.filter(doc => {
@@ -1088,6 +1078,16 @@
                     const used = Number(item?.used ?? item?.usedTotal ?? 0);
                     return Math.max(0, total - used);
                 },
+                getLatestCutoff(items) {
+                    const dates = (items || []).map(item => item.cutoff).filter(Boolean).sort();
+                    return dates.length ? dates[dates.length - 1] : '';
+                },
+                applyHeaderFromSelectedBatches(items) {
+                    const bases = [...new Set((items || []).map(item => item.base).filter(Boolean))];
+                    this.formData.base = bases.length === 1 ? bases[0] : '';
+                    const latestCutoff = this.getLatestCutoff(items);
+                    if (latestCutoff) this.formData.cutoff = latestCutoff;
+                },
                 topActionBtnClass(enabled, tone = 'default') {
                     if (!enabled) return 'opacity-50 cursor-not-allowed bg-gray-100 border border-gray-200 text-gray-400';
                     if (tone === 'purple') return 'bg-purple-50 border border-purple-200 text-purple-600 hover:bg-purple-100';
@@ -1098,16 +1098,6 @@
                 },
                 navigate(view, mode) { 
                     this.currentView = view; 
-                    if (view === 'create') { 
-                        this.forcedReadOnly = false;
-                        [...this.scpMasterPlanData, ...this.scpOrderData].forEach(i => { i.checked = false; i.inputQty = 0; i.hasError = false; }); 
-                        this.searchedScpData = [];
-                        this.selectAllPage1 = false;
-                        this.createHasSearched = false;
-                        this.appliedCreateFilters = { batchNo: '', productLine: '', partType: '' };
-                        this.createFilters.batchNo = '';
-                        this.createFilters.partType = '散件';
-                    }
                     if (view === 'edit' && (mode === 'direct' || mode === 'tvs-direct' || mode === 'new')) {
                         this.resetFormData();
                         if (mode === 'tvs-direct') this.applyFlowDefaults('tvsDirect');
@@ -1258,24 +1248,24 @@
                     const defaults = {
                         id: Date.now() + Math.random(),
                         batchNo: '',
-                        base: this.formData.base || '2900',
-                        baseName: (this.formData.base || '2900') === '2000' ? '黄岛' : '江门',
+                        base: '',
+                        baseName: '',
                         partType: this.isTvsFlow ? '整机' : '散件',
                         partTypeLocked: false,
-                        sourceType: this.isTvsFlow ? 'manual' : '',
-                        directMaterial: this.isTvsFlow ? '无' : '有',
+                        sourceType: '',
+                        directMaterial: '',
                         customerModel: '',
                         factoryModel: '',
                         panelDirect: '',
                         brand: '',
-                        qty: 0,
-                        tempQty: 0,
-                        totalPlan: this.isTvsFlow ? '' : 1000,
-                        used: this.isTvsFlow ? 0 : 0,
-                        remaining: this.isTvsFlow ? 0 : 1000,
-                        customsPrice: 0,
-                        markupRate: 10,
-                        currency: this.isTvsFlow ? 'USD' : 'CNY',
+                        qty: null,
+                        tempQty: null,
+                        totalPlan: '',
+                        used: '',
+                        remaining: '',
+                        customsPrice: null,
+                        markupRate: null,
+                        currency: '',
                         packaging: '',
                         deliveryDate: '',
                         arrivalDate: '',
@@ -1299,65 +1289,6 @@
                     this.formData.updateTime = new Date().toLocaleString();
                 },
 
-                goToEditFromCreate() {
-                    const selected = this.searchedScpData.filter(i => i.checked && i.inputQty > 0);
-
-                    const hasOverQtyError = this.searchedScpData.some(i => i.hasError);
-                    if (hasOverQtyError) {
-                        alert("创建委托单失败：请修正所有超量输入的批次数量。");
-                        return;
-                    }
-                    if (selected.length === 0) {
-                        alert("请至少选择一个批次并输入数量。");
-                        return;
-                    }
-
-                    this.resetFormData();
-                    this.applyFlowDefaults('vnFactory');
-                    this.formData.productLine = this.formData.productLine || '电视';
-                    this.formData.querySource = this.getScpSourceByPartType(this.createFilters.partType);
-
-                    const uniqueBases = [...new Set(selected.map(i => i.base))];
-                    const uniqueEntities = [...new Set(selected.map(i => i.entity))];
-                    this.formData.base = uniqueBases.length === 1 ? uniqueBases[0] : '';
-                    this.formData.entity = uniqueEntities.length === 1 ? uniqueEntities[0] : '';
-
-                    selected.forEach(i => {
-                        this.formData.items.push(this.buildDetailItem({
-                            batchNo: i.batchNo,
-                            base: i.base,
-                            baseName: i.baseName,
-                            partType: i.partType,
-                            partTypeLocked: true,
-                            sourceType: i.sourceType,
-                            directMaterial: '有',
-                            customerModel: `REGZA-${i.id}`,
-                            factoryModel: `FACT-${i.id}`,
-                            panelDirect: '',
-                            brand: 'REGZA',
-                            qty: i.inputQty,
-                            tempQty: i.inputQty,
-                            totalPlan: i.total,
-                            used: i.usedTotal,
-                            remaining: i.remaining,
-                            customsPrice: 150,
-                            currency: 'CNY',
-                            packaging: 'SKD-1',
-                            deliveryDate: '2026-06-30',
-                            arrivalDate: '2026-07-05',
-                            entity: i.entity,
-                            salesOrg: '越南工厂'
-                        }));
-                        i.usedTotal += i.inputQty;
-                        i.remaining -= i.inputQty;
-                        i.inputQty = 0;
-                        i.checked = false;
-                        i.hasError = false;
-                    });
-                    this.formData.status = 'DRAFT';
-                    this.currentView = 'edit';
-                },
-                
                 resetFormData() {
                     this.formData = { 
                         commissionNo: '', status: 'NONE', 
@@ -1395,64 +1326,8 @@
                         updateFlag: Date.now()
                     });
                 },
-                searchSCP() { 
-                    if (!this.createFilters.partType) {
-                        alert("请先选择清关类型");
-                        return;
-                    }
-                    this.appliedCreateFilters = {
-                        batchNo: this.createFilters.batchNo,
-                        partType: this.createFilters.partType
-                    };
-                    const pool = this.createFilters.partType === '易损件' ? this.scpOrderData : this.scpMasterPlanData;
-                    const shuffled = [...pool].sort(() => Math.random() - 0.5);
-                    const count = Math.min(shuffled.length, 3 + Math.floor(Math.random() * 3));
-                    this.searchedScpData = shuffled.slice(0, count).map(item => ({
-                        ...item,
-                        checked: item.remaining > 0,
-                        inputQty: item.remaining > 0 ? item.remaining : 0,
-                        hasError: false
-                    }));
-                    this.createHasSearched = true;
-                    this.selectAllPage1 = this.searchedScpData.length > 0 && this.searchedScpData.every(item => item.checked);
-                },
-                
                 toggleSelectAll(view) { 
-                    if (view === 'create') {
-                        this.sortedScpData.forEach(item => { 
-                            if (item.remaining > 0) {
-                                item.checked = this.selectAllPage1; 
-                                if (item.checked) {
-                                    item.inputQty = item.remaining;
-                                    item.hasError = false;
-                                } else {
-                                    item.inputQty = 0;
-                                    item.hasError = false;
-                                }
-                            }
-                        }); 
-                    }
                     if (view === 'list') this.listData.forEach(doc => doc.checked = this.selectAllPage3); 
-                },
-                
-                toggleCheck(item) { if (item.checked) { item.inputQty = item.remaining; item.hasError = false; } else { item.inputQty = 0; item.hasError = false; } },
-                validateQty(item) { 
-                    const qty = Number(item.inputQty);
-                    if (qty < 0 || isNaN(qty)) {
-                        item.inputQty = 0;
-                    }
-                    
-                    if (!Number.isInteger(Number(item.inputQty)) || item.inputQty > item.remaining) {
-                        item.hasError = true; 
-                    } else {
-                        item.hasError = false; 
-                    }
-
-                    if (item.inputQty > 0 && !item.hasError) {
-                        item.checked = true; 
-                    } else if (item.inputQty === 0) {
-                        item.checked = false; 
-                    }
                 },
                 
                 openAddBatchModal() { 
@@ -1492,9 +1367,9 @@
                         deliveryDate: '',
                         arrivalDate: '',
                         sourceType: 'manual',
-                        base: this.formData.base || '2900',
-                        baseName: (this.formData.base || '2900') === '2000' ? '黄岛' : '江门',
-                        entity: this.formData.entity || 'TVS_ENT',
+                        base: '',
+                        baseName: '',
+                        entity: '',
                         salesOrg: 'TVS',
                         isEditing: true
                     }));
@@ -1502,16 +1377,16 @@
                 },
                 modalSearchBatch() { 
                     const mockDB = [ 
-                        { id: 901, batchNo: 'REGZA-RP-ADD-01', partType: '散件', productLine: '电视', total: 980, used: 180, remaining: 800, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
-                        { id: 902, batchNo: 'REGZA-RP-ADD-02', partType: '散件', productLine: '电视', total: 680, used: 80, remaining: 600, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
-                        { id: 903, batchNo: 'REGZA-RP-ADD-03', partType: '散件', productLine: '电视', total: 520, used: 40, remaining: 480, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
-                        { id: 904, batchNo: 'REGZA-RP-ADD-04', partType: '整机', productLine: '电视', total: 760, used: 160, remaining: 600, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
-                        { id: 905, batchNo: 'REGZA-RP-ADD-05', partType: '整机', productLine: '电视', total: 640, used: 120, remaining: 520, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
-                        { id: 906, batchNo: 'REGZA-RP-ADD-06', partType: '整机', productLine: '电视', total: 430, used: 50, remaining: 380, inputQty: 0, checked: false, sourceType: 'scpMasterPlan' },
-                        { id: 907, batchNo: 'YSD-RP-ADD-07', partType: '易损件', productLine: '电视', total: 140, used: 10, remaining: 130, inputQty: 0, checked: false, sourceType: 'scpOrder' },
-                        { id: 908, batchNo: 'YSD-RP-ADD-08', partType: '易损件', productLine: '电视', total: 260, used: 20, remaining: 240, inputQty: 0, checked: false, sourceType: 'scpOrder' },
-                        { id: 909, batchNo: 'YSD-RP-ADD-09', partType: '易损件', productLine: '电视', total: 180, used: 15, remaining: 165, inputQty: 0, checked: false, sourceType: 'scpOrder' },
-                        { id: 910, batchNo: 'YSD-RP-ADD-10', partType: '易损件', productLine: '电视', total: 110, used: 12, remaining: 98, inputQty: 0, checked: false, sourceType: 'scpOrder' } 
+                        { id: 901, batchNo: 'REGZA-RP-ADD-01', partType: '散件', productLine: '电视', total: 980, used: 180, remaining: 800, inputQty: 0, checked: false, sourceType: 'scpMasterPlan', base: '2900', baseName: '江门', cutoff: '2026-07-10' },
+                        { id: 902, batchNo: 'REGZA-RP-ADD-02', partType: '散件', productLine: '电视', total: 680, used: 80, remaining: 600, inputQty: 0, checked: false, sourceType: 'scpMasterPlan', base: '2900', baseName: '江门', cutoff: '2026-07-12' },
+                        { id: 903, batchNo: 'REGZA-RP-ADD-03', partType: '散件', productLine: '电视', total: 520, used: 40, remaining: 480, inputQty: 0, checked: false, sourceType: 'scpMasterPlan', base: '2000', baseName: '黄岛', cutoff: '2026-07-14' },
+                        { id: 904, batchNo: 'REGZA-RP-ADD-04', partType: '整机', productLine: '电视', total: 760, used: 160, remaining: 600, inputQty: 0, checked: false, sourceType: 'scpMasterPlan', base: '2900', baseName: '江门', cutoff: '2026-07-16' },
+                        { id: 905, batchNo: 'REGZA-RP-ADD-05', partType: '整机', productLine: '电视', total: 640, used: 120, remaining: 520, inputQty: 0, checked: false, sourceType: 'scpMasterPlan', base: '2000', baseName: '黄岛', cutoff: '2026-07-18' },
+                        { id: 906, batchNo: 'REGZA-RP-ADD-06', partType: '整机', productLine: '电视', total: 430, used: 50, remaining: 380, inputQty: 0, checked: false, sourceType: 'scpMasterPlan', base: '2900', baseName: '江门', cutoff: '2026-07-20' },
+                        { id: 907, batchNo: 'YSD-RP-ADD-07', partType: '易损件', productLine: '电视', total: 140, used: 10, remaining: 130, inputQty: 0, checked: false, sourceType: 'scpOrder', base: '2900', baseName: '江门', cutoff: '2026-07-11' },
+                        { id: 908, batchNo: 'YSD-RP-ADD-08', partType: '易损件', productLine: '电视', total: 260, used: 20, remaining: 240, inputQty: 0, checked: false, sourceType: 'scpOrder', base: '2900', baseName: '江门', cutoff: '2026-07-13' },
+                        { id: 909, batchNo: 'YSD-RP-ADD-09', partType: '易损件', productLine: '电视', total: 180, used: 15, remaining: 165, inputQty: 0, checked: false, sourceType: 'scpOrder', base: '2000', baseName: '黄岛', cutoff: '2026-07-15' },
+                        { id: 910, batchNo: 'YSD-RP-ADD-10', partType: '易损件', productLine: '电视', total: 110, used: 12, remaining: 98, inputQty: 0, checked: false, sourceType: 'scpOrder', base: '2900', baseName: '江门', cutoff: '2026-07-17' } 
                     ]; 
                     const mapDefaultSelection = item => ({
                         ...item,
@@ -1588,33 +1463,32 @@
                         alert(`导入失败：以下滚动计划号已存在，不能重复添加：\n${duplicates.map(d => d.batchNo).join(', ')}`);
                         return;
                     }
-                    this.fetchSAP_Price().then(price => {
+                    this.fetchSAP_Price().then(() => {
                         this.importPreview.forEach(row => {
                             this.formData.items.push(this.buildDetailItem({
                                 batchNo: row.batchNo,
                                 partType: row.partType,
                                 partTypeLocked: this.isVnFlow,
-                                sourceType: this.isVnFlow ? this.getCurrentVnSourceType() : 'manual',
-                                directMaterial: this.isTvsFlow ? '无' : '有',
-                                customerModel: 'IMP-CUST',
-                                factoryModel: 'IMP-FACT',
+                                directMaterial: '',
+                                customerModel: '',
+                                factoryModel: '',
                                 panelDirect: '',
-                                brand: this.isTvsFlow ? 'Hisense' : 'REGZA',
-                                totalPlan: this.editFlow === 'tvsDirect' ? '' : 1000,
-                                used: this.editFlow === 'tvsDirect' ? 20 : 200,
-                                currency: this.editFlow === 'tvsDirect' ? 'USD' : 'CNY',
-                                customsPrice: price,
-                                markupRate: this.editFlow === 'tvsDirect' ? 5 : 10,
+                                brand: '',
+                                totalPlan: '',
+                                used: '',
+                                currency: '',
+                                customsPrice: null,
+                                markupRate: null,
                                 qty: row.qty,
                                 tempQty: row.qty,
-                                remaining: this.editFlow === 'tvsDirect' ? 0 : 800,
-                                packaging: this.isTvsFlow ? 'CBU' : 'SKD-1',
-                                deliveryDate: '2026-07-01',
-                                arrivalDate: '2026-07-06',
+                                remaining: '',
+                                packaging: '',
+                                deliveryDate: '',
+                                arrivalDate: '',
                                 sourceType: 'manual',
-                                base: this.formData.base || '2900',
-                                baseName: (this.formData.base || '2900') === '2000' ? '黄岛' : '江门',
-                                entity: this.formData.entity || (this.editFlow === 'tvsDirect' ? 'TVS_ENT' : 'REGZA_ENT'),
+                                base: '',
+                                baseName: '',
+                                entity: '',
                                 salesOrg: this.formData.salesOrg
                             }));
                         });
@@ -1639,6 +1513,7 @@
                     this.fetchSAP_Price(added).then(price => {
                         const nextQuerySource = this.isTvsFlow ? 'scpOrder' : (this.getCurrentVnSourceType() || this.getScpSourceByPartType(this.modalPartType));
                         this.formData.querySource = nextQuerySource;
+                        this.applyHeaderFromSelectedBatches(added);
                         added.forEach(i => { 
                             const isScpSource = this.isSyncableSource({ sourceType: nextQuerySource || this.getScpSourceByPartType(i.partType) });
                             this.formData.items.push(this.buildDetailItem({ 
@@ -1660,10 +1535,10 @@
                                 tempQty: i.inputQty,
                                 remaining: isScpSource ? (i.remaining - i.inputQty) : '',
                                 packaging: this.isTvsFlow ? 'CBU' : 'SKD-1',
-                                deliveryDate: '2026-07-02',
+                                deliveryDate: i.cutoff || '',
                                 arrivalDate: '2026-07-07',
-                                base: this.formData.base || '2900',
-                                baseName: (this.formData.base || '2900') === '2000' ? '黄岛' : '江门',
+                                base: i.base || '',
+                                baseName: i.baseName || '',
                                 entity: this.formData.entity || (this.editFlow === 'tvsDirect' ? 'TVS_ENT' : 'REGZA_ENT'),
                                 salesOrg: this.formData.salesOrg
                             })); 
