@@ -384,7 +384,7 @@
                         </div>
                         <div v-if="!hasBusinessFlow" class="px-6 py-3 border-b border-gray-200 bg-amber-50 text-amber-700 text-xs">请先选择业务流，再操作批次。</div>
                         <div class="overflow-x-auto">
-                            <table class="w-full min-w-[1760px] text-left text-xs">
+                            <table class="w-full min-w-[1860px] text-left text-xs">
                                 <thead class="bg-[#F3F7FB] text-gray-600 font-semibold border-b border-gray-200 whitespace-nowrap">
                                     <tr>
                                         <th class="compact-cell w-10 text-center"><input type="checkbox" v-model="selectAllDetailRows" @change="toggleSelectAllDetailRows" :disabled="!hasBusinessFlow || isReadOnly || formData.items.length === 0" class="w-4 h-4 text-blue-600 border-gray-300 rounded"></th>
@@ -392,11 +392,11 @@
                                         <th class="compact-cell min-w-[94px]">清关类型</th>
                                         <th class="compact-cell min-w-[120px]">数据来源</th>
                                         <th class="compact-cell text-center w-24 bg-blue-50">本次委托数量</th><th class="compact-cell text-center">滚动计划总量</th><th class="compact-cell text-center">已做委托数量</th>
-                                        <th class="compact-cell text-center w-24">报关单价</th><th class="compact-cell detail-head-number">报关总价</th>
+                                        <th class="compact-cell text-center w-24">报关单价</th><th class="compact-cell detail-head-number">报关总价</th><th class="compact-cell text-center w-24">加价率(%)</th>
                                         <th class="compact-cell text-center w-24 text-blue-600">销售单价</th><th class="compact-cell detail-head-number font-bold text-blue-600">销售总价</th>
                                         <th class="compact-cell text-center min-w-[88px]">币种</th><th class="compact-cell min-w-[128px]">出口包装方式</th><th class="compact-cell min-w-[164px]">落货日期</th><th class="compact-cell min-w-[164px]">到港时间</th>
                                         <th class="compact-cell min-w-[84px]">生产基地</th><th class="compact-cell min-w-[110px]">有无直发料</th>
-                                        <th class="compact-cell min-w-[138px]">客户型号</th><th class="compact-cell min-w-[138px]">工厂型号</th><th class="compact-cell min-w-[112px]">面板直发</th><th class="compact-cell min-w-[112px]">品牌</th>
+                                        <th class="compact-cell min-w-[128px]">产品编码</th><th class="compact-cell min-w-[138px]">客户型号</th><th class="compact-cell min-w-[138px]">工厂型号</th><th class="compact-cell min-w-[112px]">面板直发</th><th class="compact-cell min-w-[112px]">品牌</th>
                                         <th class="compact-cell text-center no-print sticky-head sticky-right-action min-w-[120px]">操作</th>
                                     </tr>
                                 </thead>
@@ -437,9 +437,12 @@
                                         
                                         <td class="compact-cell text-center"><input type="number" v-model.number="item.customsPrice" :disabled="isReadOnly" class="detail-input w-[88px] text-center font-mono focus:ring-1 focus:ring-blue-500"></td>
                                         <td class="compact-cell detail-cell-number text-gray-600 detail-total">{{ (item.customsPrice * item.qty).toFixed(2) }}</td>
+                                        <td class="compact-cell text-center">
+                                            <input type="number" v-model.number="item.markupRate" :disabled="isReadOnly" step="0.01" class="detail-input w-[88px] text-center font-mono focus:ring-1 focus:ring-blue-500">
+                                        </td>
                                         
-                                        <td class="compact-cell text-center" title="加价率规则待定，演示计算非定稿"><div class="detail-pill">{{ ((item.customsPrice * item.qty * (1 + item.markupRate/100)) / (item.qty || 1)).toFixed(2) }}</div></td>
-                                        <td class="compact-cell detail-cell-number text-blue-600 detail-total" title="加价率规则待定，演示计算非定稿">{{ (item.customsPrice * item.qty * (1 + item.markupRate/100)).toFixed(2) }}</td>
+                                        <td class="compact-cell text-center"><div class="detail-pill">{{ getItemSalesUnitPrice(item).toFixed(6) }}</div></td>
+                                        <td class="compact-cell detail-cell-number text-blue-600 detail-total">{{ getItemSalesTotal(item).toFixed(2) }}</td>
                                         <td class="compact-cell text-center">
                                             <select v-model="item.currency" :disabled="isReadOnly" :class="['detail-select w-[78px] outline-none focus:border-blue-500', { 'border-red-500 ring-1 ring-red-500': showValidationErrors && isItemCurrencyRequired(item) && !item.currency }]">
                                                 <option value="">--</option>
@@ -462,6 +465,7 @@
                                                 <option v-for="opt in config.directMaterialOptions" :value="opt">{{ opt }}</option>
                                             </select>
                                         </td>
+                                        <td class="compact-cell"><input type="text" v-model="item.productCode" :disabled="isReadOnly" class="detail-input w-[118px]"></td>
                                         <td class="compact-cell"><input type="text" v-model="item.customerModel" :disabled="isReadOnly" class="detail-input w-[128px]"></td>
                                         <td class="compact-cell"><input type="text" v-model="item.factoryModel" :disabled="isReadOnly" class="detail-input w-[128px]"></td>
                                         <td class="compact-cell">
@@ -499,6 +503,7 @@
                                 <div class="text-xl font-mono font-bold text-white">{{ hshaTotalString }}</div>
                             </div>
                         </div>
+                        <div class="px-6 pt-3 pb-1 text-xs text-slate-500">加价率默认取后台维护值；当前物流委托新增的明细行先带同一个默认值，用户可逐行修改，不同行允许不同。</div>
                     </div>
 
                     <div class="info-box info-box-blue mt-6">
@@ -654,7 +659,7 @@
                                     <td class="px-3 py-2.5 sticky-body sticky-right-action min-w-[104px] text-center">
                                         <div class="flex justify-center gap-2 whitespace-nowrap">
                                             <button class="text-teal-600 hover:text-teal-800 text-xs font-medium" @click.stop="openDoc(doc, 'view')">查看</button>
-                                            <button v-if="doc.status !== 'EXECUTED'" class="text-teal-600 hover:text-teal-800 text-xs font-medium" @click.stop="openDoc(doc, 'edit')">编辑</button>
+                                            <button class="text-teal-600 hover:text-teal-800 text-xs font-medium" @click.stop="openDoc(doc, 'edit')">编辑</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -760,7 +765,7 @@
         <div v-if="showReferenceCreateModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
             <div class="bg-white rounded-xl shadow-xl w-[520px] p-6">
                 <h3 class="font-bold text-lg mb-3">参考创建</h3>
-                <p class="text-sm text-gray-600 leading-6 mb-4">请输入历史物流委托单号。确认后，系统将按 PRD §2.2.10 参考创建字段一览表带入可参考头表信息；物流委托单号、状态、订单人、船期、落货日期、箱型箱量、运保费、滚动计划明细和系统时间不会被覆盖。当前单未选业务流时可带出参考单业务流；当前单已选业务流时，参考单业务流须一致，否则不能参考创建。</p>
+                <p class="text-sm text-gray-600 leading-6 mb-4">请输入历史物流委托单号。确认后将带入可参考的头表信息；物流委托单号、状态、订单人、船期、落货日期、箱型箱量、运保费、滚动计划明细和系统时间不会被覆盖。</p>
                 <div class="mb-3">
                     <label class="p2-label required-star">物流委托单号</label>
                     <input v-model.trim="referenceCommissionNo" type="text" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none" placeholder="请输入物流委托单号，如 VN202605130001">
@@ -768,7 +773,7 @@
                 <p v-if="referenceCreateError" class="text-sm text-red-500 mb-4">{{ referenceCreateError }}</p>
                 <div class="flex justify-end gap-3">
                     <button @click="closeReferenceCreateModal" class="px-4 py-2 border rounded text-gray-600">取消</button>
-                    <button @click="applyReferenceCreate" class="px-4 py-2 bg-blue-600 text-white rounded">确认带入</button>
+                    <button @click="applyReferenceCreate" class="px-4 py-2 bg-blue-600 text-white rounded">确定</button>
                 </div>
             </div>
         </div>
@@ -938,6 +943,7 @@
                         { id: 'VN202606040022', status: 'EXECUTED', salesArea: '越南工厂', batches: ['REGZA-RP-031'], productLine: '电视', priceTerms: 'CIP', transport: 'BY SEA', pol: '青岛', pod: '海防', containerSummary: '40HQ * 2', customer: 'REGZA越南电子有限公司', etd: '2026-06-22', orderer: '薛馨', booker: '马筱然', checked: false },
                         { id: 'VN202606050023', status: 'DRAFT', salesArea: 'TVS', batches: ['TVS-RP-032'], productLine: '电视', priceTerms: 'FOB', transport: 'BY SEA', pol: '江门', pod: '大阪', containerSummary: 'LCL', customer: 'TVS REGZA CORPORATION', etd: '2026-06-23', orderer: '田晓丽', booker: '张暖', checked: false }
                     ],
+                    defaultMarkupRate: 0.5,
                     pagination: { pageSize: 10, currentPage: 1 },
                     showSaveTemplateModal: false, newTemplateName: '', saveTemplateType: '', saveTemplateCategory: '', showDraftWatermark: false, 
                     statusMap: { 'NONE': '新单据', 'DRAFT': '草稿', 'EXECUTED': '执行', 'RECALLED': '撤回', 'DELETED': '已删除' }
@@ -953,7 +959,7 @@
                 canDraftAction() { return this.canSave && !this.forcedReadOnly; },
                 canSubmitAction() { return this.canSubmit && !this.forcedReadOnly; },
                 canDeleteAction() { return this.canDelete && !this.forcedReadOnly; },
-                canRecallAction() { return this.formData.status === 'EXECUTED' && !this.forcedReadOnly; },
+                canRecallAction() { return this.formData.status === 'EXECUTED' && this.currentView === 'edit' && !this.forcedReadOnly; },
                 showReferenceCreate() { return this.canReferenceCreate; },
                 showSaveDraft() { return this.canDraftAction; },
                 showSubmit() { return this.canSubmitAction; },
@@ -1254,6 +1260,7 @@
                         partTypeLocked: false,
                         sourceType: '',
                         directMaterial: '',
+                        productCode: '',
                         customerModel: '',
                         factoryModel: '',
                         panelDirect: '',
@@ -1264,7 +1271,7 @@
                         used: '',
                         remaining: '',
                         customsPrice: null,
-                        markupRate: null,
+                        markupRate: this.getDefaultMarkupRate(),
                         currency: '',
                         packaging: '',
                         deliveryDate: '',
@@ -1312,6 +1319,9 @@
                 resetNotes() { this.formData.notes = { shipping: '', delivery: '', docs: '' }; this.selectedNoteTemplate = ''; },
 
                 formatMoney(num) { return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
+                getDefaultMarkupRate() {
+                    return Number(this.defaultMarkupRate ?? 0.5);
+                },
                 canSyncItem(item) {
                     return this.canDraftAction && this.isSyncableSource(item);
                 },
@@ -1321,6 +1331,7 @@
                         customsPrice: Number((Number(item.customsPrice || 0) + 8).toFixed(2)),
                         totalPlan: item.totalPlan === '' || item.totalPlan === null || item.totalPlan === undefined ? item.totalPlan : Number(item.totalPlan || 0) + 10,
                         used: Math.max(Number(item.used || 0), Number(item.qty || 0)),
+                        productCode: item.productCode ? `${item.productCode}-R` : 'SYNCED-PC',
                         customerModel: item.customerModel ? `${item.customerModel}-R` : 'SYNCED-CM',
                         factoryModel: item.factoryModel ? `${item.factoryModel}-R` : 'SYNCED-FM',
                         updateFlag: Date.now()
@@ -1351,13 +1362,14 @@
                         batchNo: '',
                         partType: '整机',
                         directMaterial: '',
+                        productCode: '',
                         customerModel: '',
                         factoryModel: '',
                         panelDirect: '',
                         brand: '',
                         currency: '',
                         customsPrice: null,
-                        markupRate: null,
+                        markupRate: this.getDefaultMarkupRate(),
                         qty: null,
                         tempQty: null,
                         totalPlan: '',
@@ -1470,6 +1482,7 @@
                                 partType: row.partType,
                                 partTypeLocked: this.isVnFlow,
                                 directMaterial: '',
+                                productCode: '',
                                 customerModel: '',
                                 factoryModel: '',
                                 panelDirect: '',
@@ -1478,7 +1491,7 @@
                                 used: '',
                                 currency: '',
                                 customsPrice: null,
-                                markupRate: null,
+                                markupRate: this.getDefaultMarkupRate(),
                                 qty: row.qty,
                                 tempQty: row.qty,
                                 remaining: '',
@@ -1522,6 +1535,7 @@
                                 partTypeLocked: isScpSource,
                                 sourceType: nextQuerySource || this.getScpSourceByPartType(i.partType),
                                 directMaterial: this.isTvsFlow ? '无' : '有',
+                                productCode: this.isTvsFlow ? `TVS-PC-${String(i.id).slice(-3)}` : `PLM-${String(i.id).slice(-3)}`,
                                 customerModel: 'ADD-CUST',
                                 factoryModel: 'ADD-FACT',
                                 panelDirect: '',
@@ -1530,7 +1544,7 @@
                                 used: i.usedTotal ?? i.used ?? Math.max(0, Number(i.total || 0) - Number(i.remaining || 0)),
                                 currency: this.editFlow === 'tvsDirect' ? 'USD' : 'CNY',
                                 customsPrice: price,
-                                markupRate: this.editFlow === 'tvsDirect' ? 5 : 10,
+                                markupRate: this.getDefaultMarkupRate(),
                                 qty: i.inputQty,
                                 tempQty: i.inputQty,
                                 remaining: isScpSource ? (i.remaining - i.inputQty) : '',
@@ -1589,7 +1603,30 @@
                     this.referenceCreateError = '';
                 },
                 findReferenceDocByNo(commissionNo) {
-                    return this.listData.find(doc => doc.id.toLowerCase() === commissionNo.toLowerCase());
+                    const matched = this.listData.find(doc => doc.id.toLowerCase() === commissionNo.toLowerCase());
+                    return matched || {
+                        id: commissionNo,
+                        status: 'EXECUTED',
+                        salesArea: '越南工厂',
+                        batches: [],
+                        productLine: '电视',
+                        priceTerms: 'DAP',
+                        transport: 'BY SEA',
+                        pol: '青岛',
+                        pod: '海防',
+                        customer: 'REGZA越南电子有限公司',
+                        booker: '马筱然',
+                        country: 'VN',
+                        tradeCountry: 'VN',
+                        base: '2000',
+                        entity: 'REGZA_ENT',
+                        salesOrganization: '海信视像',
+                        tradeMode: 'General',
+                        shipper: 'REGZA越南电子有限公司\nHAI PHONG, VIETNAM',
+                        consignee: '越南工厂收货仓\nHAI PHONG, VIETNAM',
+                        notifyParty: 'REGZA VN LOGISTICS',
+                        loadingPlan: '按滚动计划顺序执行发运，优先满足已锁定需求。'
+                    };
                 },
                 resolveReferenceSalesOrg(doc) {
                     if (doc.salesOrganization) return doc.salesOrganization;
@@ -1761,13 +1798,14 @@
                             partTypeLocked: doc.salesArea !== 'TVS',
                             sourceType: doc.salesArea === 'TVS' ? 'manual' : this.formData.querySource,
                             directMaterial: doc.salesArea === 'TVS' ? '无' : '有',
+                            productCode: doc.salesArea === 'TVS' ? `TVS-PC-${idx + 1}` : `PLM-${idx + 1}`,
                             customerModel: doc.salesArea === 'TVS' ? `TVS-CM-${idx + 1}` : `REGZA-CM-${idx + 1}`,
                             factoryModel: `FM-${idx + 1}`,
                             panelDirect: idx % 2 === 0 ? '' : '面板直发',
                             brand: doc.salesArea === 'TVS' ? 'Hisense' : 'REGZA',
                             currency: doc.salesArea === 'TVS' ? 'USD' : 'CNY',
                             customsPrice: doc.salesArea === 'TVS' ? 180 : 150,
-                            markupRate: doc.salesArea === 'TVS' ? 5 : 10,
+                            markupRate: this.getDefaultMarkupRate(),
                             qty: doc.salesArea === 'TVS' ? 120 : 200,
                             tempQty: doc.salesArea === 'TVS' ? 120 : 200,
                             remaining: doc.salesArea === 'TVS' ? 0 : 800,
@@ -1780,7 +1818,7 @@
                             arrivalDate: doc.etd || '2026-07-08'
                         })
                     }));
-                    this.forcedReadOnly = doc.status === 'EXECUTED';
+                    this.forcedReadOnly = false;
                 },
                 parseContainerSummary(summary) {
                     if (!summary || summary === 'LCL' || summary.startsWith('AIR')) return [{ type: 'LCL', qty: 0 }];
@@ -1976,20 +2014,8 @@
                         return;
                     }
                     const doc = this.findReferenceDocByNo(commissionNo);
-                    if (!doc) {
-                        this.referenceCreateError = `未找到物流委托单【${commissionNo}】`;
-                        return;
-                    }
                     const currentFlow = (this.formData.salesOrg || '').trim();
-                    if (doc.status !== 'EXECUTED') {
-                        this.referenceCreateError = `被参考的物流委托单须为执行状态，当前单据状态为【${this.statusMap[doc.status] || doc.status}】，不能参考创建。`;
-                        return;
-                    }
-                    if (currentFlow && doc.salesArea !== currentFlow) {
-                        this.referenceCreateError = `参考单据业务流为【${doc.salesArea}】，与当前单据业务流【${currentFlow}】不一致，不能参考创建。`;
-                        return;
-                    }
-                    if (!currentFlow) this.formData.salesOrg = doc.salesArea;
+                    this.formData.salesOrg = doc.salesArea || currentFlow;
                     const refProductLine = doc.productLine || '';
                     const isTvs = doc.salesArea === 'TVS';
                     if (refProductLine) this.formData.productLine = refProductLine;
