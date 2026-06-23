@@ -1,0 +1,1969 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>预警配置管理</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      color: #111827;
+      background: #f8fafc;
+      font-size: 12px;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { display: flex; height: 100vh; width: 100vw; }
+    .sidebar {
+      width: 240px;
+      flex: 0 0 240px;
+      background: #f3edd8;
+      border-right: 1px solid #ded7bf;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-title {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid #ded7bf;
+      color: #111827;
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .nav { padding: 18px 12px; flex: 1; overflow-y: auto; }
+    .nav-group { margin-bottom: 10px; }
+    .nav-parent {
+      width: 100%;
+      height: 42px;
+      padding: 0 12px;
+      border: 0;
+      background: transparent;
+      color: #08a6a6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 15px;
+      font-weight: 800;
+      text-align: left;
+    }
+    .nav-child {
+      display: block;
+      margin: 4px 6px 0 18px;
+      padding: 9px 12px 9px 22px;
+      border-radius: 6px;
+      color: #111827;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      transition: color .16s, background .16s;
+    }
+    .nav-child:hover { color: #08a6a6; background: rgba(255,255,255,.35); }
+    .nav-child.active { color: #111827; background: rgba(255,255,255,.28); }
+    .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .topbar {
+      height: 64px;
+      flex: 0 0 64px;
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 2;
+    }
+    .breadcrumb { color: #6b7280; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .breadcrumb strong { color: #111827; }
+    .tenant { display: flex; align-items: center; gap: 8px; color: #4b5563; }
+    .tenant select {
+      height: 30px;
+      width: 88px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #fff;
+      padding: 0 8px;
+      outline: none;
+    }
+    .content {
+      flex: 1;
+      overflow: auto;
+      padding: 18px 24px 28px;
+    }
+    .page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .title-wrap h1 {
+      margin: 0 0 6px;
+      font-size: 20px;
+      line-height: 1.3;
+      font-weight: 800;
+    }
+    .title-wrap p { margin: 0; color: #64748b; font-size: 13px; }
+    .page-head-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .head-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .btn {
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #374151;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #f8fafc; }
+    .btn.primary { background: #0f766e; border-color: #0f766e; color: #fff; }
+    .btn.primary:hover { background: #0d9488; }
+    .btn.secondary { background: #eff6ff; border-color: #bfdbfe; color: #2563eb; }
+    .btn.secondary:hover { background: #dbeafe; }
+    .btn.danger { color: #dc2626; border-color: #fecaca; background: #fff; }
+    .btn.danger:hover { background: #fef2f2; }
+    .btn:disabled { background: #f3f4f6; color: #9ca3af; border-color: #e5e7eb; cursor: not-allowed; }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .tab {
+      height: 42px;
+      padding: 0 18px;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      background: transparent;
+      color: #64748b;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .tab.active { color: #0f766e; border-bottom-color: #0f766e; }
+    .query-shell, .list-shell, .history-shell {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, .05);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+    .panel-head {
+      min-height: 48px;
+      padding: 12px 16px;
+      background: linear-gradient(180deg, #f8fbff 0%, #f4f8fc 100%);
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #0f766e;
+      font-weight: 900;
+      font-size: 14px;
+    }
+    .panel-body { padding: 14px 16px; }
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr)) auto auto;
+      gap: 12px;
+      align-items: end;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    .field label { color: #4b5563; font-weight: 700; }
+    .control {
+      width: 100%;
+      height: 34px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 0 10px;
+      background: #fff;
+      color: #111827;
+      outline: none;
+    }
+    .control:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,.12); }
+    .control[readonly], .control:disabled {
+      background: #bfc9d7;
+      border-color: #7c8da1;
+      color: #334155;
+      cursor: not-allowed;
+      font-weight: 700;
+    }
+    .multi-select {
+      position: relative;
+      width: 100%;
+    }
+    .multi-trigger {
+      width: 100%;
+      min-height: 34px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 6px 36px 6px 10px;
+      background: #fff;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      text-align: left;
+      position: relative;
+    }
+    .multi-trigger:focus {
+      outline: none;
+      border-color: #0d9488;
+      box-shadow: 0 0 0 3px rgba(13,148,136,.12);
+    }
+    .multi-trigger::after {
+      content: "▾";
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+      font-size: 12px;
+    }
+    .multi-select.open .multi-trigger::after {
+      content: "▴";
+    }
+    .multi-placeholder {
+      color: #94a3b8;
+    }
+    .multi-chip {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #ecfeff;
+      color: #0f766e;
+      font-weight: 700;
+      max-width: 220px;
+    }
+    .multi-chip.more {
+      background: #f1f5f9;
+      color: #475569;
+    }
+    .multi-panel {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      z-index: 60;
+      display: none;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 14px 32px rgba(15, 23, 42, .12);
+      padding: 8px;
+      min-width: 100%;
+    }
+    .multi-select.open .multi-panel {
+      display: block;
+    }
+    .multi-options {
+      max-height: 220px;
+      overflow: auto;
+      display: grid;
+      gap: 4px;
+    }
+    .multi-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: #334155;
+    }
+    .multi-option:hover {
+      background: #f8fafc;
+    }
+    .multi-option input {
+      margin: 0;
+    }
+    .table-wrap { overflow: auto; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 1500px; }
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      height: 42px;
+      padding: 0 10px;
+      background: #f3f7fb;
+      border-bottom: 1px solid #d9e2ec;
+      color: #475569;
+      text-align: left;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    tbody td {
+      height: 46px;
+      padding: 0 10px;
+      border-bottom: 1px solid #e5e7eb;
+      color: #1f2937;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    tbody tr:hover td { background: #f8fafc; }
+    .row-actions { display: flex; align-items: center; gap: 8px; }
+    thead th.sticky-action,
+    tbody td.sticky-action {
+      position: sticky;
+      right: 0;
+      z-index: 2;
+      width: 150px;
+      min-width: 150px;
+      background: #fff;
+      box-shadow: -10px 0 14px rgba(15, 23, 42, .08);
+    }
+    thead th.sticky-action {
+      z-index: 3;
+      background: #f3f7fb;
+    }
+    tbody tr:hover td.sticky-action { background: #f8fafc; }
+    .status-col {
+      width: 110px;
+      min-width: 110px;
+      position: sticky;
+      right: 150px;
+      z-index: 2;
+      background: #fff;
+      text-align: center;
+    }
+    thead th.status-col {
+      z-index: 3;
+      background: #f3f7fb;
+    }
+    tbody tr:hover td.status-col { background: #f8fafc; }
+    .meta-user-col { width: 90px; min-width: 90px; }
+    .meta-time-col { width: 150px; min-width: 150px; }
+    .link-btn {
+      border: 0;
+      background: transparent;
+      padding: 0;
+      color: #0f766e;
+      font-weight: 800;
+    }
+    .link-btn:hover { color: #0d9488; text-decoration: underline; }
+    .link-btn.danger { color: #dc2626; }
+    .link-btn:disabled { color: #9ca3af; cursor: not-allowed; text-decoration: none; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .badge.green { background: #d1fae5; color: #047857; }
+    .badge.gray { background: #f3f4f6; color: #6b7280; }
+    .badge.blue { background: #dbeafe; color: #1d4ed8; }
+    .badge.teal { background: #ccfbf1; color: #0f766e; }
+    .badge.amber { background: #fef3c7; color: #92400e; }
+    .tag { color: #64748b; font-weight: 800; }
+    .batch-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px;
+      background: #f0fdfa;
+      border-bottom: 1px solid #ccfbf1;
+    }
+    .batch-bar.show { display: flex; }
+    .default-row td {
+      background: #f0fdfa;
+      border-bottom: 1px solid #99f6e4;
+      color: #0f766e;
+      font-weight: 900;
+    }
+    .default-row:hover td { background: #ecfdf5; }
+    .default-row .tag { color: #0f766e; }
+    .default-row td.status-col,
+    .default-row td.sticky-action { background: #f0fdfa; }
+    .default-row:hover td.status-col,
+    .default-row:hover td.sticky-action { background: #ecfdf5; }
+    .transport-config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .rule-summary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 900;
+      color: #111827;
+    }
+    .rule-summary .node {
+      min-width: 34px;
+      height: 22px;
+      border-radius: 6px;
+      background: #ecfeff;
+      color: #0e7490;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mode-picker {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .mode-option {
+      min-height: 40px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      border-radius: 8px;
+      font-weight: 900;
+      color: #374151;
+    }
+    .mode-option.active {
+      border-color: #0f766e;
+      background: #ecfdf5;
+      color: #0f766e;
+    }
+    .rail-detail.hide { display: none; }
+    .pagination {
+      min-height: 72px;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #64748b;
+      border-top: 1px solid #e5e7eb;
+      background: #fff;
+    }
+    .page-tools { display: flex; align-items: center; gap: 10px; }
+    .page-size {
+      width: 112px;
+      height: 34px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 0 8px;
+      background: #fff;
+      color: #374151;
+      font-weight: 800;
+    }
+    .page-btn {
+      min-width: 74px;
+      height: 34px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #374151;
+      font-weight: 800;
+    }
+    .page-btn:disabled {
+      color: #9ca3af;
+      background: #f8fafc;
+      cursor: not-allowed;
+    }
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, .38);
+      padding: 24px;
+    }
+    .modal-mask.show { display: flex; }
+    .modal {
+      width: min(900px, calc(100vw - 48px));
+      max-height: calc(100vh - 64px);
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, .24);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal.small { width: 540px; }
+    .modal.wide { width: min(1040px, calc(100vw - 48px)); }
+    .modal-head {
+      min-height: 54px;
+      padding: 0 18px;
+      background: linear-gradient(180deg, #f8fbff 0%, #f4f8fc 100%);
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-head h2 { margin: 0; font-size: 16px; color: #111827; }
+    .close {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      border-radius: 6px;
+      color: #64748b;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .modal-body { padding: 18px; overflow: auto; }
+    .rule-modal {
+      width: min(1160px, calc(100vw - 48px));
+    }
+    .rule-modal-body { padding-right: 18px; }
+    .rule-modal .form-section { overflow: visible; }
+    .modal-foot {
+      min-height: 58px;
+      padding: 12px 18px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .form-section {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .form-section h3 {
+      margin: 0;
+      padding: 11px 14px;
+      background: #f8fbff;
+      border-bottom: 1px solid #e5e7eb;
+      color: #0f766e;
+      font-size: 14px;
+    }
+    .form-section .inner { padding: 14px; display: grid; gap: 12px; }
+    .switch-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .switch {
+      width: 44px;
+      height: 24px;
+      border-radius: 999px;
+      border: 0;
+      background: #cbd5e1;
+      position: relative;
+      transition: background .15s;
+      flex: 0 0 auto;
+    }
+    .switch::after {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      transition: transform .15s;
+      box-shadow: 0 1px 2px rgba(0,0,0,.18);
+    }
+    .switch.on { background: #0f766e; }
+    .switch.on::after { transform: translateX(20px); }
+    .status-switch { width: 42px; height: 22px; vertical-align: middle; }
+    .status-switch::after { width: 16px; height: 16px; }
+    .status-switch.off { background: #dc2626; }
+    .status-switch.on::after { transform: translateX(20px); }
+    .hint { color: #64748b; line-height: 1.7; }
+    .field-hint {
+      margin-top: -1px;
+      color: #64748b;
+      line-height: 1.6;
+      font-size: 12px;
+    }
+    .field-hint.emphasis {
+      color: #0f766e;
+      font-weight: 800;
+    }
+    .drawer-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .page-guide-mask {
+      position: fixed;
+      inset: 64px 0 0 0;
+      background: rgba(15, 23, 42, .28);
+      z-index: 26;
+      display: none;
+    }
+    .page-guide-mask.show { display: block; }
+    .page-guide-drawer {
+      position: fixed;
+      top: 76px;
+      right: 16px;
+      bottom: 16px;
+      width: min(420px, calc(100vw - 32px));
+      background: linear-gradient(180deg, #f8fbff 0%, #ffffff 24%);
+      border: 1px solid #dbe7f3;
+      box-shadow: -18px 0 36px rgba(15, 23, 42, .18);
+      transform: translateX(calc(100% + 24px));
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .22s ease, opacity .22s ease;
+      z-index: 27;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border-radius: 16px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    .page-guide-drawer.open {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .help-drawer-head {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding: 14px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: linear-gradient(180deg, #f0fdfa 0%, #f8fbff 100%);
+      flex: 0 0 auto;
+    }
+    .help-drawer-head strong {
+      color: #0f766e;
+      font-size: 14px;
+    }
+    .help-drawer-body {
+      padding: 14px 16px 18px;
+      display: grid;
+      gap: 14px;
+    }
+    .help-block {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .help-block h4 {
+      margin: 0;
+      padding: 10px 12px;
+      color: #0f766e;
+      background: #f8fbff;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 13px;
+    }
+    .help-block .inner {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+    .help-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #475569;
+      line-height: 1.7;
+    }
+    .help-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 0;
+    }
+    .help-table th,
+    .help-table td {
+      padding: 8px 0;
+      border-bottom: 1px solid #eef2f7;
+      text-align: left;
+      vertical-align: top;
+      white-space: normal;
+      line-height: 1.6;
+    }
+    .help-table th {
+      color: #64748b;
+      font-weight: 800;
+      width: 74px;
+    }
+    .help-rail {
+      display: grid;
+      gap: 8px;
+    }
+    .help-step {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      line-height: 1.7;
+    }
+    .help-step strong {
+      color: #0f766e;
+      margin-right: 6px;
+    }
+    .result-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 14px 0; }
+    .result-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+    }
+    .result-card strong { display: block; font-size: 20px; margin-top: 4px; }
+    .sheet-chip-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .sheet-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #2563eb;
+      font-weight: 800;
+    }
+    .upload-inline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .upload-file-name {
+      color: #334155;
+      font-weight: 700;
+    }
+    .import-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 12px;
+    }
+    .mini-list-block {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .mini-list-block strong {
+      display: block;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e5e7eb;
+      color: #0f766e;
+      background: #f8fbff;
+      font-size: 13px;
+    }
+    .mini-list {
+      margin: 0;
+      padding: 10px 12px 10px 28px;
+      color: #475569;
+      line-height: 1.7;
+    }
+    .mini-list li + li {
+      margin-top: 6px;
+    }
+    .import-stage {
+      display: none;
+    }
+    .import-stage.show {
+      display: block;
+    }
+    .import-compact {
+      width: min(760px, calc(100vw - 64px));
+    }
+    .import-simple {
+      padding: 10px 4px 2px;
+    }
+    .import-simple-row {
+      min-height: 72px;
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      align-items: center;
+      gap: 16px;
+      padding: 0 14px;
+    }
+    .import-simple-row + .import-simple-row {
+      border-top: 1px solid #eef2f7;
+    }
+    .import-simple-label {
+      color: #475569;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: right;
+    }
+    .import-simple-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: #334155;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .import-link {
+      color: #3b82f6;
+      font-weight: 800;
+      background: transparent;
+      border: 0;
+      padding: 0;
+    }
+    .import-error-tip {
+      margin: 8px 0 4px 150px;
+      color: #ef4444;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .history-view { display: none; }
+    .history-view.show { display: block; }
+    .config-panels.hide { display: none; }
+    .config-view.hide { display: none; }
+    @media (max-width: 1180px) {
+      .filters { grid-template-columns: repeat(3, minmax(130px, 1fr)); }
+      .form-grid { grid-template-columns: 1fr; }
+      .transport-config-grid { grid-template-columns: 1fr; }
+      .page-guide-drawer { top: 72px; right: 8px; bottom: 8px; width: calc(100vw - 16px); border-radius: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-title">国际运输管理（HTM）</div>
+      <nav class="nav">
+        <div class="nav-group">
+          <button class="nav-parent" type="button">
+            <span>预警管理</span>
+            <span>-</span>
+          </button>
+          <a href="#" class="nav-child active" id="navConfig">预警配置管理</a>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="breadcrumb">
+          <span>HTM</span><span>/</span><span>预警管理</span><span>/</span><strong id="crumbCurrent">预警配置管理</strong>
+        </div>
+        <div class="tenant">
+          <span>租户：</span>
+          <select><option>视像</option></select>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="config-view" id="configView">
+          <div class="page-head">
+            <div class="title-wrap">
+              <h1>预警配置管理</h1>
+              <p>按业务范围维护规则，每条规则同时管理海运和海铁两种运输场景的起算节点与免费期。</p>
+            </div>
+            <div class="page-head-actions">
+              <button class="btn secondary drawer-toggle" id="pageGuideBtn" type="button">如何配置</button>
+            </div>
+          </div>
+
+          <div class="tabs">
+            <button class="tab active" data-tab="pickup">未提箱配置</button>
+            <button class="tab" data-tab="return">未还箱配置</button>
+            <button class="tab" data-tab="history">变更历史</button>
+          </div>
+
+          <section class="config-panels" id="configPanels">
+          <section class="query-shell">
+            <div class="panel-head">
+              <div class="panel-title">查询条件</div>
+            </div>
+            <div class="panel-body">
+              <div class="filters">
+                <div class="field">
+                  <label>大区</label>
+                  <select class="control" id="filterRegion"><option>全部</option><option>北美区</option><option>欧洲区</option><option>东盟区</option><option>亚太区</option><option>中东非区</option></select>
+                </div>
+                <div class="field">
+                  <label>国家</label>
+                  <select class="control" id="filterCountry"><option>全部</option><option>美国</option><option>墨西哥</option><option>加拿大</option></select>
+                </div>
+                <div class="field">
+                  <label>港口</label>
+                  <select class="control" id="filterPort"><option>全部</option><option>Long Beach</option><option>Los Angeles</option><option>Oakland</option><option>Seattle</option><option>Tacoma</option><option>New York/Newark</option><option>Savannah</option><option>Houston</option><option>Charleston</option><option>Norfolk</option><option>Miami</option><option>Lazaro</option><option>Vancouver</option><option>Prince Rupert</option></select>
+                </div>
+                <div class="field">
+                  <label>船公司</label>
+                  <select class="control" id="filterCarrier"><option>全部</option><option>通用</option><option>COSCO</option><option>MSC</option><option>Hapag-Lloyd</option><option>Maersk</option><option>CMA CGM</option><option>ONE</option><option>Evergreen</option><option>OOCL</option><option>ZIM</option><option>Matson</option></select>
+                </div>
+                <div class="field">
+                  <label>启用状态</label>
+                  <select class="control" id="filterStatus"><option>全部</option><option>启用</option><option>关闭</option></select>
+                </div>
+                <div class="field">
+                  <label>关键字</label>
+                  <input class="control" id="filterKeyword" placeholder="大区 / 港口 / 船公司" />
+                </div>
+                <button class="btn primary" id="queryBtn">查询</button>
+                <button class="btn" id="resetBtn">重置</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="list-shell">
+            <div class="panel-head">
+              <div class="panel-title" id="listTitle">未提箱配置列表</div>
+              <div class="head-actions" id="configActions">
+                <button class="btn primary" id="addBtn">新建</button>
+                <button class="btn" id="exportBtn">导出</button>
+                <button class="btn secondary" id="importBtn">批量导入</button>
+                <button class="btn primary" id="batchBtn">批量修改免费期</button>
+                <button class="btn danger" id="batchDeleteBtn">批量删除</button>
+              </div>
+            </div>
+            <div class="panel-body" style="padding: 10px 16px; border-bottom: 1px solid #e5e7eb;">
+              <div class="hint">默认规则固定置顶且始终生效；状态为启用的特殊规则在保存或导入确认成功后立即参与计算。</div>
+            </div>
+            <div class="batch-bar" id="batchBar">
+              <strong>已选择 <span id="selectedCount">0</span> 条规则</strong>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width:42px;"><input type="checkbox" id="checkAll" /></th>
+                    <th>大区</th>
+                    <th>层级</th>
+                    <th>国家</th>
+                    <th>港口</th>
+                    <th>船公司</th>
+                    <th>海运规则（起算节点 / 免费期）</th>
+                    <th>海铁规则（起算节点 / 免费期）</th>
+                    <th class="status-col">启用状态</th>
+                    <th class="meta-user-col">修改人</th>
+                    <th class="meta-time-col">修改时间</th>
+                    <th class="sticky-action" style="width:150px;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="ruleBody"></tbody>
+              </table>
+            </div>
+            <div class="pagination">
+              <span id="pageSummary">显示 0-0 条，共 0 条</span>
+              <div class="page-tools">
+                <select class="page-size" id="pageSizeSelect">
+                  <option value="10">10 条/页</option>
+                  <option value="20">20 条/页</option>
+                  <option value="50">50 条/页</option>
+                  <option value="100">100 条/页</option>
+                </select>
+                <div class="page-btns" id="pageBtns"></div>
+              </div>
+            </div>
+          </section>
+          </section>
+        </section>
+
+        <section class="history-view" id="historyView">
+          <section class="query-shell">
+            <div class="panel-head"><div class="panel-title">历史筛选</div></div>
+            <div class="panel-body">
+              <div class="filters" style="grid-template-columns: repeat(4, minmax(140px, 1fr)) auto auto;">
+                <div class="field"><label>开始日期</label><input class="control" value="2026-05-01" /></div>
+                <div class="field"><label>结束日期</label><input class="control" value="2026-05-29" /></div>
+                <div class="field"><label>操作类型</label><select class="control"><option>全部</option><option>编辑</option><option>导入</option></select></div>
+                <div class="field"><label>规则类型</label><select class="control"><option>全部</option><option>未提箱</option><option>未还箱</option></select></div>
+                <button class="btn primary">查询</button><button class="btn">重置</button>
+              </div>
+            </div>
+          </section>
+          <section class="history-shell">
+            <div class="panel-head"><div class="panel-title">操作记录</div></div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>操作时间</th><th>操作人</th><th>操作类型</th><th>规则类型</th><th>规则摘要</th><th>变更说明</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>2026-05-29 10:22:31</td><td>zhang</td><td><span class="badge blue">编辑</span></td><td>未提箱</td><td>美国 / Long Beach / COSCO</td><td>免费期 2 天调整为 4 天</td></tr>
+                  <tr><td>2026-05-28 16:08:12</td><td>sun</td><td><span class="badge teal">导入</span></td><td>未还箱</td><td>北美批量规则</td><td>新增 12 条，覆盖 3 条，失败 0 条</td></tr>
+                  <tr><td>2026-05-28 15:34:09</td><td>admin</td><td><span class="badge amber">启停</span></td><td>未提箱</td><td>墨西哥 / Lazaro / 通用</td><td>状态由关闭调整为启用</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-mask" id="defaultModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h2 id="defaultModalTitle">编辑默认规则</h2>
+        <button class="close" data-close="defaultModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="transport-config-grid">
+          <section class="form-section">
+            <h3>海运配置（无火车）</h3>
+            <div class="inner">
+              <div class="field">
+                <label>起算节点</label>
+                <select class="control" id="defaultOceanNodeInput">
+                  <option value="UV" selected>UV - 目的港卸船</option>
+                  <option value="VA">VA - 目的港到港</option>
+                  <option value="UR">UR - 铁路卸货</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>免费期（天）</label>
+                <input class="control" id="defaultOceanFreeInput" type="number" min="0" max="365" value="0" />
+              </div>
+              <div class="hint">海运订舱未命中国家、港口、船司特殊规则时，使用这套默认口径。</div>
+            </div>
+          </section>
+          <section class="form-section">
+            <h3>海铁配置（有火车）</h3>
+            <div class="inner">
+              <div class="field">
+                <label>起算节点</label>
+                <select class="control" id="defaultRailNodeInput">
+                  <option value="UR" selected>UR - 铁路卸货</option>
+                  <option value="UV">UV - 目的港卸船</option>
+                  <option value="VA">VA - 目的港到港</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>免费期（天）</label>
+                <input class="control" id="defaultRailFreeInput" type="number" min="0" max="365" value="0" />
+              </div>
+              <div class="hint">海铁订舱未命中特殊规则时，使用这套默认口径。</div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" data-close="defaultModal">取消</button>
+        <button class="btn primary" id="saveDefaultBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="ruleModal">
+    <div class="modal rule-modal">
+      <div class="modal-head">
+        <h2 id="ruleModalTitle">新增规则</h2>
+        <button class="close" data-close="ruleModal">×</button>
+      </div>
+      <div class="modal-body rule-modal-body">
+        <div class="form-grid">
+          <section class="transport-config-grid" style="grid-column: 1 / -1; order: 1;">
+            <section class="form-section">
+              <h3>海运配置（无火车）</h3>
+              <div class="inner">
+                <div class="field">
+                  <label>起算节点</label>
+                  <select class="control" id="oceanNodeSelect">
+                    <option value="UV" selected>UV - 目的港卸船</option>
+                    <option value="VA">VA - 目的港到港</option>
+                    <option value="UR">UR - 铁路卸货</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>免费期（天）</label>
+                  <input class="control" id="oceanFreeInput" type="number" min="0" max="365" value="4" />
+                </div>
+                <div class="hint">订舱运输方式为海运时，命中该业务范围则使用这套参数。</div>
+              </div>
+            </section>
+            <section class="form-section">
+              <h3>海铁配置（有火车）</h3>
+              <div class="inner">
+                <div class="field">
+                  <label>起算节点</label>
+                  <select class="control" id="railNodeSelect">
+                    <option value="UR" selected>UR - 铁路卸货</option>
+                    <option value="UV">UV - 目的港卸船</option>
+                    <option value="VA">VA - 目的港到港</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>免费期（天）</label>
+                  <input class="control" id="railFreeInput" type="number" min="0" max="365" value="2" />
+                </div>
+                <div class="hint">订舱运输方式为海铁时，命中该业务范围则使用这套参数。</div>
+              </div>
+            </section>
+          </section>
+          <section class="form-section" id="scopeSection" style="grid-column: 1 / -1; order: 2;">
+            <h3>适用范围</h3>
+            <div class="inner">
+              <div class="field">
+                <label>规则层级</label>
+                <select class="control" id="levelSelect">
+                  <option value="region">大区</option>
+                  <option value="country">国家</option>
+                  <option value="port" selected>港口</option>
+                </select>
+                <div class="field-hint emphasis" id="levelHint">大区规则用于该业务大区下的基础口径，特殊规则默认必须先选大区。</div>
+              </div>
+              <div class="field" id="regionField">
+                <label>大区</label>
+                <select class="control" id="regionSelect"><option>北美区</option><option>欧洲区</option><option>东盟区</option><option>亚太区</option><option>中东非区</option></select>
+                <div class="field-hint emphasis" id="regionHint">大区取自落货纸业务归属，不是国家或港口的地理上级。</div>
+              </div>
+              <div class="field" id="countryField">
+                <label>国家</label>
+                <select class="control" id="countrySelect"><option>美国</option><option>墨西哥</option><option>加拿大</option></select>
+                <div class="field-hint" id="countryHint">国家级规则用于某个国家整体口径特殊的场景。</div>
+              </div>
+              <div class="field" id="portField">
+                <label>港口</label>
+                <select class="control" id="portSelect"><option data-country="美国">Long Beach</option><option data-country="墨西哥">Lazaro</option><option data-country="加拿大">Vancouver</option></select>
+                <div class="field-hint" id="portHint">选择港口后自动带出所属国家，国家字段置灰且不可修改。</div>
+              </div>
+              <div class="field">
+                <label>船公司</label>
+                <div class="multi-select" id="carrierSelect">
+                  <button class="multi-trigger" id="carrierTrigger" type="button" aria-expanded="false">
+                    <span class="multi-placeholder">请选择船公司</span>
+                  </button>
+                  <div class="multi-panel">
+                    <div class="multi-options" id="carrierOptions"></div>
+                  </div>
+                </div>
+                <div class="field-hint" id="carrierHint">船公司支持多选；保存时会按所选船公司拆成多条独立规则。“通用”不能与指定船公司同时选择。</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" data-close="ruleModal">取消</button>
+        <button class="btn primary" id="saveRuleBtn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="batchModal">
+    <div class="modal small">
+      <div class="modal-head">
+        <h2>批量修改免费期</h2>
+        <button class="close" data-close="batchModal">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="hint">批量修改仅调整所选规则的海运免费期和海铁免费期；不影响适用范围和起算节点。</p>
+        <div class="field">
+          <label>新的海运免费期（天）</label>
+          <input class="control" id="batchOceanFreeInput" type="number" min="0" max="365" value="14" />
+        </div>
+        <div class="field">
+          <label>新的海铁免费期（天）</label>
+          <input class="control" id="batchRailFreeInput" type="number" min="0" max="365" value="14" />
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" data-close="batchModal">取消</button>
+        <button class="btn primary" id="confirmBatchBtn">确认修改</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-mask" id="importModal">
+    <div class="modal import-compact">
+      <div class="modal-head">
+        <h2 id="importModalTitle">批量导入未提箱规则</h2>
+        <button class="close" data-close="importModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="import-stage show" id="importUploadStage">
+          <div class="import-simple">
+            <div class="import-simple-row">
+              <div class="import-simple-label">模板下载</div>
+              <div class="import-simple-content">
+                <button class="import-link" id="downloadCurrentTemplateBtn">模板下载</button>
+              </div>
+            </div>
+            <div class="import-simple-row">
+              <div class="import-simple-label">文件上传</div>
+              <div class="import-simple-content">
+                <button class="btn primary" id="uploadImportBtn" type="button">点击上传</button>
+                <span class="upload-file-name" id="importFileName">请选择上传的文件（xlsx,xls）</span>
+              </div>
+            </div>
+            <div class="import-error-tip" id="importTemplateHint">仅支持 .xlsx、.xls 格式文件，文件大小不超过 5MB</div>
+          </div>
+        </div>
+        <div class="import-stage" id="importResultStage">
+          <div class="hint" id="importModalLead">仅支持标准模板导入；导入确认成功后立即生效。</div>
+          <div style="height:14px;"></div>
+          <section class="form-section">
+            <h3>校验结果</h3>
+            <div class="inner">
+              <div class="result-cards">
+                <div class="result-card"><span>可导入</span><strong>12</strong></div>
+                <div class="result-card"><span>待覆盖</span><strong>3</strong></div>
+                <div class="result-card"><span>失败</span><strong>1</strong></div>
+              </div>
+              <div class="hint" id="importValidationHint">命中已有规则时不会直接覆盖，确认后才导入；如存在失败记录，本次文件不入库。</div>
+              <div class="import-split">
+                <div class="mini-list-block">
+                  <strong>待覆盖规则</strong>
+                  <ul class="mini-list">
+                    <li>北美区 / 美国 / Long Beach / COSCO</li>
+                    <li>北美区 / 美国 / 通用</li>
+                    <li>北美区 / 墨西哥 / Lazaro / MSC</li>
+                  </ul>
+                </div>
+                <div class="mini-list-block">
+                  <strong>失败明细</strong>
+                  <ul class="mini-list">
+                    <li>第 8 行：港口与国家不匹配</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" data-close="importModal">取消</button>
+        <button class="btn secondary" id="reuploadImportBtn" type="button" style="display:none;">重新上传</button>
+        <button class="btn primary" id="startImportCheckBtn" type="button">保存</button>
+        <button class="btn primary" id="confirmImportBtn" disabled style="display:none;">确认覆盖并导入</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-guide-mask" id="pageGuideMask"></div>
+  <aside class="page-guide-drawer" id="pageGuideDrawer" aria-hidden="true">
+    <div class="help-drawer-head">
+      <div>
+        <strong id="pageGuideTitle">未提箱配置帮助</strong>
+        <div class="hint" id="pageGuideSubtitle">先判断你要维护的是大区、国家还是港口，再按优先级理解谁会生效。</div>
+      </div>
+      <button class="close" id="pageGuideCloseBtn" type="button">×</button>
+    </div>
+    <div class="help-drawer-body">
+      <section class="help-block">
+        <h4>先判断你要配哪一层</h4>
+        <div class="inner help-rail">
+          <div class="help-step"><strong>1.</strong>如果你要维护整个大区的口径，就配置<strong>大区层级</strong>。例如北美区负责人，维护“北美区 + 通用”或“北美区 + 指定船司”。</div>
+          <div class="help-step"><strong>2.</strong>如果你要维护某个国家的口径，就配置<strong>国家层级</strong>。例如美国负责人，维护“北美区 + 美国 + 通用”或“北美区 + 美国 + 指定船司”。</div>
+          <div class="help-step"><strong>3.</strong>如果你要维护某个港口的口径，就配置<strong>港口层级</strong>。例如 Long Beach 负责人，维护“北美区 + 美国 + Long Beach + 通用”或“北美区 + 美国 + Long Beach + 指定船司”。</div>
+          <div class="help-step"><strong>4.</strong>如果只是某个船司特殊，不要新开一层，只在你当前负责的层级下补一条该船司特例即可，其他船司继续走通用规则。</div>
+        </div>
+      </section>
+      <section class="help-block">
+        <h4>取值逻辑</h4>
+        <div class="inner">
+          <table class="help-table">
+            <tbody>
+              <tr><th>大区</th><td>取自落货纸销售/业务归属，特殊规则默认必填。</td></tr>
+              <tr><th>国家</th><td>来自国家主数据，用于国家级整体口径差异。</td></tr>
+              <tr><th>港口</th><td>来自 `b_port`，选择港口后自动带出国家，国家置灰不可改。</td></tr>
+              <tr><th>船公司</th><td>“通用”表示当前层级下未单独拆船司时默认走这条。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section class="help-block">
+        <h4>优先级说明</h4>
+        <div class="inner">
+          <div class="priority-line">
+            <span class="priority-chip">港口 + 船司</span>
+            <span class="priority-chip">港口 + 通用</span>
+            <span class="priority-chip">国家 + 船司</span>
+            <span class="priority-chip">国家 + 通用</span>
+            <span class="priority-chip">大区 + 船司</span>
+            <span class="priority-chip">大区 + 通用</span>
+            <span class="priority-chip">默认兜底</span>
+          </div>
+          <table class="help-table">
+            <tbody>
+              <tr><th>大区负责人</th><td>你配置的是大区规则，只有在没有更细的国家规则、港口规则时才生效。</td></tr>
+              <tr><th>国家负责人</th><td>你配置的国家规则会覆盖同大区下的大区规则；但如果某个港口又单独配置了港口规则，则港口规则优先。</td></tr>
+              <tr><th>港口负责人</th><td>你配置的港口规则优先级最高；如果同一个港口下某个船司又单独配置了船司特例，则该船司特例优先于港口通用。</td></tr>
+              <tr><th>统一原则</th><td>先比层级：港口 &gt; 国家 &gt; 大区；同层级再比船司：指定船司 &gt; 通用。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section class="help-block">
+        <h4>当前页签标准示例</h4>
+        <div class="inner">
+          <table class="help-table">
+            <tbody id="pageGuideExamples"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </aside>
+
+  <script>
+    const bPortOptions = [
+      { name: "Long Beach", country: "美国" },
+      { name: "Los Angeles", country: "美国" },
+      { name: "Oakland", country: "美国" },
+      { name: "Seattle", country: "美国" },
+      { name: "Tacoma", country: "美国" },
+      { name: "New York/Newark", country: "美国" },
+      { name: "Savannah", country: "美国" },
+      { name: "Houston", country: "美国" },
+      { name: "Charleston", country: "美国" },
+      { name: "Norfolk", country: "美国" },
+      { name: "Miami", country: "美国" },
+      { name: "Lazaro", country: "墨西哥" },
+      { name: "Vancouver", country: "加拿大" },
+      { name: "Prince Rupert", country: "加拿大" }
+    ];
+
+    const data = {
+      pickup: [
+        {region:"北美区", level:"大区", country:"-", port:"-", carrier:"通用", ocean:"VA / 4 天", rail:"UR / 2 天", status:"启用", user:"zhang", time:"2026-05-29 10:05"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"通用", ocean:"VA / 5 天", rail:"UR / 3 天", status:"启用", user:"zhang", time:"2026-05-29 09:42"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"MSC", ocean:"VA / 6 天", rail:"UR / 4 天", status:"启用", user:"sun", time:"2026-05-29 09:10"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"Maersk", ocean:"VA / 6 天", rail:"UR / 4 天", status:"启用", user:"sun", time:"2026-05-29 08:51"},
+        {region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"COSCO", ocean:"VA / 2 天", rail:"UR / 2 天", status:"启用", user:"sun", time:"2026-05-28 16:41"},
+        {region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"MSC", ocean:"VA / 3 天", rail:"UR / 2 天", status:"启用", user:"admin", time:"2026-05-28 16:12"},
+        {region:"北美区", level:"港口", country:"美国", port:"Los Angeles", carrier:"通用", ocean:"VA / 3 天", rail:"UR / 2 天", status:"启用", user:"admin", time:"2026-05-28 15:50"},
+        {region:"北美区", level:"港口", country:"美国", port:"Oakland", carrier:"ONE", ocean:"VA / 4 天", rail:"UR / 3 天", status:"启用", user:"sun", time:"2026-05-28 15:22"},
+        {region:"北美区", level:"港口", country:"美国", port:"Seattle", carrier:"Hapag-Lloyd", ocean:"VA / 4 天", rail:"UR / 3 天", status:"启用", user:"zhang", time:"2026-05-28 14:58"},
+        {region:"北美区", level:"港口", country:"美国", port:"Tacoma", carrier:"Evergreen", ocean:"VA / 4 天", rail:"UR / 3 天", status:"启用", user:"zhang", time:"2026-05-28 14:42"},
+        {region:"北美区", level:"港口", country:"美国", port:"New York/Newark", carrier:"MSC", ocean:"VA / 5 天", rail:"UR / 4 天", status:"启用", user:"sun", time:"2026-05-28 13:36"},
+        {region:"北美区", level:"港口", country:"美国", port:"Savannah", carrier:"CMA CGM", ocean:"VA / 5 天", rail:"UR / 4 天", status:"启用", user:"admin", time:"2026-05-28 13:18"},
+        {region:"北美区", level:"港口", country:"美国", port:"Houston", carrier:"OOCL", ocean:"VA / 4 天", rail:"UR / 3 天", status:"启用", user:"sun", time:"2026-05-28 12:42"},
+        {region:"北美区", level:"港口", country:"美国", port:"Charleston", carrier:"ZIM", ocean:"VA / 5 天", rail:"UR / 4 天", status:"启用", user:"admin", time:"2026-05-28 11:28"},
+        {region:"北美区", level:"港口", country:"美国", port:"Norfolk", carrier:"通用", ocean:"VA / 5 天", rail:"UR / 4 天", status:"启用", user:"zhang", time:"2026-05-28 10:55"},
+        {region:"北美区", level:"港口", country:"美国", port:"Miami", carrier:"Maersk", ocean:"VA / 4 天", rail:"UR / 3 天", status:"关闭", user:"sun", time:"2026-05-27 18:20"},
+        {region:"北美区", level:"港口", country:"加拿大", port:"Vancouver", carrier:"通用", ocean:"VA / 6 天", rail:"UR / 4 天", status:"启用", user:"admin", time:"2026-05-27 16:15"},
+        {region:"北美区", level:"港口", country:"加拿大", port:"Prince Rupert", carrier:"COSCO", ocean:"VA / 6 天", rail:"UR / 4 天", status:"启用", user:"zhang", time:"2026-05-27 15:32"},
+        {region:"北美区", level:"港口", country:"墨西哥", port:"Lazaro", carrier:"通用", ocean:"VA / 14 天", rail:"UR / 7 天", status:"启用", user:"admin", time:"2026-05-28 14:20"},
+        {region:"欧洲区", level:"国家", country:"加拿大", port:"-", carrier:"通用", ocean:"VA / 3 天", rail:"UR / 2 天", status:"关闭", user:"admin", time:"2026-05-27 11:36"}
+      ],
+      return: [
+        {region:"北美区", level:"大区", country:"-", port:"-", carrier:"通用", ocean:"UV / 14 天", rail:"UR / 14 天", status:"启用", user:"zhang", time:"2026-05-29 10:10"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"通用", ocean:"UV / 18 天", rail:"UR / 18 天", status:"启用", user:"zhang", time:"2026-05-29 09:35"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"MSC", ocean:"UV / 21 天", rail:"UR / 21 天", status:"启用", user:"sun", time:"2026-05-28 17:02"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"Maersk", ocean:"UV / 21 天", rail:"UR / 21 天", status:"启用", user:"sun", time:"2026-05-28 16:56"},
+        {region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"COSCO", ocean:"UV / 10 天", rail:"UR / 10 天", status:"启用", user:"admin", time:"2026-05-28 16:20"},
+        {region:"北美区", level:"港口", country:"美国", port:"Los Angeles", carrier:"MSC", ocean:"UV / 12 天", rail:"UR / 12 天", status:"启用", user:"sun", time:"2026-05-28 15:43"},
+        {region:"北美区", level:"港口", country:"美国", port:"Oakland", carrier:"ONE", ocean:"UV / 12 天", rail:"UR / 12 天", status:"启用", user:"zhang", time:"2026-05-28 15:20"},
+        {region:"北美区", level:"港口", country:"美国", port:"Seattle", carrier:"Hapag-Lloyd", ocean:"UV / 14 天", rail:"UR / 14 天", status:"启用", user:"admin", time:"2026-05-28 14:33"},
+        {region:"北美区", level:"港口", country:"美国", port:"Tacoma", carrier:"Evergreen", ocean:"UV / 14 天", rail:"UR / 14 天", status:"启用", user:"sun", time:"2026-05-28 14:04"},
+        {region:"北美区", level:"港口", country:"美国", port:"New York/Newark", carrier:"MSC", ocean:"UV / 18 天", rail:"UR / 18 天", status:"启用", user:"zhang", time:"2026-05-28 13:21"},
+        {region:"北美区", level:"港口", country:"美国", port:"Savannah", carrier:"CMA CGM", ocean:"UV / 16 天", rail:"UR / 16 天", status:"启用", user:"sun", time:"2026-05-28 12:59"},
+        {region:"北美区", level:"港口", country:"美国", port:"Houston", carrier:"OOCL", ocean:"UV / 15 天", rail:"UR / 15 天", status:"启用", user:"admin", time:"2026-05-28 12:18"},
+        {region:"北美区", level:"港口", country:"美国", port:"Charleston", carrier:"ZIM", ocean:"UV / 16 天", rail:"UR / 16 天", status:"启用", user:"sun", time:"2026-05-28 11:45"},
+        {region:"北美区", level:"港口", country:"美国", port:"Norfolk", carrier:"通用", ocean:"UV / 16 天", rail:"UR / 16 天", status:"启用", user:"zhang", time:"2026-05-28 11:12"},
+        {region:"北美区", level:"港口", country:"美国", port:"Miami", carrier:"Maersk", ocean:"UV / 12 天", rail:"UR / 12 天", status:"关闭", user:"admin", time:"2026-05-27 18:04"},
+        {region:"北美区", level:"港口", country:"加拿大", port:"Vancouver", carrier:"通用", ocean:"UV / 20 天", rail:"UR / 20 天", status:"启用", user:"sun", time:"2026-05-27 16:48"},
+        {region:"北美区", level:"港口", country:"加拿大", port:"Prince Rupert", carrier:"COSCO", ocean:"UV / 20 天", rail:"UR / 20 天", status:"启用", user:"zhang", time:"2026-05-27 16:06"},
+        {region:"北美区", level:"港口", country:"墨西哥", port:"Lazaro", carrier:"COSCO", ocean:"VA / 28 天", rail:"UR / 28 天", status:"启用", user:"admin", time:"2026-05-28 15:48"},
+        {region:"欧洲区", level:"国家", country:"加拿大", port:"-", carrier:"Hapag-Lloyd", ocean:"UV / 14 天", rail:"UR / 14 天", status:"启用", user:"sun", time:"2026-05-27 13:12"}
+      ]
+    };
+
+    const defaultRules = {
+      pickup: { oceanNode:"UV", oceanFree:"0 天", railNode:"UR", railFree:"0 天" },
+      return: { oceanNode:"UV", oceanFree:"0 天", railNode:"UR", railFree:"0 天" }
+    };
+    const CARRIER_OPTIONS = ["通用", "COSCO", "MSC", "Hapag-Lloyd", "Maersk", "CMA CGM", "ONE", "Evergreen", "OOCL", "ZIM", "Matson"];
+
+    let currentTab = "pickup";
+    let currentPage = 1;
+    let pageSize = 10;
+    let editingRow = null;
+    let selectedCarriers = ["通用"];
+
+    function getTabLabel(tab = currentTab) {
+      return tab === "pickup" ? "未提箱" : "未还箱";
+    }
+
+    function formatRuleSummary(row) {
+      const parts = [row.region, row.level];
+      if (row.country && row.country !== "-") parts.push(row.country);
+      if (row.port && row.port !== "-") parts.push(row.port);
+      parts.push(row.carrier || "通用");
+      return parts.join(" / ");
+    }
+
+    function getRuleUniqueKey(row) {
+      return [
+        currentTab,
+        row.region || "-",
+        row.level || "-",
+        row.country || "-",
+        row.port || "-",
+        row.carrier || "通用"
+      ].join("||");
+    }
+
+    function findDuplicateRule(target, excludedRow = null) {
+      const targetKey = getRuleUniqueKey(target);
+      return data[currentTab].find(row => row !== excludedRow && getRuleUniqueKey(row) === targetKey) || null;
+    }
+
+    function refreshImportModalCopy() {
+      const tabLabel = getTabLabel();
+      document.getElementById("importModalTitle").textContent = `批量导入${tabLabel}规则`;
+      document.getElementById("downloadCurrentTemplateBtn").textContent = `模板下载`;
+      document.getElementById("importModalLead").textContent = `仅支持${tabLabel}标准模板导入；导入确认成功后立即生效。`;
+      document.getElementById("importTemplateHint").textContent = `仅支持 .xlsx、.xls 格式文件，文件大小不超过 5MB`;
+    }
+
+    function setImportStage(stage) {
+      const isResult = stage === "result";
+      document.getElementById("importUploadStage").classList.toggle("show", !isResult);
+      document.getElementById("importResultStage").classList.toggle("show", isResult);
+      document.getElementById("reuploadImportBtn").style.display = isResult ? "" : "none";
+      document.getElementById("startImportCheckBtn").style.display = isResult ? "none" : "";
+      document.getElementById("confirmImportBtn").style.display = isResult ? "" : "none";
+    }
+
+    function getSelectedCarriers() {
+      return [...selectedCarriers];
+    }
+
+    function setSelectedCarriers(values) {
+      selectedCarriers = values.length ? [...new Set(values)] : ["通用"];
+      syncCarrierMultiSelect();
+    }
+
+    function getPrimaryCarrierValue() {
+      const selected = getSelectedCarriers();
+      return selected[0] || "通用";
+    }
+
+    function syncCarrierMultiSelect() {
+      const optionsWrap = document.getElementById("carrierOptions");
+      if (optionsWrap && optionsWrap.childElementCount === 0) {
+        optionsWrap.innerHTML = CARRIER_OPTIONS.map(carrier => `
+          <label class="multi-option">
+            <input type="checkbox" class="carrier-option-check" value="${carrier}" />
+            <span>${carrier}</span>
+          </label>
+        `).join("");
+      }
+      document.querySelectorAll(".carrier-option-check").forEach(input => {
+        input.checked = selectedCarriers.includes(input.value);
+      });
+      const trigger = document.getElementById("carrierTrigger");
+      if (!trigger) return;
+      const chips = selectedCarriers.length === 0
+        ? `<span class="multi-placeholder">请选择船公司</span>`
+        : selectedCarriers.slice(0, 3).map(carrier => `<span class="multi-chip">${carrier}</span>`).join("") + (selectedCarriers.length > 3 ? `<span class="multi-chip more">+${selectedCarriers.length - 3}</span>` : "");
+      trigger.innerHTML = chips;
+    }
+
+    function toggleCarrierSelect(force) {
+      const wrap = document.getElementById("carrierSelect");
+      const trigger = document.getElementById("carrierTrigger");
+      const shouldOpen = typeof force === "boolean" ? force : !wrap.classList.contains("open");
+      wrap.classList.toggle("open", shouldOpen);
+      trigger.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+    }
+
+    function populatePortSelects() {
+      const filterPort = document.getElementById("filterPort");
+      const portSelect = document.getElementById("portSelect");
+      filterPort.innerHTML = `<option>全部</option>${bPortOptions.map(port => `<option>${port.name}</option>`).join("")}`;
+      portSelect.innerHTML = bPortOptions.map(port => `<option data-country="${port.country}">${port.name}</option>`).join("");
+    }
+
+    function formatFreeDays(value) {
+      return `${Number(value || 0)} 天`;
+    }
+
+    function getNodeValue(ruleText) {
+      return String(ruleText || "").split(" / ")[0] || "UV";
+    }
+
+    function getFreeValue(ruleText) {
+      const text = String(ruleText || "").split(" / ")[1] || "0 天";
+      return parseInt(text, 10) || 0;
+    }
+
+    function currentTimeText() {
+      const now = new Date();
+      const pad = value => String(value).padStart(2, "0");
+      return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    }
+
+    function getFilterValue(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function getFilteredRows() {
+      const keyword = getFilterValue("filterKeyword").toLowerCase();
+      const filters = {
+        region: getFilterValue("filterRegion"),
+        country: getFilterValue("filterCountry"),
+        port: getFilterValue("filterPort"),
+        carrier: getFilterValue("filterCarrier"),
+        status: getFilterValue("filterStatus")
+      };
+      return data[currentTab].filter(row => {
+        const exactMatched = Object.entries(filters).every(([key, value]) => value === "全部" || row[key] === value);
+        const keywordMatched = !keyword || [row.region, row.level, row.country, row.port, row.carrier, row.ocean, row.rail, row.status]
+          .some(value => String(value).toLowerCase().includes(keyword));
+        return exactMatched && keywordMatched;
+      });
+    }
+
+    function renderPagination(total, totalPages) {
+      const pageBtns = document.getElementById("pageBtns");
+      pageBtns.innerHTML = "";
+      const makeButton = (label, page, disabled = false) => {
+        const btn = document.createElement("button");
+        btn.className = "page-btn";
+        btn.type = "button";
+        btn.textContent = label;
+        btn.disabled = disabled;
+        btn.addEventListener("click", () => {
+          currentPage = page;
+          renderTable();
+        });
+        return btn;
+      };
+
+      pageBtns.appendChild(makeButton("上一页", Math.max(1, currentPage - 1), currentPage === 1));
+      pageBtns.appendChild(makeButton("下一页", Math.min(totalPages, currentPage + 1), currentPage === totalPages));
+      document.getElementById("pageSummary").textContent = total === 0
+        ? "显示 0-0 条，共 0 条"
+        : `显示 ${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, total)} 条，共 ${total} 条`;
+    }
+
+    function renderTable() {
+      const body = document.getElementById("ruleBody");
+      const rows = getFilteredRows();
+      const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const pagedRows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+      const defaultRule = defaultRules[currentTab];
+      document.getElementById("listTitle").textContent = currentTab === "pickup" ? "未提箱配置列表" : "未还箱配置列表";
+      refreshImportModalCopy();
+      renderPagination(rows.length, totalPages);
+      const defaultRow = `
+        <tr class="default-row">
+          <td></td>
+          <td>全局</td>
+          <td><span class="tag">默认兜底</span></td>
+          <td>-</td>
+          <td>-</td>
+          <td>通用</td>
+          <td><span class="rule-summary"><span class="node">${defaultRule.oceanNode}</span><span>${defaultRule.oceanFree}</span></span></td>
+          <td><span class="rule-summary"><span class="node">${defaultRule.railNode}</span><span>${defaultRule.railFree}</span></span></td>
+          <td class="status-col"><span class="badge green">始终生效</span></td>
+          <td class="meta-user-col">系统</td>
+          <td class="meta-time-col">-</td>
+          <td class="sticky-action"><button class="link-btn edit-default-action">编辑默认规则</button></td>
+        </tr>
+      `;
+      body.innerHTML = defaultRow + (pagedRows.length === 0 ? `
+        <tr>
+          <td colspan="12" style="height:72px; text-align:center; color:#64748b;">没有匹配的规则，请调整查询条件</td>
+        </tr>
+      ` : pagedRows.map((r, i) => `
+        <tr>
+          <td><input class="row-check" type="checkbox" data-index="${data[currentTab].indexOf(r)}" /></td>
+          <td>${r.region}</td>
+          <td><span class="tag">${r.level}</span></td>
+          <td>${r.country}</td>
+          <td>${r.port}</td>
+          <td>${r.carrier}</td>
+          <td><span class="rule-summary"><span class="node">${r.ocean.split(" / ")[0]}</span><span>${r.ocean.split(" / ")[1]}</span></span></td>
+          <td><span class="rule-summary"><span class="node">${r.rail.split(" / ")[0]}</span><span>${r.rail.split(" / ")[1] || ""}</span></span></td>
+          <td class="status-col">
+            <button
+              class="switch status-switch ${r.status === "启用" ? "on" : "off"}"
+              type="button"
+              data-index="${i}"
+              title="${r.status === "启用" ? "点击停用规则" : "点击启用规则"}"
+              aria-label="${r.status === "启用" ? "当前启用，点击停用规则" : "当前关闭，点击启用规则"}"
+            ></button>
+          </td>
+          <td class="meta-user-col">${r.user}</td>
+          <td class="meta-time-col">${r.time}</td>
+          <td class="sticky-action"><div class="row-actions">
+            <button class="link-btn edit-action" data-index="${i}">编辑</button>
+            <button class="link-btn copy-action" data-index="${i}">复制</button>
+            <button class="link-btn danger delete-action" data-index="${i}" ${r.locked ? "disabled" : ""}>删除</button>
+          </div></td>
+        </tr>
+      `).join(""));
+      document.querySelectorAll(".row-check").forEach(cb => cb.addEventListener("change", updateBatchBar));
+      document.querySelectorAll(".edit-default-action").forEach(btn => btn.addEventListener("click", openDefaultModal));
+      document.querySelectorAll(".status-switch").forEach(btn => btn.addEventListener("click", () => {
+        const row = pagedRows[Number(btn.dataset.index)];
+        row.status = row.status === "启用" ? "关闭" : "启用";
+        renderTable();
+      }));
+      document.querySelectorAll(".edit-action").forEach(btn => btn.addEventListener("click", () => openRuleModal("编辑规则", pagedRows[Number(btn.dataset.index)])));
+      document.querySelectorAll(".copy-action").forEach(btn => btn.addEventListener("click", () => openRuleModal("复制规则", { ...pagedRows[Number(btn.dataset.index)], copy: true })));
+      document.querySelectorAll(".delete-action").forEach(btn => btn.addEventListener("click", () => {
+        const row = pagedRows[Number(btn.dataset.index)];
+        if (!confirm(`确认删除 ${row.region} / ${row.level} / ${row.carrier} 这条规则？`)) return;
+        const rowIndex = data[currentTab].indexOf(row);
+        if (rowIndex >= 0) data[currentTab].splice(rowIndex, 1);
+        renderTable();
+      }));
+      document.getElementById("checkAll").checked = false;
+      updateBatchBar();
+    }
+
+    function updateBatchBar() {
+      const checked = document.querySelectorAll(".row-check:checked").length;
+      document.getElementById("selectedCount").textContent = checked;
+      document.getElementById("batchBar").classList.toggle("show", checked > 0);
+    }
+    function openModal(id) { document.getElementById(id).classList.add("show"); }
+    function closeModal(id) { document.getElementById(id).classList.remove("show"); }
+    function openDefaultModal() {
+      const rule = defaultRules[currentTab];
+      document.getElementById("defaultOceanNodeInput").value = rule.oceanNode;
+      document.getElementById("defaultOceanFreeInput").value = getFreeValue(rule.oceanFree);
+      document.getElementById("defaultRailNodeInput").value = rule.railNode;
+      document.getElementById("defaultRailFreeInput").value = getFreeValue(rule.railFree);
+      openModal("defaultModal");
+    }
+    function openRuleModal(title, row = null) {
+      editingRow = row && !row.copy ? row : null;
+      document.getElementById("ruleModalTitle").textContent = title;
+      document.getElementById("scopeSection").style.display = "";
+      const source = row || { region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"通用", ocean:"VA / 4 天", rail:"UR / 2 天" };
+      const levelValue = source.level === "大区" ? "region" : source.level === "国家" ? "country" : "port";
+      document.getElementById("levelSelect").value = levelValue;
+      document.getElementById("regionSelect").value = source.region || "北美区";
+      document.getElementById("countrySelect").value = source.country === "-" ? "美国" : source.country;
+      document.getElementById("portSelect").value = source.port === "-" ? "Long Beach" : source.port;
+      setSelectedCarriers([source.carrier || "通用"]);
+      document.getElementById("oceanNodeSelect").value = getNodeValue(source.ocean);
+      document.getElementById("oceanFreeInput").value = getFreeValue(source.ocean);
+      document.getElementById("railNodeSelect").value = getNodeValue(source.rail);
+      document.getElementById("railFreeInput").value = getFreeValue(source.rail);
+      syncLevelFields();
+      syncPortCountry();
+      renderScopeGuide();
+      openModal("ruleModal");
+    }
+    function showHistoryTab(show) {
+      document.getElementById("historyView").classList.toggle("show", show);
+      document.getElementById("configPanels").classList.toggle("hide", show);
+      document.getElementById("configActions").style.display = show ? "none" : "flex";
+      document.getElementById("pageGuideBtn").style.display = show ? "none" : "";
+      if (show) togglePageGuide(false);
+      document.getElementById("crumbCurrent").textContent = show ? "变更历史" : "预警配置管理";
+    }
+    function syncLevelFields() {
+      const level = document.getElementById("levelSelect").value;
+      document.getElementById("countryField").style.display = level === "region" ? "none" : "flex";
+      document.getElementById("portField").style.display = level === "port" ? "flex" : "none";
+      document.getElementById("countrySelect").disabled = level === "port";
+      renderScopeGuide();
+    }
+    function syncPortCountry() {
+      if (document.getElementById("levelSelect").value === "port") {
+        const port = document.getElementById("portSelect");
+        const country = port.options[port.selectedIndex].dataset.country;
+        document.getElementById("countrySelect").value = country;
+      }
+      renderScopeGuide();
+    }
+    function togglePageGuide(force) {
+      const drawer = document.getElementById("pageGuideDrawer");
+      const mask = document.getElementById("pageGuideMask");
+      const shouldOpen = typeof force === "boolean" ? force : !drawer.classList.contains("open");
+      drawer.classList.toggle("open", shouldOpen);
+      mask.classList.toggle("show", shouldOpen);
+      drawer.setAttribute("aria-hidden", shouldOpen ? "false" : "true");
+      document.getElementById("pageGuideBtn").textContent = shouldOpen ? "收起配置说明" : "如何配置";
+    }
+    function renderPageGuide() {
+      const isPickup = currentTab === "pickup";
+      document.getElementById("pageGuideTitle").textContent = isPickup ? "未提箱配置帮助" : "未还箱配置帮助";
+      document.getElementById("pageGuideSubtitle").textContent = isPickup
+        ? "先判断你负责的是大区、国家还是港口，再配置对应层级的未提箱规则。"
+        : "先判断你负责的是大区、国家还是港口，再配置对应层级的未还箱规则。";
+      const examples = isPickup
+        ? [
+            ["大区负责人", "如果你负责北美区整体口径，先配“北美区 + 通用”；若只有 COSCO 特殊，再补“北美区 + COSCO”。"],
+            ["国家负责人", "如果你负责美国口径，就配“北美区 + 美国 + 通用”；如果美国只有 COSCO 特殊，再补“北美区 + 美国 + COSCO”。"],
+            ["港口负责人", "如果你负责 Long Beach，就配“北美区 + 美国 + Long Beach + 通用”；如果 Long Beach 只有 COSCO 特殊，再补“Long Beach + COSCO”。"],
+            ["共通理解", "你负责哪一层，就先配哪一层；只有更细范围不同，才继续往下补规则。"]
+          ]
+        : [
+            ["大区负责人", "如果你负责北美区整体未还口径，先配“北美区 + 通用”；若只有 COSCO 免箱使特殊，再补“北美区 + COSCO”。"],
+            ["国家负责人", "如果你负责美国未还口径，就配“北美区 + 美国 + 通用”；如果美国只有 COSCO 特殊，再补“北美区 + 美国 + COSCO”。"],
+            ["港口负责人", "如果你负责 Long Beach 未还口径，就配“北美区 + 美国 + Long Beach + 通用”；如果港口下只有 COSCO 特殊，再补“Long Beach + COSCO”。"],
+            ["共通理解", "你负责哪一层，就先配哪一层；只有更细范围不同，才继续往下补规则。"]
+          ];
+      document.getElementById("pageGuideExamples").innerHTML = examples
+        .map(([label, text]) => `<tr><th>${label}</th><td>${text}</td></tr>`)
+        .join("");
+    }
+    function renderScopeGuide() {
+      const level = document.getElementById("levelSelect").value;
+      const region = document.getElementById("regionSelect").value;
+      const country = document.getElementById("countrySelect").value;
+      const port = document.getElementById("portSelect").value;
+      const carrier = getPrimaryCarrierValue();
+      const carrierText = carrier === "通用" ? "通用规则，覆盖当前层级下未单独配置的船司。" : `${carrier} 为指定船司特例，优先于当前层级通用规则。`;
+      const configMap = {
+        region: {
+          levelHint: "大区规则用于该业务大区下的基础口径，特殊规则默认必须先选大区。",
+          countryHint: "大区级无需选择国家；只有该大区下某个国家整体特殊时再补国家规则。",
+          portHint: "大区级无需选择港口；只有单个港口特殊时再下钻到港口规则。"
+        },
+        country: {
+          levelHint: "国家规则用于该大区下某个国家整体口径特殊的场景，仍然必须保留大区。",
+          countryHint: `${country} 为当前国家级适用范围；若只有某个港口不同，再继续下钻到港口规则。`,
+          portHint: "国家级不需要选择港口；港口字段仅在港口级展示。"
+        },
+        port: {
+          levelHint: "港口规则用于单个港口口径特殊的场景，仍然必须先选大区。",
+          countryHint: `${port} 归属 ${country}，国家由港口自动带出并置灰，不允许手工修改。`,
+          portHint: `当前港口为 ${port}；若该港口下只有某个船司特殊，再在港口层级补指定船司规则。`
+        }
+      };
+      const config = configMap[level];
+      document.getElementById("levelHint").textContent = config.levelHint;
+      document.getElementById("regionHint").textContent = `大区取自落货纸业务归属。当前规则将在 ${region} 范围内参与匹配，不是地理上级关系。`;
+      document.getElementById("countryHint").textContent = config.countryHint;
+      document.getElementById("portHint").textContent = config.portHint;
+      document.getElementById("carrierHint").textContent = carrier === "通用"
+        ? "通用规则表示当前层级下未单独配置船司时默认走这条规则。"
+        : `${carrier} 为当前层级指定船司特例，命中时优先于当前层级通用规则。`;
+    }
+    document.querySelectorAll(".tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        btn.classList.add("active");
+        if (btn.dataset.tab === "history") {
+          showHistoryTab(true);
+          return;
+        }
+        showHistoryTab(false);
+        currentTab = btn.dataset.tab;
+        currentPage = 1;
+        renderPageGuide();
+        renderTable();
+      });
+    });
+    document.getElementById("addBtn").addEventListener("click", () => openRuleModal("新建"));
+    document.getElementById("exportBtn").addEventListener("click", () => alert("导出当前筛选结果"));
+    document.getElementById("batchDeleteBtn").addEventListener("click", () => {
+      const checkedIndexes = [...document.querySelectorAll(".row-check:checked")].map(cb => Number(cb.dataset.index)).sort((a, b) => b - a);
+      if (checkedIndexes.length === 0) {
+        alert("请先选择需要删除的规则");
+        return;
+      }
+      const selectedRows = checkedIndexes
+        .slice()
+        .reverse()
+        .map(index => data[currentTab][index])
+        .filter(Boolean);
+      const previewText = selectedRows.slice(0, 3).map(row => `- ${formatRuleSummary(row)}`).join("\n");
+      const moreText = selectedRows.length > 3 ? `\n- 其余 ${selectedRows.length - 3} 条规则` : "";
+      if (!confirm(`确认批量删除已选 ${selectedRows.length} 条规则吗？\n${previewText}${moreText}`)) return;
+      checkedIndexes.forEach(index => data[currentTab].splice(index, 1));
+      currentPage = 1;
+      renderTable();
+    });
+    document.getElementById("importBtn").addEventListener("click", () => {
+      refreshImportModalCopy();
+      setImportStage("upload");
+      openModal("importModal");
+    });
+    document.getElementById("batchBtn").addEventListener("click", () => {
+      if (!document.querySelector(".row-check:checked")) {
+        alert("请先选择需要批量修改的规则");
+        return;
+      }
+      openModal("batchModal");
+    });
+    document.getElementById("navConfig").addEventListener("click", e => {
+      e.preventDefault();
+      document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === currentTab));
+      showHistoryTab(false);
+    });
+    document.getElementById("checkAll").addEventListener("change", e => {
+      document.querySelectorAll(".row-check").forEach(cb => cb.checked = e.target.checked);
+      updateBatchBar();
+    });
+    document.getElementById("queryBtn").addEventListener("click", () => {
+      currentPage = 1;
+      renderTable();
+    });
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      ["filterRegion", "filterCountry", "filterPort", "filterCarrier", "filterStatus"].forEach(id => {
+        document.getElementById(id).value = "全部";
+      });
+      document.getElementById("filterKeyword").value = "";
+      currentPage = 1;
+      renderTable();
+    });
+    document.getElementById("filterKeyword").addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        currentPage = 1;
+        renderTable();
+      }
+    });
+    document.getElementById("pageSizeSelect").addEventListener("change", e => {
+      pageSize = Number(e.target.value);
+      currentPage = 1;
+      renderTable();
+    });
+    document.getElementById("carrierTrigger").addEventListener("click", () => toggleCarrierSelect());
+    document.getElementById("carrierOptions").addEventListener("change", e => {
+      if (!(e.target instanceof HTMLInputElement) || !e.target.classList.contains("carrier-option-check")) return;
+      const value = e.target.value;
+      if (value === "通用" && e.target.checked) {
+        selectedCarriers = ["通用"];
+      } else if (value !== "通用" && e.target.checked) {
+        selectedCarriers = selectedCarriers.filter(carrier => carrier !== "通用");
+        selectedCarriers.push(value);
+      } else {
+        selectedCarriers = selectedCarriers.filter(carrier => carrier !== value);
+        if (selectedCarriers.length === 0) {
+          selectedCarriers = ["通用"];
+        }
+      }
+      syncCarrierMultiSelect();
+      renderScopeGuide();
+    });
+    document.getElementById("saveRuleBtn").addEventListener("click", () => {
+      const level = document.getElementById("levelSelect").value;
+      const baseTarget = editingRow || { status:"启用", user:"admin" };
+      baseTarget.region = document.getElementById("regionSelect").value;
+      baseTarget.level = level === "region" ? "大区" : level === "country" ? "国家" : "港口";
+      baseTarget.country = level === "region" ? "-" : document.getElementById("countrySelect").value;
+      baseTarget.port = level === "port" ? document.getElementById("portSelect").value : "-";
+      baseTarget.ocean = `${document.getElementById("oceanNodeSelect").value} / ${formatFreeDays(document.getElementById("oceanFreeInput").value)}`;
+      baseTarget.rail = `${document.getElementById("railNodeSelect").value} / ${formatFreeDays(document.getElementById("railFreeInput").value)}`;
+      const selectedCarriers = getSelectedCarriers();
+      if (selectedCarriers.length === 0) {
+        alert("请至少选择一个船公司");
+        return;
+      }
+      if (selectedCarriers.includes("通用") && selectedCarriers.length > 1) {
+        alert("“通用”不能与指定船公司同时选择");
+        return;
+      }
+      const targetRows = selectedCarriers.map(carrier => ({ ...baseTarget, carrier }));
+      const duplicateSummaries = [];
+      targetRows.forEach(target => {
+        const duplicatedRule = findDuplicateRule(target, editingRow);
+        if (duplicatedRule) {
+          duplicateSummaries.push(formatRuleSummary(duplicatedRule));
+        }
+      });
+      if (duplicateSummaries.length > 0) {
+        alert(`以下船公司规则已存在，不能重复保存：\n- ${[...new Set(duplicateSummaries)].join("\n- ")}`);
+        return;
+      }
+      const now = currentTimeText();
+      if (editingRow) {
+        const [firstTarget, ...extraTargets] = targetRows;
+        editingRow.region = firstTarget.region;
+        editingRow.level = firstTarget.level;
+        editingRow.country = firstTarget.country;
+        editingRow.port = firstTarget.port;
+        editingRow.carrier = firstTarget.carrier;
+        editingRow.ocean = firstTarget.ocean;
+        editingRow.rail = firstTarget.rail;
+        editingRow.user = "admin";
+        editingRow.time = now;
+        extraTargets.slice().reverse().forEach(target => {
+          data[currentTab].unshift({ ...target, status: editingRow.status || "启用", user: "admin", time: now });
+        });
+      } else {
+        targetRows.slice().reverse().forEach(target => {
+          data[currentTab].unshift({ ...target, status: target.status || "启用", user: "admin", time: now });
+        });
+      }
+      closeModal("ruleModal");
+      currentPage = 1;
+      renderTable();
+    });
+    document.getElementById("confirmBatchBtn").addEventListener("click", () => {
+      const checkedIndexes = [...document.querySelectorAll(".row-check:checked")].map(cb => Number(cb.dataset.index));
+      if (checkedIndexes.length === 0) {
+        alert("请先选择需要批量修改的规则");
+        return;
+      }
+      const oceanFree = formatFreeDays(document.getElementById("batchOceanFreeInput").value);
+      const railFree = formatFreeDays(document.getElementById("batchRailFreeInput").value);
+      checkedIndexes.forEach(index => {
+        const row = data[currentTab][index];
+        if (!row) return;
+        row.ocean = `${getNodeValue(row.ocean)} / ${oceanFree}`;
+        row.rail = `${getNodeValue(row.rail)} / ${railFree}`;
+        row.user = "admin";
+        row.time = currentTimeText();
+      });
+      closeModal("batchModal");
+      currentPage = 1;
+      renderTable();
+    });
+    document.getElementById("startImportCheckBtn").addEventListener("click", () => {
+      setImportStage("result");
+    });
+    document.getElementById("confirmImportBtn").addEventListener("click", () => {
+      alert(`${getTabLabel()}规则导入确认后立即生效，不追溯历史。`);
+      closeModal("importModal");
+      setImportStage("upload");
+    });
+    document.getElementById("reuploadImportBtn").addEventListener("click", () => {
+      setImportStage("upload");
+    });
+    document.getElementById("saveDefaultBtn").addEventListener("click", () => {
+      defaultRules[currentTab] = {
+        oceanNode: document.getElementById("defaultOceanNodeInput").value,
+        oceanFree: `${Number(document.getElementById("defaultOceanFreeInput").value || 0)} 天`,
+        railNode: document.getElementById("defaultRailNodeInput").value,
+        railFree: `${Number(document.getElementById("defaultRailFreeInput").value || 0)} 天`
+      };
+      closeModal("defaultModal");
+      renderTable();
+    });
+    document.querySelectorAll("[data-close]").forEach(btn => btn.addEventListener("click", () => closeModal(btn.dataset.close)));
+    document.querySelectorAll(".modal-mask").forEach(mask => {
+      mask.addEventListener("click", e => { if (e.target === mask) mask.classList.remove("show"); });
+    });
+    document.querySelectorAll(".switch").forEach(sw => sw.addEventListener("click", () => sw.classList.toggle("on")));
+    document.getElementById("levelSelect").addEventListener("change", () => {
+      syncLevelFields();
+      syncPortCountry();
+    });
+    document.getElementById("portSelect").addEventListener("change", syncPortCountry);
+    document.getElementById("regionSelect").addEventListener("change", renderScopeGuide);
+    document.getElementById("countrySelect").addEventListener("change", renderScopeGuide);
+    document.addEventListener("click", e => {
+      const carrierWrap = document.getElementById("carrierSelect");
+      if (carrierWrap && !carrierWrap.contains(e.target)) {
+        toggleCarrierSelect(false);
+      }
+    });
+    document.getElementById("pageGuideBtn").addEventListener("click", () => togglePageGuide());
+    document.getElementById("pageGuideCloseBtn").addEventListener("click", () => togglePageGuide(false));
+    document.getElementById("pageGuideMask").addEventListener("click", () => togglePageGuide(false));
+    populatePortSelects();
+    syncCarrierMultiSelect();
+    syncPortCountry();
+    syncLevelFields();
+    renderPageGuide();
+    renderTable();
+  </script>
+</body>
+</html>
