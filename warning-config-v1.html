@@ -159,6 +159,15 @@
       margin-bottom: 14px;
       overflow: hidden;
     }
+    .query-shell {
+      overflow: visible;
+      position: relative;
+      z-index: 8;
+    }
+    .list-shell, .history-shell {
+      position: relative;
+      z-index: 1;
+    }
     .panel-head {
       min-height: 48px;
       padding: 12px 16px;
@@ -180,7 +189,7 @@
     .panel-body { padding: 14px 16px; }
     .filters {
       display: grid;
-      grid-template-columns: repeat(6, minmax(120px, 1fr)) auto auto;
+      grid-template-columns: repeat(5, minmax(120px, 1fr)) auto auto;
       gap: 12px;
       align-items: end;
     }
@@ -272,14 +281,55 @@
       padding: 8px;
       min-width: 100%;
     }
+    .multi-panel.port-panel {
+      padding: 0;
+      overflow: hidden;
+    }
     .multi-select.open .multi-panel {
       display: block;
+    }
+    .multi-search {
+      padding: 10px;
+      border-bottom: 1px solid #eef2f7;
+      background: #fff;
+    }
+    .multi-search input {
+      width: 100%;
+      height: 34px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 0 10px;
+      outline: none;
+    }
+    .multi-search input:focus {
+      border-color: #0d9488;
+      box-shadow: 0 0 0 3px rgba(13,148,136,.12);
     }
     .multi-options {
       max-height: 220px;
       overflow: auto;
       display: grid;
       gap: 4px;
+    }
+    .multi-group {
+      display: grid;
+      gap: 4px;
+      padding: 8px;
+    }
+    .multi-group + .multi-group {
+      border-top: 1px solid #f1f5f9;
+    }
+    .multi-group-title {
+      padding: 2px 10px 4px;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .multi-empty {
+      padding: 18px 12px;
+      color: #94a3b8;
+      text-align: center;
+      font-size: 12px;
     }
     .multi-option {
       display: flex;
@@ -491,7 +541,7 @@
       width: min(900px, calc(100vw - 48px));
       max-height: calc(100vh - 64px);
       background: #fff;
-      border-radius: 8px;
+      border-radius: 14px;
       border: 1px solid #e5e7eb;
       box-shadow: 0 20px 50px rgba(15, 23, 42, .24);
       display: flex;
@@ -499,6 +549,7 @@
       overflow: hidden;
     }
     .modal.small { width: 540px; }
+    .modal.medium { width: min(680px, calc(100vw - 48px)); }
     .modal.wide { width: min(1040px, calc(100vw - 48px)); }
     .modal-head {
       min-height: 54px;
@@ -509,7 +560,7 @@
       align-items: center;
       justify-content: space-between;
     }
-    .modal-head h2 { margin: 0; font-size: 16px; color: #111827; }
+    .modal-head h2 { margin: 0; font-size: 17px; font-weight: 800; color: #111827; }
     .close {
       width: 30px;
       height: 30px;
@@ -534,6 +585,81 @@
       align-items: center;
       justify-content: flex-end;
       gap: 10px;
+    }
+    .modal-copy {
+      color: #64748b;
+      line-height: 1.75;
+      font-size: 13px;
+    }
+    .modal-note {
+      padding: 12px 14px;
+      border: 1px solid #dbe7f3;
+      border-radius: 10px;
+      background: #f8fbff;
+      color: #475569;
+      line-height: 1.75;
+    }
+    .warning-note {
+      padding: 10px 12px;
+      border: 1px solid #fde68a;
+      border-radius: 10px;
+      background: #fffbeb;
+      color: #b45309;
+      line-height: 1.7;
+      font-weight: 700;
+      display: none;
+    }
+    .warning-note.show {
+      display: block;
+    }
+    .batch-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .batch-field-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #fff;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+    .batch-field-card strong {
+      color: #0f172a;
+      font-size: 14px;
+    }
+    .field-subtitle {
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .control-unit {
+      position: relative;
+    }
+    .control-unit .control {
+      padding-right: 42px;
+    }
+    .unit-suffix {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+      font-weight: 700;
+      pointer-events: none;
+    }
+    .feedback-body {
+      display: grid;
+      gap: 12px;
+    }
+    .feedback-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #475569;
+      line-height: 1.7;
+    }
+    .feedback-list li + li {
+      margin-top: 4px;
     }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
     .form-section {
@@ -917,7 +1043,10 @@
                     <button class="multi-trigger" id="filterPortTrigger" type="button" aria-expanded="false">
                       <span class="multi-placeholder">全部</span>
                     </button>
-                    <div class="multi-panel">
+                    <div class="multi-panel port-panel">
+                      <div class="multi-search">
+                        <input id="filterPortSearch" type="text" placeholder="搜索港口或国家" />
+                      </div>
                       <div class="multi-options" id="filterPortOptions"></div>
                     </div>
                   </div>
@@ -1004,7 +1133,7 @@
               <div class="filters" style="grid-template-columns: repeat(4, minmax(140px, 1fr)) auto auto;">
                 <div class="field"><label>开始日期</label><input class="control" value="2026-05-01" /></div>
                 <div class="field"><label>结束日期</label><input class="control" value="2026-05-29" /></div>
-                <div class="field"><label>操作类型</label><select class="control"><option>全部</option><option>编辑</option><option>导入</option></select></div>
+                <div class="field"><label>操作类型</label><select class="control"><option>全部</option><option>新增</option><option>编辑</option><option>删除</option><option>启停</option><option>批量导入</option><option>批量修改免费期</option><option>批量删除</option></select></div>
                 <div class="field"><label>规则类型</label><select class="control"><option>全部</option><option>未提箱</option><option>未还箱</option></select></div>
                 <button class="btn primary">查询</button><button class="btn">重置</button>
               </div>
@@ -1053,6 +1182,7 @@
                 <label>免费期（天）</label>
                 <input class="control" id="defaultOceanFreeInput" type="number" min="0" max="365" value="0" />
               </div>
+              <div class="warning-note" id="defaultOceanFreeWarning">当前免费期明显高于常规值，请确认是否为特殊合同口径。</div>
               <div class="hint">海运订舱未命中国家、港口、船司特殊规则时，使用这套默认口径。</div>
             </div>
           </section>
@@ -1071,6 +1201,7 @@
                 <label>免费期（天）</label>
                 <input class="control" id="defaultRailFreeInput" type="number" min="0" max="365" value="0" />
               </div>
+              <div class="warning-note" id="defaultRailFreeWarning">当前免费期明显高于常规值，请确认是否为特殊合同口径。</div>
               <div class="hint">海铁订舱未命中特殊规则时，使用这套默认口径。</div>
             </div>
           </section>
@@ -1107,6 +1238,7 @@
                   <label>免费期（天）</label>
                   <input class="control" id="oceanFreeInput" type="number" min="0" max="365" value="4" />
                 </div>
+                <div class="warning-note" id="oceanFreeWarning">当前免费期明显高于常规值，请确认是否为特殊合同口径。</div>
                 <div class="hint">订舱运输方式为海运时，命中该业务范围则使用这套参数。</div>
               </div>
             </section>
@@ -1125,6 +1257,7 @@
                   <label>免费期（天）</label>
                   <input class="control" id="railFreeInput" type="number" min="0" max="365" value="2" />
                 </div>
+                <div class="warning-note" id="railFreeWarning">当前免费期明显高于常规值，请确认是否为特殊合同口径。</div>
                 <div class="hint">订舱运输方式为海铁时，命中该业务范围则使用这套参数。</div>
               </div>
             </section>
@@ -1180,21 +1313,33 @@
   </div>
 
   <div class="modal-mask" id="batchModal">
-    <div class="modal small">
+    <div class="modal medium">
       <div class="modal-head">
         <h2>批量修改免费期</h2>
         <button class="close" data-close="batchModal">×</button>
       </div>
       <div class="modal-body">
-        <p class="hint">批量修改仅调整所选规则的海运免费期和海铁免费期；不影响适用范围和起算节点。</p>
-        <div class="field">
-          <label>新的海运免费期（天）</label>
-          <input class="control" id="batchOceanFreeInput" type="number" min="0" max="365" value="14" />
+        <div class="batch-form-grid">
+          <div class="batch-field-card">
+            <strong>新的海运免费期</strong>
+            <div class="field-subtitle">适用于命中海运场景的已选规则。</div>
+            <div class="control-unit">
+              <input class="control" id="batchOceanFreeInput" type="number" min="0" max="365" value="14" />
+              <span class="unit-suffix">天</span>
+            </div>
+            <div class="warning-note" id="batchOceanFreeWarning">当前免费期明显高于常规值，请确认是否为特殊合同口径。</div>
+          </div>
+          <div class="batch-field-card">
+            <strong>新的海铁免费期</strong>
+            <div class="field-subtitle">适用于命中海铁场景的已选规则。</div>
+            <div class="control-unit">
+              <input class="control" id="batchRailFreeInput" type="number" min="0" max="365" value="14" />
+              <span class="unit-suffix">天</span>
+            </div>
+            <div class="warning-note" id="batchRailFreeWarning">当前免费期明显高于常规值，请确认是否为特殊合同口径。</div>
+          </div>
         </div>
-        <div class="field">
-          <label>新的海铁免费期（天）</label>
-          <input class="control" id="batchRailFreeInput" type="number" min="0" max="365" value="14" />
-        </div>
+        <div class="modal-note" style="margin-top:16px;">两个字段都必须填写，且仅允许输入 0~365 的整数；当免费期大于 60 天时给出提醒，但不拦截保存；点击“确认修改”后才正式生效。</div>
       </div>
       <div class="modal-foot">
         <button class="btn" data-close="batchModal">取消</button>
@@ -1222,10 +1367,10 @@
               <div class="import-simple-label">文件上传</div>
               <div class="import-simple-content">
                 <button class="btn primary" id="uploadImportBtn" type="button">点击上传</button>
-                <span class="upload-file-name" id="importFileName">请选择上传的文件（xlsx,xls）</span>
+                <span class="upload-file-name" id="importFileName">请选择上传的文件（xlsx）</span>
               </div>
             </div>
-            <div class="import-error-tip" id="importTemplateHint">仅支持 .xlsx、.xls 格式文件，文件大小不超过 5MB</div>
+            <div class="import-error-tip" id="importTemplateHint">仅支持 .xlsx 格式文件，文件大小不超过 5MB，单次不超过 200 行</div>
           </div>
         </div>
         <div class="import-stage" id="importResultStage">
@@ -1295,7 +1440,7 @@
             <tbody>
               <tr><th>大区</th><td>取自落货纸销售/业务归属，特殊规则默认必填。</td></tr>
               <tr><th>国家</th><td>来自国家主数据，用于国家级整体口径差异。</td></tr>
-              <tr><th>港口</th><td>来自 `b_port`，选择港口后自动带出国家，国家置灰不可改。</td></tr>
+              <tr><th>港口</th><td>来自港口主数据，选择港口后自动带出国家，国家置灰不可改。</td></tr>
               <tr><th>船公司</th><td>“通用”表示当前层级下未单独拆船司时默认走这条。</td></tr>
             </tbody>
           </table>
@@ -1333,6 +1478,25 @@
       </section>
     </div>
   </aside>
+
+  <div class="modal-mask" id="feedbackModal">
+    <div class="modal small">
+      <div class="modal-head">
+        <h2 id="feedbackTitle">提示</h2>
+        <button class="close" id="feedbackCloseBtn" type="button">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="feedback-body">
+          <div class="modal-copy" id="feedbackMessage"></div>
+          <ul class="feedback-list" id="feedbackList" style="display:none;"></ul>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" id="feedbackCancelBtn" type="button" style="display:none;">取消</button>
+        <button class="btn primary" id="feedbackConfirmBtn" type="button">确定</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const bPortOptions = [
@@ -1373,7 +1537,7 @@
         {region:"北美区", level:"港口", country:"加拿大", port:"Vancouver", carrier:"通用", ocean:"目的港到港 / 6 天", rail:"铁运卸货 / 4 天", status:"启用", user:"admin", time:"2026-05-27 16:15"},
         {region:"北美区", level:"港口", country:"加拿大", port:"Prince Rupert", carrier:"COSCO", ocean:"目的港到港 / 6 天", rail:"铁运卸货 / 4 天", status:"启用", user:"zhang", time:"2026-05-27 15:32"},
         {region:"北美区", level:"港口", country:"墨西哥", port:"Lazaro", carrier:"通用", ocean:"目的港到港 / 14 天", rail:"铁运卸货 / 7 天", status:"启用", user:"admin", time:"2026-05-28 14:20"},
-        {region:"欧洲区", level:"国家", country:"加拿大", port:"-", carrier:"通用", ocean:"目的港到港 / 3 天", rail:"铁运卸货 / 2 天", status:"关闭", user:"admin", time:"2026-05-27 11:36"}
+        {region:"北美区", level:"国家", country:"加拿大", port:"-", carrier:"通用", ocean:"目的港到港 / 3 天", rail:"铁运卸货 / 2 天", status:"关闭", user:"admin", time:"2026-05-27 11:36"}
       ],
       return: [
         {region:"北美区", level:"大区", country:"-", port:"-", carrier:"通用", ocean:"目的港卸船 / 14 天", rail:"铁运卸货 / 14 天", status:"启用", user:"zhang", time:"2026-05-29 10:10"},
@@ -1394,7 +1558,8 @@
         {region:"北美区", level:"港口", country:"加拿大", port:"Vancouver", carrier:"通用", ocean:"目的港卸船 / 20 天", rail:"铁运卸货 / 20 天", status:"启用", user:"sun", time:"2026-05-27 16:48"},
         {region:"北美区", level:"港口", country:"加拿大", port:"Prince Rupert", carrier:"COSCO", ocean:"目的港卸船 / 20 天", rail:"铁运卸货 / 20 天", status:"启用", user:"zhang", time:"2026-05-27 16:06"},
         {region:"北美区", level:"港口", country:"墨西哥", port:"Lazaro", carrier:"COSCO", ocean:"目的港到港 / 28 天", rail:"铁运卸货 / 28 天", status:"启用", user:"admin", time:"2026-05-28 15:48"},
-        {region:"欧洲区", level:"国家", country:"加拿大", port:"-", carrier:"Hapag-Lloyd", ocean:"目的港卸船 / 14 天", rail:"铁运卸货 / 14 天", status:"启用", user:"sun", time:"2026-05-27 13:12"}
+        {region:"北美区", level:"港口", country:"美国", port:"Oakland", carrier:"COSCO", ocean:"提重 / 12 天", rail:"铁运卸货 / 12 天", status:"启用", user:"sun", time:"2026-05-27 14:05"},
+        {region:"北美区", level:"国家", country:"加拿大", port:"-", carrier:"Hapag-Lloyd", ocean:"目的港卸船 / 14 天", rail:"铁运卸货 / 14 天", status:"启用", user:"sun", time:"2026-05-27 13:12"}
       ]
     };
 
@@ -1452,6 +1617,8 @@
     let pageSize = 10;
     let editingRow = null;
     let selectedCarriers = ["通用"];
+    let filterPortKeyword = "";
+    let feedbackResolver = null;
     let filterSelections = {
       region: [],
       country: [],
@@ -1492,7 +1659,7 @@
       document.getElementById("importModalTitle").textContent = `批量导入${tabLabel}规则`;
       document.getElementById("downloadCurrentTemplateBtn").textContent = `模板下载`;
       document.getElementById("importModalLead").textContent = `仅支持${tabLabel}标准模板导入；导入确认成功后立即生效。`;
-      document.getElementById("importTemplateHint").textContent = `仅支持 .xlsx、.xls 格式文件，文件大小不超过 5MB`;
+      document.getElementById("importTemplateHint").textContent = `仅支持 .xlsx 格式文件，文件大小不超过 5MB，单次不超过 200 行`;
     }
 
     function setImportStage(stage) {
@@ -1501,7 +1668,9 @@
       document.getElementById("importResultStage").classList.toggle("show", isResult);
       document.getElementById("reuploadImportBtn").style.display = isResult ? "" : "none";
       document.getElementById("startImportCheckBtn").style.display = isResult ? "none" : "";
-      document.getElementById("confirmImportBtn").style.display = isResult ? "" : "none";
+      const confirmBtn = document.getElementById("confirmImportBtn");
+      confirmBtn.style.display = isResult ? "" : "none";
+      confirmBtn.disabled = !isResult;
     }
 
     function getSelectedCarriers() {
@@ -1556,6 +1725,15 @@
       syncFilterMultiSelect(key);
     }
 
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
     function toggleFilterMultiSelect(key, force) {
       const config = FILTER_MULTI_CONFIG[key];
       const wrap = document.getElementById(config.wrapId);
@@ -1568,7 +1746,9 @@
     function syncFilterMultiSelect(key) {
       const config = FILTER_MULTI_CONFIG[key];
       const optionsWrap = document.getElementById(config.optionsId);
-      if (optionsWrap && optionsWrap.childElementCount === 0) {
+      if (key === "port") {
+        renderPortFilterOptions();
+      } else if (optionsWrap && optionsWrap.childElementCount === 0) {
         optionsWrap.innerHTML = config.values.map(value => `
           <label class="multi-option">
             <input type="checkbox" class="filter-option-check" data-filter="${key}" value="${value}" />
@@ -1587,15 +1767,61 @@
       trigger.innerHTML = chips;
     }
 
+    function renderPortFilterOptions() {
+      const optionsWrap = document.getElementById("filterPortOptions");
+      if (!optionsWrap) return;
+      const keyword = filterPortKeyword.trim().toLowerCase();
+      const matched = bPortOptions.filter(port => {
+        return keyword === ""
+          || port.name.toLowerCase().includes(keyword)
+          || port.country.toLowerCase().includes(keyword);
+      });
+      if (matched.length === 0) {
+        optionsWrap.innerHTML = `<div class="multi-empty">没有匹配的港口</div>`;
+        return;
+      }
+      const grouped = matched.reduce((acc, port) => {
+        (acc[port.country] ||= []).push(port.name);
+        return acc;
+      }, {});
+      optionsWrap.innerHTML = Object.entries(grouped).map(([country, ports]) => `
+        <div class="multi-group">
+          <div class="multi-group-title">${country}</div>
+          ${ports.map(value => `
+            <label class="multi-option">
+              <input type="checkbox" class="filter-option-check" data-filter="port" value="${value}" ${filterSelections.port.includes(value) ? "checked" : ""} />
+              <span>${value}</span>
+            </label>
+          `).join("")}
+        </div>
+      `).join("");
+    }
+
     function populatePortSelects() {
       const portSelect = document.getElementById("portSelect");
       FILTER_MULTI_CONFIG.port.values = bPortOptions.map(port => port.name);
       portSelect.innerHTML = bPortOptions.map(port => `<option data-country="${port.country}">${port.name}</option>`).join("");
+      renderPortFilterOptions();
       syncFilterMultiSelect("port");
     }
 
     function formatFreeDays(value) {
       return `${Number(value || 0)} 天`;
+    }
+
+    function isValidFreeInteger(value) {
+      return /^\d+$/.test(String(value).trim()) && Number(value) >= 0 && Number(value) <= 365;
+    }
+
+    function shouldWarnFreeValue(value) {
+      return /^\d+$/.test(String(value).trim()) && Number(value) > 60;
+    }
+
+    function syncFreeWarning(inputId, warningId) {
+      const input = document.getElementById(inputId);
+      const warning = document.getElementById(warningId);
+      if (!input || !warning) return;
+      warning.classList.toggle("show", shouldWarnFreeValue(input.value));
     }
 
     function getNodeValue(ruleText) {
@@ -1628,6 +1854,73 @@
       const now = new Date();
       const pad = value => String(value).padStart(2, "0");
       return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    }
+
+    function getCheckedIndexes() {
+      return [...document.querySelectorAll(".row-check:checked")].map(cb => Number(cb.dataset.index));
+    }
+
+    function getCheckedRows() {
+      return getCheckedIndexes()
+        .map(index => data[currentTab][index])
+        .filter(Boolean);
+    }
+
+    function openFeedbackDialog({ title = "提示", message = "", details = [], confirmText = "确定", cancelText = "取消", showCancel = false, confirmClass = "primary" } = {}) {
+      document.getElementById("feedbackTitle").textContent = title;
+      document.getElementById("feedbackMessage").innerHTML = escapeHtml(message).replace(/\n/g, "<br>");
+      const listEl = document.getElementById("feedbackList");
+      if (details.length > 0) {
+        listEl.style.display = "";
+        listEl.innerHTML = details.map(item => `<li>${escapeHtml(item)}</li>`).join("");
+      } else {
+        listEl.style.display = "none";
+        listEl.innerHTML = "";
+      }
+      const cancelBtn = document.getElementById("feedbackCancelBtn");
+      const confirmBtn = document.getElementById("feedbackConfirmBtn");
+      cancelBtn.style.display = showCancel ? "" : "none";
+      confirmBtn.textContent = confirmText;
+      confirmBtn.className = `btn ${confirmClass}`;
+      openModal("feedbackModal");
+      return new Promise(resolve => {
+        feedbackResolver = resolve;
+      });
+    }
+
+    function closeFeedbackDialog(result) {
+      closeModal("feedbackModal");
+      if (feedbackResolver) {
+        const resolve = feedbackResolver;
+        feedbackResolver = null;
+        resolve(result);
+      }
+    }
+
+    function showAlertDialog(message, title = "提示") {
+      return openFeedbackDialog({ title, message, showCancel: false, confirmText: "确定" });
+    }
+
+    function showConfirmDialog({ title = "确认操作", message = "", details = [], confirmText = "确定", danger = false } = {}) {
+      return openFeedbackDialog({
+        title,
+        message,
+        details,
+        showCancel: true,
+        confirmText,
+        cancelText: "取消",
+        confirmClass: danger ? "danger" : "primary"
+      });
+    }
+
+    function refreshBatchModalSummary() {
+      const rows = getCheckedRows();
+      if (rows[0]) {
+        document.getElementById("batchOceanFreeInput").value = getFreeValue(rows[0].ocean);
+        document.getElementById("batchRailFreeInput").value = getFreeValue(rows[0].rail);
+      }
+      syncFreeWarning("batchOceanFreeInput", "batchOceanFreeWarning");
+      syncFreeWarning("batchRailFreeInput", "batchRailFreeWarning");
     }
 
     function getFilteredRows() {
@@ -1737,9 +2030,16 @@
       }));
       document.querySelectorAll(".edit-action").forEach(btn => btn.addEventListener("click", () => openRuleModal("编辑规则", pagedRows[Number(btn.dataset.index)])));
       document.querySelectorAll(".copy-action").forEach(btn => btn.addEventListener("click", () => openRuleModal("复制规则", { ...pagedRows[Number(btn.dataset.index)], copy: true })));
-      document.querySelectorAll(".delete-action").forEach(btn => btn.addEventListener("click", () => {
+      document.querySelectorAll(".delete-action").forEach(btn => btn.addEventListener("click", async () => {
         const row = pagedRows[Number(btn.dataset.index)];
-        if (!confirm(`确认删除 ${row.region} / ${row.level} / ${row.carrier} 这条规则？`)) return;
+        const confirmed = await showConfirmDialog({
+          title: "确认删除规则",
+          message: `删除后不可恢复，确认删除这条规则吗？`,
+          details: [formatRuleSummary(row)],
+          confirmText: "确认删除",
+          danger: true
+        });
+        if (!confirmed) return;
         const rowIndex = data[currentTab].indexOf(row);
         if (rowIndex >= 0) data[currentTab].splice(rowIndex, 1);
         renderTable();
@@ -1762,6 +2062,8 @@
       document.getElementById("defaultOceanFreeInput").value = getFreeValue(rule.oceanFree);
       document.getElementById("defaultRailNodeInput").value = rule.railNode;
       document.getElementById("defaultRailFreeInput").value = getFreeValue(rule.railFree);
+      syncFreeWarning("defaultOceanFreeInput", "defaultOceanFreeWarning");
+      syncFreeWarning("defaultRailFreeInput", "defaultRailFreeWarning");
       openModal("defaultModal");
     }
     function openRuleModal(title, row = null) {
@@ -1780,6 +2082,8 @@
       document.getElementById("oceanFreeInput").value = getFreeValue(source.ocean);
       document.getElementById("railNodeSelect").value = getNodeValue(source.rail);
       document.getElementById("railFreeInput").value = getFreeValue(source.rail);
+      syncFreeWarning("oceanFreeInput", "oceanFreeWarning");
+      syncFreeWarning("railFreeInput", "railFreeWarning");
       syncLevelFields();
       syncPortCountry();
       renderScopeGuide();
@@ -1890,11 +2194,11 @@
       });
     });
     document.getElementById("addBtn").addEventListener("click", () => openRuleModal("新建"));
-    document.getElementById("exportBtn").addEventListener("click", () => alert("导出当前筛选结果"));
-    document.getElementById("batchDeleteBtn").addEventListener("click", () => {
-      const checkedIndexes = [...document.querySelectorAll(".row-check:checked")].map(cb => Number(cb.dataset.index)).sort((a, b) => b - a);
+    document.getElementById("exportBtn").addEventListener("click", () => showAlertDialog("原型中仅展示导出入口，实际文件以当前筛选结果为准。", "导出说明"));
+    document.getElementById("batchDeleteBtn").addEventListener("click", async () => {
+      const checkedIndexes = getCheckedIndexes().sort((a, b) => b - a);
       if (checkedIndexes.length === 0) {
-        alert("请先选择需要删除的规则");
+        await showAlertDialog("请先选择需要删除的规则");
         return;
       }
       const selectedRows = checkedIndexes
@@ -1904,7 +2208,14 @@
         .filter(Boolean);
       const previewText = selectedRows.slice(0, 3).map(row => `- ${formatRuleSummary(row)}`).join("\n");
       const moreText = selectedRows.length > 3 ? `\n- 其余 ${selectedRows.length - 3} 条规则` : "";
-      if (!confirm(`确认批量删除已选 ${selectedRows.length} 条规则吗？\n${previewText}${moreText}`)) return;
+      const confirmed = await showConfirmDialog({
+        title: "确认批量删除",
+        message: `本次将删除已选 ${selectedRows.length} 条规则，删除后不可恢复。`,
+        details: selectedRows.slice(0, 3).map(formatRuleSummary).concat(selectedRows.length > 3 ? `其余 ${selectedRows.length - 3} 条规则` : []).filter(Boolean),
+        confirmText: "确认删除",
+        danger: true
+      });
+      if (!confirmed) return;
       checkedIndexes.forEach(index => data[currentTab].splice(index, 1));
       currentPage = 1;
       renderTable();
@@ -1914,11 +2225,12 @@
       setImportStage("upload");
       openModal("importModal");
     });
-    document.getElementById("batchBtn").addEventListener("click", () => {
+    document.getElementById("batchBtn").addEventListener("click", async () => {
       if (!document.querySelector(".row-check:checked")) {
-        alert("请先选择需要批量修改的规则");
+        await showAlertDialog("请先选择需要批量修改的规则");
         return;
       }
+      refreshBatchModalSummary();
       openModal("batchModal");
     });
     document.getElementById("navConfig").addEventListener("click", e => {
@@ -1954,6 +2266,20 @@
         setFilterSelections(key, values);
       });
     });
+    document.getElementById("filterPortSearch").addEventListener("input", e => {
+      filterPortKeyword = e.target.value;
+      renderPortFilterOptions();
+    });
+    [
+      ["defaultOceanFreeInput", "defaultOceanFreeWarning"],
+      ["defaultRailFreeInput", "defaultRailFreeWarning"],
+      ["oceanFreeInput", "oceanFreeWarning"],
+      ["railFreeInput", "railFreeWarning"],
+      ["batchOceanFreeInput", "batchOceanFreeWarning"],
+      ["batchRailFreeInput", "batchRailFreeWarning"]
+    ].forEach(([inputId, warningId]) => {
+      document.getElementById(inputId).addEventListener("input", () => syncFreeWarning(inputId, warningId));
+    });
     document.getElementById("carrierTrigger").addEventListener("click", () => toggleCarrierSelect());
     document.getElementById("carrierOptions").addEventListener("change", e => {
       if (!(e.target instanceof HTMLInputElement) || !e.target.classList.contains("carrier-option-check")) return;
@@ -1972,22 +2298,28 @@
       syncCarrierMultiSelect();
       renderScopeGuide();
     });
-    document.getElementById("saveRuleBtn").addEventListener("click", () => {
+    document.getElementById("saveRuleBtn").addEventListener("click", async () => {
       const level = document.getElementById("levelSelect").value;
+      const oceanRaw = document.getElementById("oceanFreeInput").value.trim();
+      const railRaw = document.getElementById("railFreeInput").value.trim();
+      if (!isValidFreeInteger(oceanRaw) || !isValidFreeInteger(railRaw)) {
+        await showAlertDialog("免费期仅允许填写 0~365 的整数");
+        return;
+      }
       const baseTarget = editingRow || { status:"启用", user:"admin" };
       baseTarget.region = document.getElementById("regionSelect").value;
       baseTarget.level = level === "region" ? "大区" : level === "country" ? "国家" : "港口";
       baseTarget.country = level === "region" ? "-" : document.getElementById("countrySelect").value;
       baseTarget.port = level === "port" ? document.getElementById("portSelect").value : "-";
-      baseTarget.ocean = `${formatNodeLabel(document.getElementById("oceanNodeSelect").value)} / ${formatFreeDays(document.getElementById("oceanFreeInput").value)}`;
-      baseTarget.rail = `${formatNodeLabel(document.getElementById("railNodeSelect").value)} / ${formatFreeDays(document.getElementById("railFreeInput").value)}`;
+      baseTarget.ocean = `${formatNodeLabel(document.getElementById("oceanNodeSelect").value)} / ${formatFreeDays(oceanRaw)}`;
+      baseTarget.rail = `${formatNodeLabel(document.getElementById("railNodeSelect").value)} / ${formatFreeDays(railRaw)}`;
       const selectedCarriers = getSelectedCarriers();
       if (selectedCarriers.length === 0) {
-        alert("请至少选择一个船公司");
+        await showAlertDialog("请至少选择一个船公司");
         return;
       }
       if (selectedCarriers.includes("通用") && selectedCarriers.length > 1) {
-        alert("“通用”不能与指定船公司同时选择");
+        await showAlertDialog("“通用”不能与指定船公司同时选择");
         return;
       }
       const targetRows = selectedCarriers.map(carrier => ({ ...baseTarget, carrier }));
@@ -1999,7 +2331,13 @@
         }
       });
       if (duplicateSummaries.length > 0) {
-        alert(`以下船公司规则已存在，不能重复保存：\n- ${[...new Set(duplicateSummaries)].join("\n- ")}`);
+        await openFeedbackDialog({
+          title: "保存失败",
+          message: "以下船公司规则已存在，不能重复保存。",
+          details: [...new Set(duplicateSummaries)],
+          showCancel: false,
+          confirmText: "确定"
+        });
         return;
       }
       const now = currentTimeText();
@@ -2026,14 +2364,24 @@
       currentPage = 1;
       renderTable();
     });
-    document.getElementById("confirmBatchBtn").addEventListener("click", () => {
-      const checkedIndexes = [...document.querySelectorAll(".row-check:checked")].map(cb => Number(cb.dataset.index));
+    document.getElementById("confirmBatchBtn").addEventListener("click", async () => {
+      const checkedIndexes = getCheckedIndexes();
       if (checkedIndexes.length === 0) {
-        alert("请先选择需要批量修改的规则");
+        await showAlertDialog("请先选择需要批量修改的规则");
         return;
       }
-      const oceanFree = formatFreeDays(document.getElementById("batchOceanFreeInput").value);
-      const railFree = formatFreeDays(document.getElementById("batchRailFreeInput").value);
+      const oceanRaw = document.getElementById("batchOceanFreeInput").value.trim();
+      const railRaw = document.getElementById("batchRailFreeInput").value.trim();
+      if (oceanRaw === "" || railRaw === "") {
+        await showAlertDialog("海运免费期和海铁免费期均为必填");
+        return;
+      }
+      if (!isValidFreeInteger(oceanRaw) || !isValidFreeInteger(railRaw)) {
+        await showAlertDialog("免费期仅允许填写 0~365 的整数");
+        return;
+      }
+      const oceanFree = formatFreeDays(oceanRaw);
+      const railFree = formatFreeDays(railRaw);
       checkedIndexes.forEach(index => {
         const row = data[currentTab][index];
         if (!row) return;
@@ -2050,27 +2398,44 @@
       setImportStage("result");
     });
     document.getElementById("confirmImportBtn").addEventListener("click", () => {
-      alert(`${getTabLabel()}规则导入确认后立即生效，不追溯历史。`);
-      closeModal("importModal");
-      setImportStage("upload");
+      showAlertDialog(`${getTabLabel()}规则导入确认成功后立即生效，不追溯历史。`, "导入成功").then(() => {
+        closeModal("importModal");
+        setImportStage("upload");
+      });
     });
     document.getElementById("reuploadImportBtn").addEventListener("click", () => {
       setImportStage("upload");
     });
-    document.getElementById("saveDefaultBtn").addEventListener("click", () => {
+    document.getElementById("saveDefaultBtn").addEventListener("click", async () => {
+      const oceanRaw = document.getElementById("defaultOceanFreeInput").value.trim();
+      const railRaw = document.getElementById("defaultRailFreeInput").value.trim();
+      if (!isValidFreeInteger(oceanRaw) || !isValidFreeInteger(railRaw)) {
+        await showAlertDialog("免费期仅允许填写 0~365 的整数");
+        return;
+      }
       defaultRules[currentTab] = {
         oceanNode: document.getElementById("defaultOceanNodeInput").value,
-        oceanFree: `${Number(document.getElementById("defaultOceanFreeInput").value || 0)} 天`,
+        oceanFree: `${Number(oceanRaw || 0)} 天`,
         railNode: document.getElementById("defaultRailNodeInput").value,
-        railFree: `${Number(document.getElementById("defaultRailFreeInput").value || 0)} 天`
+        railFree: `${Number(railRaw || 0)} 天`
       };
       closeModal("defaultModal");
       renderTable();
     });
     document.querySelectorAll("[data-close]").forEach(btn => btn.addEventListener("click", () => closeModal(btn.dataset.close)));
     document.querySelectorAll(".modal-mask").forEach(mask => {
-      mask.addEventListener("click", e => { if (e.target === mask) mask.classList.remove("show"); });
+      mask.addEventListener("click", e => {
+        if (e.target !== mask) return;
+        if (mask.id === "feedbackModal") {
+          closeFeedbackDialog(false);
+          return;
+        }
+        mask.classList.remove("show");
+      });
     });
+    document.getElementById("feedbackCloseBtn").addEventListener("click", () => closeFeedbackDialog(false));
+    document.getElementById("feedbackCancelBtn").addEventListener("click", () => closeFeedbackDialog(false));
+    document.getElementById("feedbackConfirmBtn").addEventListener("click", () => closeFeedbackDialog(true));
     document.querySelectorAll(".switch").forEach(sw => sw.addEventListener("click", () => sw.classList.toggle("on")));
     document.getElementById("levelSelect").addEventListener("change", () => {
       syncLevelFields();
