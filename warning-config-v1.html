@@ -860,7 +860,7 @@
         </div>
         <div class="tenant">
           <span>租户：</span>
-          <select><option>视像</option></select>
+          <select><option>国际营销</option></select>
         </div>
       </header>
 
@@ -891,27 +891,51 @@
               <div class="filters">
                 <div class="field">
                   <label>大区</label>
-                  <select class="control" id="filterRegion"><option>全部</option><option>北美区</option><option>欧洲区</option><option>东盟区</option><option>亚太区</option><option>中东非区</option></select>
+                  <div class="multi-select" id="filterRegionSelect">
+                    <button class="multi-trigger" id="filterRegionTrigger" type="button" aria-expanded="false">
+                      <span class="multi-placeholder">全部</span>
+                    </button>
+                    <div class="multi-panel">
+                      <div class="multi-options" id="filterRegionOptions"></div>
+                    </div>
+                  </div>
                 </div>
                 <div class="field">
                   <label>国家</label>
-                  <select class="control" id="filterCountry"><option>全部</option><option>美国</option><option>墨西哥</option><option>加拿大</option></select>
+                  <div class="multi-select" id="filterCountrySelect">
+                    <button class="multi-trigger" id="filterCountryTrigger" type="button" aria-expanded="false">
+                      <span class="multi-placeholder">全部</span>
+                    </button>
+                    <div class="multi-panel">
+                      <div class="multi-options" id="filterCountryOptions"></div>
+                    </div>
+                  </div>
                 </div>
                 <div class="field">
                   <label>港口</label>
-                  <select class="control" id="filterPort"><option>全部</option><option>Long Beach</option><option>Los Angeles</option><option>Oakland</option><option>Seattle</option><option>Tacoma</option><option>New York/Newark</option><option>Savannah</option><option>Houston</option><option>Charleston</option><option>Norfolk</option><option>Miami</option><option>Lazaro</option><option>Vancouver</option><option>Prince Rupert</option></select>
+                  <div class="multi-select" id="filterPortSelect">
+                    <button class="multi-trigger" id="filterPortTrigger" type="button" aria-expanded="false">
+                      <span class="multi-placeholder">全部</span>
+                    </button>
+                    <div class="multi-panel">
+                      <div class="multi-options" id="filterPortOptions"></div>
+                    </div>
+                  </div>
                 </div>
                 <div class="field">
                   <label>船公司</label>
-                  <select class="control" id="filterCarrier"><option>全部</option><option>通用</option><option>COSCO</option><option>MSC</option><option>Hapag-Lloyd</option><option>Maersk</option><option>CMA CGM</option><option>ONE</option><option>Evergreen</option><option>OOCL</option><option>ZIM</option><option>Matson</option></select>
+                  <div class="multi-select" id="filterCarrierSelect">
+                    <button class="multi-trigger" id="filterCarrierTrigger" type="button" aria-expanded="false">
+                      <span class="multi-placeholder">全部</span>
+                    </button>
+                    <div class="multi-panel">
+                      <div class="multi-options" id="filterCarrierOptions"></div>
+                    </div>
+                  </div>
                 </div>
                 <div class="field">
                   <label>启用状态</label>
                   <select class="control" id="filterStatus"><option>全部</option><option>启用</option><option>关闭</option></select>
-                </div>
-                <div class="field">
-                  <label>关键字</label>
-                  <input class="control" id="filterKeyword" placeholder="大区 / 港口 / 船公司" />
                 </div>
                 <button class="btn primary" id="queryBtn">查询</button>
                 <button class="btn" id="resetBtn">重置</button>
@@ -1020,9 +1044,9 @@
               <div class="field">
                 <label>起算节点</label>
                 <select class="control" id="defaultOceanNodeInput">
-                  <option value="UV" selected>UV - 目的港卸船</option>
-                  <option value="VA">VA - 目的港到港</option>
-                  <option value="UR">UR - 铁路卸货</option>
+                  <option value="UV" selected>目的港卸船</option>
+                  <option value="VA">目的港到港</option>
+                  <option value="UR">铁运卸货</option>
                 </select>
               </div>
               <div class="field">
@@ -1038,9 +1062,9 @@
               <div class="field">
                 <label>起算节点</label>
                 <select class="control" id="defaultRailNodeInput">
-                  <option value="UR" selected>UR - 铁路卸货</option>
-                  <option value="UV">UV - 目的港卸船</option>
-                  <option value="VA">VA - 目的港到港</option>
+                  <option value="UR" selected>铁运卸货</option>
+                  <option value="UV">目的港卸船</option>
+                  <option value="VA">目的港到港</option>
                 </select>
               </div>
               <div class="field">
@@ -1074,9 +1098,9 @@
                 <div class="field">
                   <label>起算节点</label>
                   <select class="control" id="oceanNodeSelect">
-                    <option value="UV" selected>UV - 目的港卸船</option>
-                    <option value="VA">VA - 目的港到港</option>
-                    <option value="UR">UR - 铁路卸货</option>
+                    <option value="UV" selected>目的港卸船</option>
+                    <option value="VA">目的港到港</option>
+                    <option value="UR">铁运卸货</option>
                   </select>
                 </div>
                 <div class="field">
@@ -1092,9 +1116,9 @@
                 <div class="field">
                   <label>起算节点</label>
                   <select class="control" id="railNodeSelect">
-                    <option value="UR" selected>UR - 铁路卸货</option>
-                    <option value="UV">UV - 目的港卸船</option>
-                    <option value="VA">VA - 目的港到港</option>
+                    <option value="UR" selected>铁运卸货</option>
+                    <option value="UV">目的港卸船</option>
+                    <option value="VA">目的港到港</option>
                   </select>
                 </div>
                 <div class="field">
@@ -1330,61 +1354,110 @@
 
     const data = {
       pickup: [
-        {region:"北美区", level:"大区", country:"-", port:"-", carrier:"通用", ocean:"VA / 4 天", rail:"UR / 2 天", status:"启用", user:"zhang", time:"2026-05-29 10:05"},
-        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"通用", ocean:"VA / 5 天", rail:"UR / 3 天", status:"启用", user:"zhang", time:"2026-05-29 09:42"},
-        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"MSC", ocean:"VA / 6 天", rail:"UR / 4 天", status:"启用", user:"sun", time:"2026-05-29 09:10"},
-        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"Maersk", ocean:"VA / 6 天", rail:"UR / 4 天", status:"启用", user:"sun", time:"2026-05-29 08:51"},
-        {region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"COSCO", ocean:"VA / 2 天", rail:"UR / 2 天", status:"启用", user:"sun", time:"2026-05-28 16:41"},
-        {region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"MSC", ocean:"VA / 3 天", rail:"UR / 2 天", status:"启用", user:"admin", time:"2026-05-28 16:12"},
-        {region:"北美区", level:"港口", country:"美国", port:"Los Angeles", carrier:"通用", ocean:"VA / 3 天", rail:"UR / 2 天", status:"启用", user:"admin", time:"2026-05-28 15:50"},
-        {region:"北美区", level:"港口", country:"美国", port:"Oakland", carrier:"ONE", ocean:"VA / 4 天", rail:"UR / 3 天", status:"启用", user:"sun", time:"2026-05-28 15:22"},
-        {region:"北美区", level:"港口", country:"美国", port:"Seattle", carrier:"Hapag-Lloyd", ocean:"VA / 4 天", rail:"UR / 3 天", status:"启用", user:"zhang", time:"2026-05-28 14:58"},
-        {region:"北美区", level:"港口", country:"美国", port:"Tacoma", carrier:"Evergreen", ocean:"VA / 4 天", rail:"UR / 3 天", status:"启用", user:"zhang", time:"2026-05-28 14:42"},
-        {region:"北美区", level:"港口", country:"美国", port:"New York/Newark", carrier:"MSC", ocean:"VA / 5 天", rail:"UR / 4 天", status:"启用", user:"sun", time:"2026-05-28 13:36"},
-        {region:"北美区", level:"港口", country:"美国", port:"Savannah", carrier:"CMA CGM", ocean:"VA / 5 天", rail:"UR / 4 天", status:"启用", user:"admin", time:"2026-05-28 13:18"},
-        {region:"北美区", level:"港口", country:"美国", port:"Houston", carrier:"OOCL", ocean:"VA / 4 天", rail:"UR / 3 天", status:"启用", user:"sun", time:"2026-05-28 12:42"},
-        {region:"北美区", level:"港口", country:"美国", port:"Charleston", carrier:"ZIM", ocean:"VA / 5 天", rail:"UR / 4 天", status:"启用", user:"admin", time:"2026-05-28 11:28"},
-        {region:"北美区", level:"港口", country:"美国", port:"Norfolk", carrier:"通用", ocean:"VA / 5 天", rail:"UR / 4 天", status:"启用", user:"zhang", time:"2026-05-28 10:55"},
-        {region:"北美区", level:"港口", country:"美国", port:"Miami", carrier:"Maersk", ocean:"VA / 4 天", rail:"UR / 3 天", status:"关闭", user:"sun", time:"2026-05-27 18:20"},
-        {region:"北美区", level:"港口", country:"加拿大", port:"Vancouver", carrier:"通用", ocean:"VA / 6 天", rail:"UR / 4 天", status:"启用", user:"admin", time:"2026-05-27 16:15"},
-        {region:"北美区", level:"港口", country:"加拿大", port:"Prince Rupert", carrier:"COSCO", ocean:"VA / 6 天", rail:"UR / 4 天", status:"启用", user:"zhang", time:"2026-05-27 15:32"},
-        {region:"北美区", level:"港口", country:"墨西哥", port:"Lazaro", carrier:"通用", ocean:"VA / 14 天", rail:"UR / 7 天", status:"启用", user:"admin", time:"2026-05-28 14:20"},
-        {region:"欧洲区", level:"国家", country:"加拿大", port:"-", carrier:"通用", ocean:"VA / 3 天", rail:"UR / 2 天", status:"关闭", user:"admin", time:"2026-05-27 11:36"}
+        {region:"北美区", level:"大区", country:"-", port:"-", carrier:"通用", ocean:"目的港到港 / 4 天", rail:"铁运卸货 / 2 天", status:"启用", user:"zhang", time:"2026-05-29 10:05"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"通用", ocean:"目的港到港 / 5 天", rail:"铁运卸货 / 3 天", status:"启用", user:"zhang", time:"2026-05-29 09:42"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"MSC", ocean:"目的港到港 / 6 天", rail:"铁运卸货 / 4 天", status:"启用", user:"sun", time:"2026-05-29 09:10"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"Maersk", ocean:"目的港到港 / 6 天", rail:"铁运卸货 / 4 天", status:"启用", user:"sun", time:"2026-05-29 08:51"},
+        {region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"COSCO", ocean:"目的港到港 / 2 天", rail:"铁运卸货 / 2 天", status:"启用", user:"sun", time:"2026-05-28 16:41"},
+        {region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"MSC", ocean:"目的港到港 / 3 天", rail:"铁运卸货 / 2 天", status:"启用", user:"admin", time:"2026-05-28 16:12"},
+        {region:"北美区", level:"港口", country:"美国", port:"Los Angeles", carrier:"通用", ocean:"目的港到港 / 3 天", rail:"铁运卸货 / 2 天", status:"启用", user:"admin", time:"2026-05-28 15:50"},
+        {region:"北美区", level:"港口", country:"美国", port:"Oakland", carrier:"ONE", ocean:"目的港到港 / 4 天", rail:"铁运卸货 / 3 天", status:"启用", user:"sun", time:"2026-05-28 15:22"},
+        {region:"北美区", level:"港口", country:"美国", port:"Seattle", carrier:"Hapag-Lloyd", ocean:"目的港到港 / 4 天", rail:"铁运卸货 / 3 天", status:"启用", user:"zhang", time:"2026-05-28 14:58"},
+        {region:"北美区", level:"港口", country:"美国", port:"Tacoma", carrier:"Evergreen", ocean:"目的港到港 / 4 天", rail:"铁运卸货 / 3 天", status:"启用", user:"zhang", time:"2026-05-28 14:42"},
+        {region:"北美区", level:"港口", country:"美国", port:"New York/Newark", carrier:"MSC", ocean:"目的港到港 / 5 天", rail:"铁运卸货 / 4 天", status:"启用", user:"sun", time:"2026-05-28 13:36"},
+        {region:"北美区", level:"港口", country:"美国", port:"Savannah", carrier:"CMA CGM", ocean:"目的港到港 / 5 天", rail:"铁运卸货 / 4 天", status:"启用", user:"admin", time:"2026-05-28 13:18"},
+        {region:"北美区", level:"港口", country:"美国", port:"Houston", carrier:"OOCL", ocean:"目的港到港 / 4 天", rail:"铁运卸货 / 3 天", status:"启用", user:"sun", time:"2026-05-28 12:42"},
+        {region:"北美区", level:"港口", country:"美国", port:"Charleston", carrier:"ZIM", ocean:"目的港到港 / 5 天", rail:"铁运卸货 / 4 天", status:"启用", user:"admin", time:"2026-05-28 11:28"},
+        {region:"北美区", level:"港口", country:"美国", port:"Norfolk", carrier:"通用", ocean:"目的港到港 / 5 天", rail:"铁运卸货 / 4 天", status:"启用", user:"zhang", time:"2026-05-28 10:55"},
+        {region:"北美区", level:"港口", country:"美国", port:"Miami", carrier:"Maersk", ocean:"目的港到港 / 4 天", rail:"铁运卸货 / 3 天", status:"关闭", user:"sun", time:"2026-05-27 18:20"},
+        {region:"北美区", level:"港口", country:"加拿大", port:"Vancouver", carrier:"通用", ocean:"目的港到港 / 6 天", rail:"铁运卸货 / 4 天", status:"启用", user:"admin", time:"2026-05-27 16:15"},
+        {region:"北美区", level:"港口", country:"加拿大", port:"Prince Rupert", carrier:"COSCO", ocean:"目的港到港 / 6 天", rail:"铁运卸货 / 4 天", status:"启用", user:"zhang", time:"2026-05-27 15:32"},
+        {region:"北美区", level:"港口", country:"墨西哥", port:"Lazaro", carrier:"通用", ocean:"目的港到港 / 14 天", rail:"铁运卸货 / 7 天", status:"启用", user:"admin", time:"2026-05-28 14:20"},
+        {region:"欧洲区", level:"国家", country:"加拿大", port:"-", carrier:"通用", ocean:"目的港到港 / 3 天", rail:"铁运卸货 / 2 天", status:"关闭", user:"admin", time:"2026-05-27 11:36"}
       ],
       return: [
-        {region:"北美区", level:"大区", country:"-", port:"-", carrier:"通用", ocean:"UV / 14 天", rail:"UR / 14 天", status:"启用", user:"zhang", time:"2026-05-29 10:10"},
-        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"通用", ocean:"UV / 18 天", rail:"UR / 18 天", status:"启用", user:"zhang", time:"2026-05-29 09:35"},
-        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"MSC", ocean:"UV / 21 天", rail:"UR / 21 天", status:"启用", user:"sun", time:"2026-05-28 17:02"},
-        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"Maersk", ocean:"UV / 21 天", rail:"UR / 21 天", status:"启用", user:"sun", time:"2026-05-28 16:56"},
-        {region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"COSCO", ocean:"UV / 10 天", rail:"UR / 10 天", status:"启用", user:"admin", time:"2026-05-28 16:20"},
-        {region:"北美区", level:"港口", country:"美国", port:"Los Angeles", carrier:"MSC", ocean:"UV / 12 天", rail:"UR / 12 天", status:"启用", user:"sun", time:"2026-05-28 15:43"},
-        {region:"北美区", level:"港口", country:"美国", port:"Oakland", carrier:"ONE", ocean:"UV / 12 天", rail:"UR / 12 天", status:"启用", user:"zhang", time:"2026-05-28 15:20"},
-        {region:"北美区", level:"港口", country:"美国", port:"Seattle", carrier:"Hapag-Lloyd", ocean:"UV / 14 天", rail:"UR / 14 天", status:"启用", user:"admin", time:"2026-05-28 14:33"},
-        {region:"北美区", level:"港口", country:"美国", port:"Tacoma", carrier:"Evergreen", ocean:"UV / 14 天", rail:"UR / 14 天", status:"启用", user:"sun", time:"2026-05-28 14:04"},
-        {region:"北美区", level:"港口", country:"美国", port:"New York/Newark", carrier:"MSC", ocean:"UV / 18 天", rail:"UR / 18 天", status:"启用", user:"zhang", time:"2026-05-28 13:21"},
-        {region:"北美区", level:"港口", country:"美国", port:"Savannah", carrier:"CMA CGM", ocean:"UV / 16 天", rail:"UR / 16 天", status:"启用", user:"sun", time:"2026-05-28 12:59"},
-        {region:"北美区", level:"港口", country:"美国", port:"Houston", carrier:"OOCL", ocean:"UV / 15 天", rail:"UR / 15 天", status:"启用", user:"admin", time:"2026-05-28 12:18"},
-        {region:"北美区", level:"港口", country:"美国", port:"Charleston", carrier:"ZIM", ocean:"UV / 16 天", rail:"UR / 16 天", status:"启用", user:"sun", time:"2026-05-28 11:45"},
-        {region:"北美区", level:"港口", country:"美国", port:"Norfolk", carrier:"通用", ocean:"UV / 16 天", rail:"UR / 16 天", status:"启用", user:"zhang", time:"2026-05-28 11:12"},
-        {region:"北美区", level:"港口", country:"美国", port:"Miami", carrier:"Maersk", ocean:"UV / 12 天", rail:"UR / 12 天", status:"关闭", user:"admin", time:"2026-05-27 18:04"},
-        {region:"北美区", level:"港口", country:"加拿大", port:"Vancouver", carrier:"通用", ocean:"UV / 20 天", rail:"UR / 20 天", status:"启用", user:"sun", time:"2026-05-27 16:48"},
-        {region:"北美区", level:"港口", country:"加拿大", port:"Prince Rupert", carrier:"COSCO", ocean:"UV / 20 天", rail:"UR / 20 天", status:"启用", user:"zhang", time:"2026-05-27 16:06"},
-        {region:"北美区", level:"港口", country:"墨西哥", port:"Lazaro", carrier:"COSCO", ocean:"VA / 28 天", rail:"UR / 28 天", status:"启用", user:"admin", time:"2026-05-28 15:48"},
-        {region:"欧洲区", level:"国家", country:"加拿大", port:"-", carrier:"Hapag-Lloyd", ocean:"UV / 14 天", rail:"UR / 14 天", status:"启用", user:"sun", time:"2026-05-27 13:12"}
+        {region:"北美区", level:"大区", country:"-", port:"-", carrier:"通用", ocean:"目的港卸船 / 14 天", rail:"铁运卸货 / 14 天", status:"启用", user:"zhang", time:"2026-05-29 10:10"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"通用", ocean:"目的港卸船 / 18 天", rail:"铁运卸货 / 18 天", status:"启用", user:"zhang", time:"2026-05-29 09:35"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"MSC", ocean:"目的港卸船 / 21 天", rail:"铁运卸货 / 21 天", status:"启用", user:"sun", time:"2026-05-28 17:02"},
+        {region:"北美区", level:"国家", country:"美国", port:"-", carrier:"Maersk", ocean:"目的港卸船 / 21 天", rail:"铁运卸货 / 21 天", status:"启用", user:"sun", time:"2026-05-28 16:56"},
+        {region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"COSCO", ocean:"目的港卸船 / 10 天", rail:"铁运卸货 / 10 天", status:"启用", user:"admin", time:"2026-05-28 16:20"},
+        {region:"北美区", level:"港口", country:"美国", port:"Los Angeles", carrier:"MSC", ocean:"目的港卸船 / 12 天", rail:"铁运卸货 / 12 天", status:"启用", user:"sun", time:"2026-05-28 15:43"},
+        {region:"北美区", level:"港口", country:"美国", port:"Oakland", carrier:"ONE", ocean:"目的港卸船 / 12 天", rail:"铁运卸货 / 12 天", status:"启用", user:"zhang", time:"2026-05-28 15:20"},
+        {region:"北美区", level:"港口", country:"美国", port:"Seattle", carrier:"Hapag-Lloyd", ocean:"目的港卸船 / 14 天", rail:"铁运卸货 / 14 天", status:"启用", user:"admin", time:"2026-05-28 14:33"},
+        {region:"北美区", level:"港口", country:"美国", port:"Tacoma", carrier:"Evergreen", ocean:"目的港卸船 / 14 天", rail:"铁运卸货 / 14 天", status:"启用", user:"sun", time:"2026-05-28 14:04"},
+        {region:"北美区", level:"港口", country:"美国", port:"New York/Newark", carrier:"MSC", ocean:"目的港卸船 / 18 天", rail:"铁运卸货 / 18 天", status:"启用", user:"zhang", time:"2026-05-28 13:21"},
+        {region:"北美区", level:"港口", country:"美国", port:"Savannah", carrier:"CMA CGM", ocean:"目的港卸船 / 16 天", rail:"铁运卸货 / 16 天", status:"启用", user:"sun", time:"2026-05-28 12:59"},
+        {region:"北美区", level:"港口", country:"美国", port:"Houston", carrier:"OOCL", ocean:"目的港卸船 / 15 天", rail:"铁运卸货 / 15 天", status:"启用", user:"admin", time:"2026-05-28 12:18"},
+        {region:"北美区", level:"港口", country:"美国", port:"Charleston", carrier:"ZIM", ocean:"目的港卸船 / 16 天", rail:"铁运卸货 / 16 天", status:"启用", user:"sun", time:"2026-05-28 11:45"},
+        {region:"北美区", level:"港口", country:"美国", port:"Norfolk", carrier:"通用", ocean:"目的港卸船 / 16 天", rail:"铁运卸货 / 16 天", status:"启用", user:"zhang", time:"2026-05-28 11:12"},
+        {region:"北美区", level:"港口", country:"美国", port:"Miami", carrier:"Maersk", ocean:"目的港卸船 / 12 天", rail:"铁运卸货 / 12 天", status:"关闭", user:"admin", time:"2026-05-27 18:04"},
+        {region:"北美区", level:"港口", country:"加拿大", port:"Vancouver", carrier:"通用", ocean:"目的港卸船 / 20 天", rail:"铁运卸货 / 20 天", status:"启用", user:"sun", time:"2026-05-27 16:48"},
+        {region:"北美区", level:"港口", country:"加拿大", port:"Prince Rupert", carrier:"COSCO", ocean:"目的港卸船 / 20 天", rail:"铁运卸货 / 20 天", status:"启用", user:"zhang", time:"2026-05-27 16:06"},
+        {region:"北美区", level:"港口", country:"墨西哥", port:"Lazaro", carrier:"COSCO", ocean:"目的港到港 / 28 天", rail:"铁运卸货 / 28 天", status:"启用", user:"admin", time:"2026-05-28 15:48"},
+        {region:"欧洲区", level:"国家", country:"加拿大", port:"-", carrier:"Hapag-Lloyd", ocean:"目的港卸船 / 14 天", rail:"铁运卸货 / 14 天", status:"启用", user:"sun", time:"2026-05-27 13:12"}
       ]
     };
 
-    const defaultRules = {
+      const defaultRules = {
       pickup: { oceanNode:"UV", oceanFree:"0 天", railNode:"UR", railFree:"0 天" },
       return: { oceanNode:"UV", oceanFree:"0 天", railNode:"UR", railFree:"0 天" }
     };
+    const NODE_LABELS = {
+      UV: "目的港卸船",
+      VA: "目的港到港",
+      Z8: "提重",
+      UR: "铁运卸货",
+      RL: "铁运发运",
+      AR: "铁路到达"
+    };
+    const NODE_LABEL_TO_CODE = Object.fromEntries(Object.entries(NODE_LABELS).map(([code, label]) => [label, code]));
+    const NODE_OPTIONS = {
+      pickup: ["UV", "VA", "UR", "RL", "AR"],
+      return: ["UV", "VA", "Z8", "UR", "RL", "AR"]
+    };
     const CARRIER_OPTIONS = ["通用", "COSCO", "MSC", "Hapag-Lloyd", "Maersk", "CMA CGM", "ONE", "Evergreen", "OOCL", "ZIM", "Matson"];
+    const FILTER_MULTI_CONFIG = {
+      region: {
+        wrapId: "filterRegionSelect",
+        triggerId: "filterRegionTrigger",
+        optionsId: "filterRegionOptions",
+        values: ["北美区", "欧洲区", "东盟区", "亚太区", "中东非区"],
+        placeholder: "全部"
+      },
+      country: {
+        wrapId: "filterCountrySelect",
+        triggerId: "filterCountryTrigger",
+        optionsId: "filterCountryOptions",
+        values: ["美国", "墨西哥", "加拿大"],
+        placeholder: "全部"
+      },
+      port: {
+        wrapId: "filterPortSelect",
+        triggerId: "filterPortTrigger",
+        optionsId: "filterPortOptions",
+        values: [],
+        placeholder: "全部"
+      },
+      carrier: {
+        wrapId: "filterCarrierSelect",
+        triggerId: "filterCarrierTrigger",
+        optionsId: "filterCarrierOptions",
+        values: CARRIER_OPTIONS,
+        placeholder: "全部"
+      }
+    };
 
     let currentTab = "pickup";
     let currentPage = 1;
     let pageSize = 10;
     let editingRow = null;
     let selectedCarriers = ["通用"];
+    let filterSelections = {
+      region: [],
+      country: [],
+      port: [],
+      carrier: []
+    };
 
     function getTabLabel(tab = currentTab) {
       return tab === "pickup" ? "未提箱" : "未还箱";
@@ -1474,11 +1547,51 @@
       trigger.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
     }
 
+    function getFilterSelections(key) {
+      return [...filterSelections[key]];
+    }
+
+    function setFilterSelections(key, values) {
+      filterSelections[key] = [...new Set(values)];
+      syncFilterMultiSelect(key);
+    }
+
+    function toggleFilterMultiSelect(key, force) {
+      const config = FILTER_MULTI_CONFIG[key];
+      const wrap = document.getElementById(config.wrapId);
+      const trigger = document.getElementById(config.triggerId);
+      const shouldOpen = typeof force === "boolean" ? force : !wrap.classList.contains("open");
+      wrap.classList.toggle("open", shouldOpen);
+      trigger.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+    }
+
+    function syncFilterMultiSelect(key) {
+      const config = FILTER_MULTI_CONFIG[key];
+      const optionsWrap = document.getElementById(config.optionsId);
+      if (optionsWrap && optionsWrap.childElementCount === 0) {
+        optionsWrap.innerHTML = config.values.map(value => `
+          <label class="multi-option">
+            <input type="checkbox" class="filter-option-check" data-filter="${key}" value="${value}" />
+            <span>${value}</span>
+          </label>
+        `).join("");
+      }
+      document.querySelectorAll(`.filter-option-check[data-filter="${key}"]`).forEach(input => {
+        input.checked = filterSelections[key].includes(input.value);
+      });
+      const trigger = document.getElementById(config.triggerId);
+      if (!trigger) return;
+      const chips = filterSelections[key].length === 0
+        ? `<span class="multi-placeholder">${config.placeholder}</span>`
+        : filterSelections[key].slice(0, 2).map(value => `<span class="multi-chip">${value}</span>`).join("") + (filterSelections[key].length > 2 ? `<span class="multi-chip more">+${filterSelections[key].length - 2}</span>` : "");
+      trigger.innerHTML = chips;
+    }
+
     function populatePortSelects() {
-      const filterPort = document.getElementById("filterPort");
       const portSelect = document.getElementById("portSelect");
-      filterPort.innerHTML = `<option>全部</option>${bPortOptions.map(port => `<option>${port.name}</option>`).join("")}`;
+      FILTER_MULTI_CONFIG.port.values = bPortOptions.map(port => port.name);
       portSelect.innerHTML = bPortOptions.map(port => `<option data-country="${port.country}">${port.name}</option>`).join("");
+      syncFilterMultiSelect("port");
     }
 
     function formatFreeDays(value) {
@@ -1486,7 +1599,24 @@
     }
 
     function getNodeValue(ruleText) {
-      return String(ruleText || "").split(" / ")[0] || "UV";
+      const value = String(ruleText || "").split(" / ")[0] || "UV";
+      return NODE_LABEL_TO_CODE[value] || value;
+    }
+
+    function formatNodeLabel(code) {
+      return NODE_LABELS[code] || code;
+    }
+
+    function syncNodeSelectOptions() {
+      const options = NODE_OPTIONS[currentTab];
+      const html = options.map(code => `<option value="${code}">${formatNodeLabel(code)}</option>`).join("");
+      ["defaultOceanNodeInput", "defaultRailNodeInput", "oceanNodeSelect", "railNodeSelect"].forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+        const currentValue = select.value;
+        select.innerHTML = html;
+        select.value = options.includes(currentValue) ? currentValue : (id.includes("Rail") || id === "railNodeSelect" ? "UR" : "UV");
+      });
     }
 
     function getFreeValue(ruleText) {
@@ -1500,24 +1630,20 @@
       return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
     }
 
-    function getFilterValue(id) {
-      return document.getElementById(id).value.trim();
-    }
-
     function getFilteredRows() {
-      const keyword = getFilterValue("filterKeyword").toLowerCase();
+      const sortedRows = [...data[currentTab]].sort((a, b) => String(b.time).localeCompare(String(a.time)));
       const filters = {
-        region: getFilterValue("filterRegion"),
-        country: getFilterValue("filterCountry"),
-        port: getFilterValue("filterPort"),
-        carrier: getFilterValue("filterCarrier"),
-        status: getFilterValue("filterStatus")
+        region: getFilterSelections("region"),
+        country: getFilterSelections("country"),
+        port: getFilterSelections("port"),
+        carrier: getFilterSelections("carrier"),
+        status: document.getElementById("filterStatus").value.trim()
       };
-      return data[currentTab].filter(row => {
-        const exactMatched = Object.entries(filters).every(([key, value]) => value === "全部" || row[key] === value);
-        const keywordMatched = !keyword || [row.region, row.level, row.country, row.port, row.carrier, row.ocean, row.rail, row.status]
-          .some(value => String(value).toLowerCase().includes(keyword));
-        return exactMatched && keywordMatched;
+      return sortedRows.filter(row => {
+        return Object.entries(filters).every(([key, value]) => {
+          if (key === "status") return value === "全部" || row[key] === value;
+          return value.length === 0 || value.includes(row[key]);
+        });
       });
     }
 
@@ -1562,8 +1688,8 @@
           <td>-</td>
           <td>-</td>
           <td>通用</td>
-          <td><span class="rule-summary"><span class="node">${defaultRule.oceanNode}</span><span>${defaultRule.oceanFree}</span></span></td>
-          <td><span class="rule-summary"><span class="node">${defaultRule.railNode}</span><span>${defaultRule.railFree}</span></span></td>
+          <td><span class="rule-summary"><span class="node">${formatNodeLabel(defaultRule.oceanNode)}</span><span>${defaultRule.oceanFree}</span></span></td>
+          <td><span class="rule-summary"><span class="node">${formatNodeLabel(defaultRule.railNode)}</span><span>${defaultRule.railFree}</span></span></td>
           <td class="status-col"><span class="badge green">始终生效</span></td>
           <td class="meta-user-col">系统</td>
           <td class="meta-time-col">-</td>
@@ -1631,6 +1757,7 @@
     function closeModal(id) { document.getElementById(id).classList.remove("show"); }
     function openDefaultModal() {
       const rule = defaultRules[currentTab];
+      syncNodeSelectOptions();
       document.getElementById("defaultOceanNodeInput").value = rule.oceanNode;
       document.getElementById("defaultOceanFreeInput").value = getFreeValue(rule.oceanFree);
       document.getElementById("defaultRailNodeInput").value = rule.railNode;
@@ -1641,7 +1768,8 @@
       editingRow = row && !row.copy ? row : null;
       document.getElementById("ruleModalTitle").textContent = title;
       document.getElementById("scopeSection").style.display = "";
-      const source = row || { region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"通用", ocean:"VA / 4 天", rail:"UR / 2 天" };
+      syncNodeSelectOptions();
+      const source = row || { region:"北美区", level:"港口", country:"美国", port:"Long Beach", carrier:"通用", ocean:"目的港到港 / 4 天", rail:"铁运卸货 / 2 天" };
       const levelValue = source.level === "大区" ? "region" : source.level === "国家" ? "country" : "port";
       document.getElementById("levelSelect").value = levelValue;
       document.getElementById("regionSelect").value = source.region || "北美区";
@@ -1756,6 +1884,7 @@
         showHistoryTab(false);
         currentTab = btn.dataset.tab;
         currentPage = 1;
+        syncNodeSelectOptions();
         renderPageGuide();
         renderTable();
       });
@@ -1806,23 +1935,24 @@
       renderTable();
     });
     document.getElementById("resetBtn").addEventListener("click", () => {
-      ["filterRegion", "filterCountry", "filterPort", "filterCarrier", "filterStatus"].forEach(id => {
-        document.getElementById(id).value = "全部";
-      });
-      document.getElementById("filterKeyword").value = "";
+      ["region", "country", "port", "carrier"].forEach(key => setFilterSelections(key, []));
+      document.getElementById("filterStatus").value = "全部";
       currentPage = 1;
       renderTable();
-    });
-    document.getElementById("filterKeyword").addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        currentPage = 1;
-        renderTable();
-      }
     });
     document.getElementById("pageSizeSelect").addEventListener("change", e => {
       pageSize = Number(e.target.value);
       currentPage = 1;
       renderTable();
+    });
+    Object.keys(FILTER_MULTI_CONFIG).forEach(key => {
+      const config = FILTER_MULTI_CONFIG[key];
+      document.getElementById(config.triggerId).addEventListener("click", () => toggleFilterMultiSelect(key));
+      document.getElementById(config.optionsId).addEventListener("change", e => {
+        if (!(e.target instanceof HTMLInputElement) || e.target.dataset.filter !== key) return;
+        const values = [...document.querySelectorAll(`.filter-option-check[data-filter="${key}"]:checked`)].map(input => input.value);
+        setFilterSelections(key, values);
+      });
     });
     document.getElementById("carrierTrigger").addEventListener("click", () => toggleCarrierSelect());
     document.getElementById("carrierOptions").addEventListener("change", e => {
@@ -1849,8 +1979,8 @@
       baseTarget.level = level === "region" ? "大区" : level === "country" ? "国家" : "港口";
       baseTarget.country = level === "region" ? "-" : document.getElementById("countrySelect").value;
       baseTarget.port = level === "port" ? document.getElementById("portSelect").value : "-";
-      baseTarget.ocean = `${document.getElementById("oceanNodeSelect").value} / ${formatFreeDays(document.getElementById("oceanFreeInput").value)}`;
-      baseTarget.rail = `${document.getElementById("railNodeSelect").value} / ${formatFreeDays(document.getElementById("railFreeInput").value)}`;
+      baseTarget.ocean = `${formatNodeLabel(document.getElementById("oceanNodeSelect").value)} / ${formatFreeDays(document.getElementById("oceanFreeInput").value)}`;
+      baseTarget.rail = `${formatNodeLabel(document.getElementById("railNodeSelect").value)} / ${formatFreeDays(document.getElementById("railFreeInput").value)}`;
       const selectedCarriers = getSelectedCarriers();
       if (selectedCarriers.length === 0) {
         alert("请至少选择一个船公司");
@@ -1907,8 +2037,8 @@
       checkedIndexes.forEach(index => {
         const row = data[currentTab][index];
         if (!row) return;
-        row.ocean = `${getNodeValue(row.ocean)} / ${oceanFree}`;
-        row.rail = `${getNodeValue(row.rail)} / ${railFree}`;
+        row.ocean = `${formatNodeLabel(getNodeValue(row.ocean))} / ${oceanFree}`;
+        row.rail = `${formatNodeLabel(getNodeValue(row.rail))} / ${railFree}`;
         row.user = "admin";
         row.time = currentTimeText();
       });
@@ -1954,11 +2084,19 @@
       if (carrierWrap && !carrierWrap.contains(e.target)) {
         toggleCarrierSelect(false);
       }
+      Object.keys(FILTER_MULTI_CONFIG).forEach(key => {
+        const wrap = document.getElementById(FILTER_MULTI_CONFIG[key].wrapId);
+        if (wrap && !wrap.contains(e.target)) {
+          toggleFilterMultiSelect(key, false);
+        }
+      });
     });
     document.getElementById("pageGuideBtn").addEventListener("click", () => togglePageGuide());
     document.getElementById("pageGuideCloseBtn").addEventListener("click", () => togglePageGuide(false));
     document.getElementById("pageGuideMask").addEventListener("click", () => togglePageGuide(false));
     populatePortSelects();
+    ["region", "country", "carrier"].forEach(syncFilterMultiSelect);
+    syncNodeSelectOptions();
     syncCarrierMultiSelect();
     syncPortCountry();
     syncLevelFields();
