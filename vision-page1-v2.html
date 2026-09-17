@@ -391,8 +391,8 @@
                                         <th class="compact-cell min-w-[94px]">清关类型</th>
                                         <th class="compact-cell min-w-[120px]">数据来源</th>
                                         <th class="compact-cell text-center w-24 bg-blue-50">本次委托数量</th><th class="compact-cell text-center">滚动计划总量</th><th class="compact-cell text-center">已做委托数量</th>
-                                        <th class="compact-cell text-center w-24">报关单价</th><th class="compact-cell detail-head-number">报关总价</th><th class="compact-cell text-center w-24">加价率(%)</th>
-                                        <th class="compact-cell text-center w-24 text-blue-600">销售单价</th><th class="compact-cell detail-head-number font-bold text-blue-600">销售总价</th>
+                                        <th class="compact-cell text-center w-24 text-blue-600">FOB单价</th><th class="compact-cell detail-head-number font-bold text-blue-600">FOB总价</th><th class="compact-cell text-center w-24">加价率(%)</th>
+                                        <th class="compact-cell text-center w-24">报关单价</th><th class="compact-cell detail-head-number">报关总价</th>
                                         <th class="compact-cell text-center min-w-[88px]">币种</th><th class="compact-cell min-w-[128px]">出口包装方式</th><th class="compact-cell min-w-[164px]">落货日期</th><th class="compact-cell min-w-[164px]">到港时间</th>
                                         <th class="compact-cell min-w-[84px]">生产基地</th><th class="compact-cell min-w-[110px]">有无直发料</th>
                                         <th class="compact-cell min-w-[138px]">客户型号</th><th class="compact-cell min-w-[138px]">工厂型号</th><th class="compact-cell min-w-[112px]">面板直发</th><th class="compact-cell min-w-[112px]">品牌</th>
@@ -435,14 +435,13 @@
                                         <td class="compact-cell text-center"><input type="number" :value="getPlanTotalQty(item)" disabled class="detail-input w-[88px] input-readonly text-center"></td>
                                         <td class="compact-cell detail-cell-center text-gray-500">{{ item.used }}</td>
                                         
-                                        <td class="compact-cell text-center"><input type="number" v-model.number="item.customsPrice" :disabled="isReadOnly" class="detail-input w-[88px] text-center font-mono focus:ring-1 focus:ring-blue-500"></td>
-                                        <td class="compact-cell detail-cell-number text-gray-600 detail-total">{{ (item.customsPrice * item.qty).toFixed(2) }}</td>
+                                        <td class="compact-cell text-center"><div class="detail-pill">{{ getItemFobUnitPrice(item).toFixed(6) }}</div></td>
+                                        <td class="compact-cell detail-cell-number text-blue-600 detail-total">{{ getItemFobTotal(item).toFixed(2) }}</td>
                                         <td class="compact-cell text-center">
                                             <input type="number" v-model.number="item.markupRate" :disabled="isReadOnly" step="0.01" class="detail-input w-[88px] text-center font-mono focus:ring-1 focus:ring-blue-500">
                                         </td>
-                                        
-                                        <td class="compact-cell text-center"><div class="detail-pill">{{ getItemSalesUnitPrice(item).toFixed(6) }}</div></td>
-                                        <td class="compact-cell detail-cell-number text-blue-600 detail-total">{{ getItemSalesTotal(item).toFixed(2) }}</td>
+                                        <td class="compact-cell text-center"><input type="number" v-model.number="item.customsPrice" :disabled="isReadOnly" class="detail-input w-[88px] text-center font-mono focus:ring-1 focus:ring-blue-500"></td>
+                                        <td class="compact-cell detail-cell-number text-gray-600 detail-total">{{ (item.customsPrice * item.qty).toFixed(2) }}</td>
                                         <td class="compact-cell text-center">
                                             <select v-model="item.currency" :disabled="isReadOnly" :class="['detail-select w-[78px] outline-none focus:border-blue-500', { 'border-red-500 ring-1 ring-red-500': showValidationErrors && isItemCurrencyRequired(item) && !item.currency }]">
                                                 <option value="">--</option>
@@ -497,9 +496,9 @@
                                 <div class="text-xs text-gray-400 uppercase font-bold tracking-wider">报关总额</div>
                                 <div class="text-xl font-mono font-bold text-gray-700">{{ customsTotalString }}</div>
                             </div>
-                             <div class="bg-blue-600 border border-blue-700 rounded-lg px-4 py-2 shadow-sm cursor-pointer hover:bg-blue-700 transition" @click="copyToClipboard(hshaTotalString)">
-                                <div class="text-xs text-blue-200 uppercase font-bold tracking-wider">销售总额</div>
-                                <div class="text-xl font-mono font-bold text-white">{{ hshaTotalString }}</div>
+                             <div class="bg-blue-600 border border-blue-700 rounded-lg px-4 py-2 shadow-sm cursor-pointer hover:bg-blue-700 transition" @click="copyToClipboard(fobTotalString)">
+                                <div class="text-xs text-blue-200 uppercase font-bold tracking-wider">FOB总额</div>
+                                <div class="text-xl font-mono font-bold text-white">{{ fobTotalString }}</div>
                             </div>
                         </div>
                         <div class="px-6 pt-3 pb-1 text-xs text-slate-500">加价率默认取后台维护值；当前物流委托新增的明细行先带同一个默认值，用户可逐行修改，不同行允许不同。</div>
@@ -1007,14 +1006,14 @@
                 },
                 customsTotalString() { const totals = {}; this.formData.items.forEach(item => { const amt = item.customsPrice * (item.qty || 0); if (!totals[item.currency]) totals[item.currency] = 0; totals[item.currency] += amt; }); const parts = Object.keys(totals).map(curr => `${this.formatMoney(totals[curr])} ${curr}`); return parts.length > 0 ? parts.join(' + ') : '0.00'; },
                 
-                // [Hotfix] Updated HSHA Total Calculation Logic: CustomsTotal * (1 + Markup)
-                hshaTotalString() { 
+                // Prototype display: FOB total is currently derived from customs total and markup.
+                fobTotalString() { 
                     const totals = {}; 
                     this.formData.items.forEach(item => { 
                         const customsTotal = item.customsPrice * (item.qty || 0);
-                        const hshaTotal = customsTotal * (1 + (item.markupRate || 0) / 100); 
+                        const fobTotal = customsTotal * (1 + (item.markupRate || 0) / 100); 
                         if (!totals[item.currency]) totals[item.currency] = 0; 
-                        totals[item.currency] += hshaTotal; 
+                        totals[item.currency] += fobTotal; 
                     }); 
                     const parts = Object.keys(totals).map(curr => `${this.formatMoney(totals[curr])} ${curr}`); 
                     return parts.length > 0 ? parts.join(' + ') : '0.00'; 
@@ -1567,18 +1566,18 @@
                 hasEnteredFeeValue(value) {
                     return value !== '' && value !== null && value !== undefined && !Number.isNaN(Number(value));
                 },
-                getItemSalesUnitPrice(item) {
+                getItemFobUnitPrice(item) {
                     return (Number(item.customsPrice || 0) * (1 + Number(item.markupRate || 0) / 100));
                 },
-                getItemSalesTotal(item) {
-                    return this.getItemSalesUnitPrice(item) * Number(item.qty || 0);
+                getItemFobTotal(item) {
+                    return this.getItemFobUnitPrice(item) * Number(item.qty || 0);
                 },
                 isItemCurrencyRequired(item) {
                     const customsPrice = Number(item.customsPrice || 0);
                     const customsTotal = customsPrice * Number(item.qty || 0);
-                    const salesUnitPrice = this.getItemSalesUnitPrice(item);
-                    const salesTotal = this.getItemSalesTotal(item);
-                    return [customsPrice, customsTotal, salesUnitPrice, salesTotal].some(value => value > 0);
+                    const fobUnitPrice = this.getItemFobUnitPrice(item);
+                    const fobTotal = this.getItemFobTotal(item);
+                    return [customsPrice, customsTotal, fobUnitPrice, fobTotal].some(value => value > 0);
                 },
                 validateFees() {
                     const fees = this.formData.fees || {};
